@@ -1100,5 +1100,13 @@
     "accession": "0001193125-26-456897",
     "published": "2026-11-12T07:08:55",
     "results": false
+  },
+  {
+    "accession": "0001193125-26-464688",
+    "published": "2026-11-17T06:03:46",
+    "results": true,
+    "title": "JD.COM ANNOUNCES THIRD QUARTER 2026 RESULTS",
+    "url": "https://www.sec.gov/Archives/edgar/data/1549802/000119312526464688/d179042dex991.htm",
+    "file": "2026-11-17_d179042dex991.htm"
   }
 ]

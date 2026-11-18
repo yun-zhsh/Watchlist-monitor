@@ -30,6 +30,12 @@ KEY_PROFIT = r"归属于上市公司股东的净利润（元）"
 KEY_EPS = r"基本每股收益（元\s*/\s*股）"
 INCOME_REVENUE = r"一、营业(?:总)?收入"
 INCOME_PROFIT = r"归属于母公司(?:所有者|股东)的净利润"
+# Some companies (Glodon) add the sign convention after the item name ("net loss shown with a minus sign")
+LOSS_SIGN_NOTE = r"(?:[（(]\s*净亏损以\s*[“\"]?\s*[-－—]\s*[”\"]?\s*号填列\s*[)）])?"
+# Companies with a finance business (Glodon) report total operating revenue = operating revenue + interest and fee income;
+# the key-data table and the headline revenue are the operating revenue, the first item under the total.
+INCOME_OPERATING_REVENUE = r"其中\s*[：:]\s*营业收入"
+BEFORE_OPERATING_REVENUE = r"[^、]{0,80}?"  # a page footer may sit between the total and the operating revenue, but no other numbered item
 INCOME_EPS = r"基本每股收益(?:\s*[（(]\s*元\s*/\s*股\s*[)）])?"
 EQUITY = r"归属于母公司(?:所有者|股东)权益合计"
 SHARE_CAPITAL = r"(?:实收资本（或股本）|(?<!总)股本)"
@@ -37,7 +43,7 @@ SHARE_CAPITAL = r"(?:实收资本（或股本）|(?<!总)股本)"
 EXPRESS_REVENUE = r"营业总收入"
 EXPRESS_PROFIT = r"(?<!后的)归属于上市公司股东的净利润"
 EXPRESS_EPS = r"基本每股收益"
-EXPRESS_EPS_UNIT = r"(?:（元）)?"
+EXPRESS_EPS_UNIT = r"(?:（元(?:\s*/\s*股)?）)?"
 EXPRESS_EQUITY = r"归属于上市公司股东的所有者权益"
 EXPRESS_SHARES = r"股本"
 
@@ -45,6 +51,7 @@ EXPRESS_SHARES = r"股本"
 def is_wanted_page(text: str) -> bool:
     """Is this page of a report one the parser needs (key-data table, income statement, balance sheet)?"""
     key_table = KEY_TABLE in text and "营业收入" in text
-    income = re.search(INCOME_REVENUE, text)
+    # The income statement can run over three pages (Glodon's Q1 reports): the page with the net profit keeps the EPS page after it
+    income = re.search(INCOME_REVENUE, text) or re.search(INCOME_PROFIT, text)
     balance = ("归属于母公司" in text and "权益合计" in text) or (re.search(r"(?<!总)股本", text) and "资本公积" in text)
     return bool(key_table or income or balance)

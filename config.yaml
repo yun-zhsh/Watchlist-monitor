@@ -87,3 +87,8 @@ stocks:
     market: CN   # earnings come from the Chinese periodic reports and annual express reports on CNINFO (the CSRC-designated disclosure platform)
     filing_format: cn_report   # price and financials are both in RMB; the company does not disclose Non-GAAP figures
     metrics: [pe, ps, pb]
+  - symbol: 002410.SZ
+    name: Glodon
+    market: CN   # Chinese periodic reports and express reports on CNINFO, like Hikvision
+    filing_format: cn_report   # RMB; revenue is the operating revenue (the total also has the interest income of a small finance business)
+    metrics: [pe, ps, pb]

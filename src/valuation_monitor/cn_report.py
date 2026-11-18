@@ -1,5 +1,5 @@
 """Extract earnings data from the Chinese periodic reports and express reports of A-share companies
-(PDF originals; verified on all Hikvision reports from 2014 on).
+(PDF originals; verified on all Hikvision and Glodon reports from 2014 on).
 
 The report type decides which numbers are used:
   Q1 report        consolidated income statement, current period and prior period (single quarter)
@@ -8,8 +8,9 @@ The report type decides which numbers are used:
   Annual report    consolidated income statement, current and prior period (full year, cumulative)
   Express report   preliminary annual figures (not audited by the accounting firm), published before the annual
                    report: revenue, net profit, EPS, equity, share capital
-Revenue is total operating revenue, net profit is the profit attributable to shareholders of the parent, EPS is
-basic EPS; amounts are in RMB and converted to millions. Equity is the equity attributable to owners of the parent
+Revenue is the operating revenue: total operating revenue, or the operating revenue under it where the total also
+includes interest and fee income (Glodon's finance business); express reports give only the total. Net profit is the
+profit attributable to shareholders of the parent, EPS is basic EPS; amounts are in RMB and converted to millions. Equity is the equity attributable to owners of the parent
 on the balance sheet; the share count is the balance sheet's share capital (period-end total shares, par value
 RMB 1, so shares = the share capital amount).
 In every periodic report the first column of the key-data table must match the same item in the consolidated
@@ -91,7 +92,10 @@ def parse_cn_report(title: str, pdf: bytes) -> Parsed:
 
     # Consolidated statements: current and prior period (the prior period as restated in this report)
     revenue, pos = row(text, "revenue", cn.INCOME_REVENUE, 2)
-    profit, pos = row(text, "net profit", cn.INCOME_PROFIT, 2, pos)
+    operating = re.compile(rf"{cn.BEFORE_OPERATING_REVENUE}{cn.INCOME_OPERATING_REVENUE}\s*" + r"\s+".join([NUM] * 2)).match(text, pos)
+    if operating:  # total operating revenue includes interest and fee income: use the operating revenue under it
+        revenue, pos = [to_number(g) for g in operating.groups()], operating.end()
+    profit, pos = row(text, "net profit", cn.INCOME_PROFIT, 2, pos, cn.LOSS_SIGN_NOTE)
     eps, _ = row(text, "basic EPS", cn.INCOME_EPS, 2, pos)
     values = {"revenue": [v / MILLION for v in revenue], "profit": [v / MILLION for v in profit], "eps": eps}
 

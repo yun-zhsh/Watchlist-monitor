@@ -14,7 +14,7 @@ equity attributable to owners (millions), shares disclosed in the filing (millio
       this period to date, same period last year to date; amounts are in thousands and converted to millions when read.
     - Balance sheet: same as above. EPS note: weighted average shares.
   press_release (JD, HTML) is in press_release.py; kifrs_statements (Samsung, PDF) in kifrs.py;
-  cn_report (Hikvision, PDF) in cn_report.py. These three parse functions return the common Parsed (see parsed.py).
+  cn_report (Hikvision, Glodon, PDF) in cn_report.py. These three parse functions return the common Parsed (see parsed.py).
 
 A company may publish results every quarter (4 periods a year) or only interim and annual (2 periods a year; the second half is obtained as full year minus first half).
 The number of periods is inferred from the existing filings, and the TTM is the sum of the periods in the last year (4 quarters or 2 half years).
@@ -97,7 +97,7 @@ SERIES_LABELS = {
     "equity": "Equity attributable to owners",
     "wa_shares": "Weighted average shares",
 }
-PARSER_VERSIONS = {"highlights": 5, "statements": 3, "press_release": 3, "us_press_release": 1, "us_gaap_statements": 1, "kifrs_statements": 4, "cn_report": 3}  # add 1 when the parsing rules change; saved parse results are then re-parsed automatically
+PARSER_VERSIONS = {"highlights": 5, "statements": 3, "press_release": 3, "us_press_release": 1, "us_gaap_statements": 1, "kifrs_statements": 4, "cn_report": 4}  # add 1 when the parsing rules change; saved parse results are then re-parsed automatically
 PER_SHARE_TOLERANCE = 0.005  # allowed difference of the same value between filings: per-share data (rounding, subtraction of cumulative figures)
 PER_SHARE_RELATIVE_TOLERANCE = 5e-4
 AMOUNT_TOLERANCE = 0.001  # amounts: relative difference

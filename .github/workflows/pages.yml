@@ -88,6 +88,9 @@ jobs:
 
   deploy:
     needs: build
+    # Without a condition GitHub skips this job whenever any job upstream was skipped, and "tests" is skipped on every
+    # scheduled run: the data was committed but the site was never published. !cancelled() lifts that default.
+    if: ${{ !cancelled() && needs.build.result == 'success' }}
     runs-on: ubuntu-latest
     environment:
       name: github-pages

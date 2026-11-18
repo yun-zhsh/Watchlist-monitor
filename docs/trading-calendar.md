@@ -1,15 +1,17 @@
 # Trading calendar: design
 
-Status: **designed, not built.** This document is the complete specification of a new module that answers, for any date and any
+Status: **designed, not built; on hold.** The maintainer has not yet decided when (or whether) to build it. Nothing of it is in the
+code. This document is the complete specification of a new module that answers, for any date and any
 exchange the project uses: is it a trading day, why not if it is not, what kind of trading day it is if it is, and what the
 trading sessions are. It is written so that a developer (or a new coding session) who has read [CLAUDE.md](../CLAUDE.md) and this
-file can build it without further discussion. Decisions already made are listed in section 2; the few left to the implementer are
-in section 17.
+file can build it without further discussion. Decisions already made are listed in section 2 and in the review of section 21; the few
+left to the implementer are in section 17; the questions still open for the maintainer, which must be answered **before** the first line
+of code, are in section 22.
 
 Contents: 1 Purpose · 2 Decisions made · 3 Scope · 4 Concepts · 5 Data files · 6 Generator · 7 Read API · 8 Evidence and status ·
 9 Reconciliation and the exceptions ledger · 10 Repair of price data · 11 Index data · 12 MCP tools · 13 Downloads · 14 Internal uses ·
 15 Configuration changes · 16 Build plan (four pull requests) · 17 Left to the implementer · 18 Facts found while designing ·
-19 Risks · 20 Not in scope
+19 Risks · 20 Not in scope · 21 Review before implementation (decisions of 2026-11-18) · 22 Open questions and how to start
 
 ## 1. Purpose
 
@@ -71,7 +73,9 @@ and selects the calendar. They are separate fields. `market: US` covers several 
 
 **Day record** (what a lookup returns; section 7 has the exact fields):
 
-* `status`: `open` or `closed` for the **regular** session.
+* `status`: `open` when the exchange trades at all on that date (in any session, including a `special_session`), `closed` otherwise.
+  Whether the **regular** session took place is told by `kind`: on a `special_session` day the regular session is closed, and
+  `closed_reason` says why (section 21, decision R1).
 * `kind`:
   * closed: `weekend`, `holiday` (regular holiday, with its English name), `special_closure` (unplanned or declared late: typhoon,
     mourning, temporary holiday), `workday_closed` (China: a Saturday or Sunday that the government makes a working day to offset a
@@ -89,8 +93,9 @@ and selects the calendar. They are separate fields. `market: US` covers several 
 * `observed`: known only from price data, **reason not verified**.
 
 **Verification** (also in the file, from the generation step): `verified` is `yes` when the evidence (section 8) agrees with the
-record, `no` for dates after the last evidence, and `conflict` is never committed (the generator refuses). `verified_by` names the
-evidence (for example `index ^HSI`).
+record, `no` for dates after the last evidence and for dates before the first evidence (NSE before 2007-09, section 18), and also for
+a weekend `special_session` (not visible in the index data, section 18); `conflict` is never committed (the generator refuses).
+`verified_by` names the evidence (for example `index ^HSI`) and is empty when `verified` is `no`.
 
 **Status** (not stored; computed when a question is asked, section 8): `confirmed`, `predicted` or `conflict`.
 
@@ -165,10 +170,12 @@ Steps for each exchange:
    closed (or open) against the sources and whose reason is not documented yet.
 4. **Verify** against evidence (section 8): download the daily history of the evidence index of the exchange (Yahoo, from 2000-01-01
    or its first bar) and compare every date that has evidence:
-   * a date with an index value must be `open` (any kind but `special_session` on a closed day is fine);
+   * a date with an index value must be `open` (any open kind, `special_session` included);
    * a **weekday** without an index value must be `closed`, and if it is `closed` it must have a reason (`holiday`, `special_closure`,
      `workday_closed`) or be recorded as `observed` with `reason_verified = no`;
-   * a weekend date with an index value must be `special_session`.
+   * a weekend date with an index value must be `special_session`;
+   * a weekend `special_session` **without** an index value is not a conflict (weekend special sessions are not visible in the index
+     data, section 18): it stays `verified = no`, recorded from the exchange's circular only.
    An index value is a non-null close. Old Yahoo history has a row for every weekday with a **null** close on non-trading days: drop
    those rows. A close identical to the previous day's is suspect and is not evidence of trading.
 5. **Write** the CSV files and `exchanges.json`, sorted and byte-stable (the same inputs give the same files, so a diff shows only real changes).
@@ -217,6 +224,8 @@ Rules:
 * A date outside `coverage` **raises** `CalendarRangeError` with a message that names the coverage and says to regenerate. It never guesses.
 * An unknown exchange raises with the list of known ones.
 * Dates beyond `announced_through` are answered, with `basis = rule` and a warning, never silently.
+* `is_open`, `trading_days`, `next_open` and `previous_open` follow `status`: a `special_session` day is open and counts as a trading
+  day (decision R1). A caller that needs the regular session only checks `kind`.
 * The file is read once per exchange and cached; lookups are dictionary lookups.
 * A helper maps a stock to its exchange (section 15).
 
@@ -241,11 +250,12 @@ Status of a date:
 | open | traded | `confirmed` |
 | closed | no_trade | `confirmed` |
 | any | pending | `predicted` |
-| open | no_trade | `conflict` |
-| closed | traded | `conflict` (unless `kind = special_session`: then it is `confirmed`) |
+| open | no_trade | `conflict` (unless `kind = special_session` on a weekend: then `predicted`, with a warning that it cannot be confirmed by data) |
+| closed | traded | `conflict` |
 
-`special_session` is the one case where a closed day has data. A weekend special session, however, is **not visible in Yahoo data**
-(found while designing, section 18), so it is recorded from the exchange's circular only and cannot be confirmed by data.
+A `special_session` day is `open` (decision R1, section 21), so a weekday special session with data, such as India's Diwali evening
+session, is simply `open | traded | confirmed`. A weekend special session, however, is **not visible in Yahoo data**
+(found while designing, section 18), so it is recorded from the exchange's circular only and can never be confirmed by data.
 
 A `conflict` carries its evidence: which sources disagree with the calendar, how many stocks, whether later days exist, and a
 diagnosis (section 9).
@@ -394,7 +404,8 @@ Add a freshness-style warning (not an error) in `valuation-monitor-check`: the c
 ## 16. Build plan: four pull requests
 
 Each is one pull request, merged before the next. After each, the full test suite passes on Python 3.10 and 3.12 (pandas 2 and 3: the last
-round of bugs came from pandas 2).
+round of bugs came from pandas 2). **Which branch they are merged into, and where the MCP tools are tried online, is not `main` by
+default: see section 22.**
 
 **PR 1: calendar data, read API, MCP tools.**
 
@@ -404,8 +415,10 @@ round of bugs came from pandas 2).
   already say which dates the generator confirmed), the `CLAUDE.md` rule exception, `docs/mcp-server.md`, README outline.
 * Tests: the read API on a small fixture calendar (every kind, the range errors, the horizon warning); invariants on the committed files
   (every date of the coverage exactly once; weekends are `closed` unless `special_session`; kinds and bases valid; sessions parse and do
-  not overlap; `closed_reason` only on `special_session`; names have no CJK; CSV is sorted and byte-stable when regenerated from the
-  inputs); the **golden dates** of section 18 once verified; `tests/test_english_only.py` extended to scan `src/valuation_monitor/calendars/*`
+  not overlap; `closed_reason` only on `special_session`; names have no CJK; CSV is sorted and in **canonical form**: read and written
+  again with the generator's own writer it gives the same bytes; every row of the curated inputs is **reflected** in the output with the
+  same name, source and sessions: see decision R2 of section 21 for why the generator itself is not re-run in CI); the **golden dates** of
+  section 18 once verified; `tests/test_english_only.py` extended to scan `src/valuation_monitor/calendars/*`
   and `tools/calendars/inputs/**`; the MCP production-condition tests.
 * Done when: the generator reports **no unexplained conflict** for the five exchanges from 2000-01-01 (or from the first evidence
   value), the golden dates pass, the MCP tools work against the running service (check with `curl`, as for the earlier deployments), and
@@ -510,3 +523,68 @@ above; none believed on KRX and SZSE.
 NYSE, SSE and BSE (add each when a stock needs it: a new calendar and its evidence index); other exchanges; pre-market and after-hours;
 auction schedules beyond a note; intraday data; the FX market; relative performance (the stored indices make it possible later); a web
 page that edits the calendar (it changes only through the generator and a pull request).
+
+## 21. Review before implementation (decisions of 2026-11-18)
+
+A coding session read this document and [CLAUDE.md](../CLAUDE.md) before starting PR 1 and raised the points below. The maintainer
+decided them; the sections above have been edited to match. They are recorded here so that the reasoning is not lost.
+
+**R1. `status` of a `special_session` day.** The first version of this document contradicted itself: section 4 defined `status` as the
+state of the *regular* session (so a special-session day would be `closed`) but listed `special_session` among the open kinds; the golden
+dates said "open, special_session"; the status table of section 8 treated it as closed with data. **Decision:** a `special_session` day
+has `status = open`, `kind = special_session`, and `closed_reason` says why the regular session is closed (a holiday name or `weekend`).
+`is_open` is true and the day counts as a trading day. Consequences written into sections 4, 6 (step 4), 7 and 8: a weekday special
+session with index data is simply confirmed; a weekend special session without index data is not a conflict, stays `verified = no`, and
+is reported as "cannot be confirmed by data".
+
+**R2. "Byte-stable when regenerated" cannot be a CI test.** Re-running the generator needs the network (the Yahoo index history), the
+base-calendar libraries (not run-time dependencies, not installed in CI), and the same external data on the day (Yahoo corrects old
+values; a library upgrade can change the base calendar). CI is offline. The test was meant to catch two kinds of error: (a) format drift
+(a hand edit, wrong order, `\r\n`, blank lines, stray quotes) and (b) output that no longer matches the inputs (an input edited and not
+regenerated, or the CSV edited by hand). Three ways were weighed:
+
+| Option | Runs in CI | Catches (a) | Catches (b) | Cost |
+| --- | --- | --- | --- | --- |
+| A. Canonical form: read the committed CSV, write it again with the generator's own writer, compare bytes | yes | yes | no | small |
+| B. Inputs reflected: every row of `tools/calendars/inputs/` (closures, special sessions, session periods, holiday names) appears in the output with the same name, source and sessions | yes | n/a | mostly | small |
+| C. Split the generator into an online "fetch" step that commits a snapshot of the base calendar and the evidence, and an offline "assemble" step that CI re-runs | yes | yes | fully | snapshot files of some tens of thousands of rows to commit and keep updated |
+
+**Decision: A + B.** The generator's own byte stability is shown by hand: run it twice on the same inputs and the same downloaded data,
+and state in the pull request that the outputs were identical. The writer used by the generator must therefore be importable without
+the generator's libraries (put it in `trading_calendar.py` or a small module next to it), so that the CI test of option A can call it.
+
+**R3. NSE before the evidence.** `^NSEI` has no data before 2007-09. Those dates are `verified = no` with an empty `verified_by`; they are
+not conflicts. The same applies to any exchange before its index's first value (section 18 lists the first dates).
+
+## 22. Open questions and how to start
+
+The released version is **0.4.1**. `main` keeps showing that release until the maintainer decides to release the next one. As of
+2026-11-18, `main` holds the 0.4.1 code, this document, and the data commits of the scheduled workflow; there are no code changes after 0.4.1. The tags are `v0.1.0` to `v0.4.0`; **0.4.1 has no tag yet**.
+
+**To be answered by the maintainer before the first line of code:**
+
+1. **Whether and when to build the module at all.** On hold as of 2026-11-18.
+2. **Branch.** Proposal: a long-lived integration branch (for example `trading-calendar`) cut from `main`; PR 1 to PR 4 target that
+   branch, not `main`; CI runs on pull requests to any branch, so its three checks (Python 3.10, Python 3.12, container image) still
+   gate every step; the branch is merged into `main` only when the maintainer decides to release 0.5.0. GitHub Pages publishes from `main`
+   only, so the public site does not change meanwhile.
+3. **Where the MCP tools are tried online.** PR 1's "done when" asks for a check against the running service with `curl`. The existing
+   `valuation-mcp` Cloud Run service is public; deploying the branch to it would show the unfinished calendar tools to anyone. Either deploy
+   the branch to a separate service (for example `valuation-mcp-dev`, which `scripts/deploy-cloud.sh` would need to accept as a name), or
+   defer the online check to the merge into `main`. The implementing session has no Google Cloud credentials: it writes the Cloud Shell
+   steps and the maintainer runs them.
+4. **A tag `v0.4.1`** on the merge commit of PR #33 (`87a0e18`), so that the release can be linked and keeps pointing at that state
+   whatever happens to `main` later. Recommended; do it before any further change lands on `main`.
+
+**How a new session starts (after the answers above):**
+
+1. Read [CLAUDE.md](../CLAUDE.md), then this document in full, sections 21 and 22 included.
+2. Environment: a fresh cloud container has **no `.venv`**. Create it with Python 3.12 or 3.13 (`python3 -m venv .venv && .venv/bin/pip
+   install -e '.[dev,cloud]'`, pandas 3). Python 3.10 (pandas 2) is not installed but `uv` is: `uv venv --python 3.10 .venv310` and
+   install the same extras there. Run the whole suite in both before changing anything, as a baseline.
+3. Network: as of 2026-11-05 the Yahoo chart API, PyPI and the HKEX website were reachable from the cloud container through its proxy.
+   The generator is the only part that uses the network; the program and the tests stay offline.
+4. First work items of PR 1, in order: evaluate `exchange_calendars` against the five evidence indices from 2000 on and list the
+   conflicts per exchange; verify every "believed" fact of section 18 against the exchanges' and governments' announcements (unverified
+   items are marked "reason not verified", never invented) and record the findings in section 17 and 18; then build the generator and run
+   it until no unexplained conflict remains; then the read API, the configuration, the MCP tools, the tests and the documentation.

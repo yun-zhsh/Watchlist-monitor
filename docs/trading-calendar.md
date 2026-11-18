@@ -558,9 +558,8 @@ not conflicts. The same applies to any exchange before its index's first value (
 
 ## 22. Open questions and how to start
 
-The project is presented as it stands at **version 0.4.1** (the state described in the maintainer's job applications). `main` must keep
-showing that state until the maintainer decides otherwise. As of 2026-11-18, `main` holds the 0.4.1 code, this document, and the data
-commits of the scheduled workflow; there are no code changes after 0.4.1. The tags are `v0.1.0` to `v0.4.0`; **0.4.1 has no tag yet**.
+The released version is **0.4.1**. `main` keeps showing that release until the maintainer decides to release the next one. As of
+2026-11-18, `main` holds the 0.4.1 code, this document, and the data commits of the scheduled workflow; there are no code changes after 0.4.1. The tags are `v0.1.0` to `v0.4.0`; **0.4.1 has no tag yet**.
 
 **To be answered by the maintainer before the first line of code:**
 
@@ -574,7 +573,7 @@ commits of the scheduled workflow; there are no code changes after 0.4.1. The ta
    the branch to a separate service (for example `valuation-mcp-dev`, which `scripts/deploy-cloud.sh` would need to accept as a name), or
    defer the online check to the merge into `main`. The implementing session has no Google Cloud credentials: it writes the Cloud Shell
    steps and the maintainer runs them.
-4. **A tag `v0.4.1`** on the merge commit of PR #33 (`87a0e18`), so that a link in a job application keeps pointing at that state
+4. **A tag `v0.4.1`** on the merge commit of PR #33 (`87a0e18`), so that the release can be linked and keeps pointing at that state
    whatever happens to `main` later. Recommended; do it before any further change lands on `main`.
 
 **How a new session starts (after the answers above):**

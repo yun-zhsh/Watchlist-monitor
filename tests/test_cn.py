@@ -1,4 +1,4 @@
-"""A-shares (Hikvision): the CNINFO announcement list, publication time rules, and parsing verified with the saved original Chinese reports. The Chinese strings in this file are fixtures: titles and text of the Chinese-language source filings."""
+"""A-shares (Hikvision, Glodon): the CNINFO announcement list, publication time rules, and parsing verified with the saved original Chinese reports. The Chinese strings in this file are fixtures: titles and text of the Chinese-language source filings."""
 
 import json
 from datetime import datetime
@@ -157,3 +157,86 @@ def test_express_report_is_provisional_cumulative_data():
     p = parsed("2025 annual express report", "express")
     assert not p.quarterly and p.period == pd.Period("2025Q4")
     assert p.values["eps"] == [1.545, 1.297] and p.values["wa_shares"] == pytest.approx([9164.87155])
+
+
+# --- Glodon (002410.SZ): a software company with a small finance business, so its statements differ from Hikvision's ---------
+
+GLODON = Path(__file__).parent.parent / "data" / "filings" / "002410.SZ"
+saved_glodon = pytest.mark.skipif(not (GLODON / "index.json").exists(), reason="no saved Glodon filings (the scheduled update saves them)")
+
+GLODON_KEY_TABLE = (
+    "一、主要财务数据 （一）主要会计数据和财务指标 项目 2025 年 2024 年 本年比上年增减 "
+    "营业收入（元） 6,068,493,454.08 6,202,873,989.82 -2.17% "
+    "归属于上市公司股东的净利润（元） 405,114,040.23 250,424,298.94 61.77% "
+    "基本每股收益（元/股） 0.2467 0.1513 63.05% "
+)
+GLODON_INCOME = (
+    "3、合并利润表 单位：元 项目 2025 年度 2024 年度 一、营业总收入 6,097,323,585.28 6,239,623,546.78 "
+    "广联达科技股份有限公司 2025 年年度报告全文 70 "  # a page footer between the total and the operating revenue
+    "其中：营业收入 6,068,493,454.08 6,202,873,989.82 利息收入 14,704,130.81 19,570,747.21 "
+    "二、营业总成本 5,478,670,675.03 5,865,063,390.61 "
+    "（二）按所有权归属分类 1.归属于母公司股东的净利润（净亏损以“-”号填列） 405,114,040.23 250,424,298.94 "
+    "2.少数股东损益（净亏损以“-”号填列） 36,153,927.08 20,185,361.01 "
+    "八、每股收益： （一）基本每股收益 0.2467 0.1513 （二）稀释每股收益 0.2461 0.1513 "
+)
+GLODON_BALANCE = "股本 1,651,944,342.00 1,651,944,342.00 资本公积 归属于母公司所有者权益合计 6,048,181,425.70 5,959,199,717.88 "
+
+
+def test_operating_revenue_is_used_when_the_total_includes_interest_income(monkeypatch):
+    monkeypatch.setattr("valuation_monitor.cn_report.read_text", lambda pdf: GLODON_KEY_TABLE + GLODON_INCOME + GLODON_BALANCE)
+    p = parse_cn_report("2025 annual report", b"")
+    assert p.values["revenue"] == pytest.approx([6068.49345408, 6202.87398982])  # not the total operating revenue 6,097.3
+    assert p.values["profit"] == pytest.approx([405.11404023, 250.42429894])  # the item name carries the sign convention note
+    assert p.values["eps"] == [0.2467, 0.1513]
+    assert p.values["wa_shares"] == pytest.approx([1651.944342])
+
+
+def test_express_report_with_eps_in_yuan_per_share(monkeypatch):
+    text = (
+        "项目 本报告期 上年同期 增减变动幅度（％） 营业总收入 6,586,834,560.79 5,619,380,098.61 17.22% "
+        "归属于上市公司股东的净利润 962,811,015.59 660,974,286.88 45.67% "
+        "扣除非经常性损益后的归属于上市公司股东的净利润 913,442,895.97 651,128,119.78 40.29% "
+        "基本每股收益（元/股） 0.8179 0.5636 45.12% 加权平均净资产收益率 16.51% 10.59% "
+        "项目 本报告期末 本报告期初 增减变动幅度（％） 总资产 11,547,911,676.63 10,067,626,141.36 14.70% "
+        "归属于上市公司股东的所有者权益 6,308,736,999.42 5,787,737,027.21 9.00% 股本 1,191,298,268.00 1,189,373,056.00 0.16% "
+    )
+    monkeypatch.setattr("valuation_monitor.cn_report.read_text", lambda pdf: text)
+    p = parse_cn_express("2022 annual express report", b"")
+    assert p.values["eps"] == [0.8179, 0.5636]
+    assert p.values["profit"] == pytest.approx([962.81101559, 660.97428688])  # not the figure excluding non-recurring items
+    assert p.values["revenue"] == pytest.approx([6586.83456079, 5619.38009861])  # express reports give only the total operating revenue
+
+
+def test_the_page_with_the_net_profit_is_kept_so_the_eps_page_after_it_is_too():
+    from valuation_monitor.cn_patterns import is_wanted_page
+
+    # Glodon's Q1 income statement runs over three pages: revenue, then profit, then EPS
+    assert is_wanted_page("手续费及佣金收入 二、营业总成本 1.归属于母公司所有者的净利润 34,199,072.93 29,836,965.24")
+    assert not is_wanted_page("非经常性损益项目和金额 非流动性资产处置损益 125,137.62")
+
+
+@saved_glodon
+def test_saved_glodon_reports_parse_and_match_the_key_table():
+    index = json.loads((GLODON / "index.json").read_text(encoding="utf-8"))
+    assert len(index) >= 60
+    for e in index:
+        content = (GLODON / e["file"]).read_bytes()
+        p = parse_cn_express(e["title"], content) if e["kind"] == "express" else parse_cn_report(e["title"], content)
+        assert p.period == pd.Period(year=e["year"], quarter=e["quarter"], freq="Q")
+        profit, eps, shares = p.values["profit"][0], p.values["eps"][0], p.values["wa_shares"][0]
+        assert profit / eps == pytest.approx(shares, rel=0.06), e["title"]  # period-end shares vs the weighted average behind the EPS
+
+
+@saved_glodon
+def test_saved_glodon_figures():
+    def glodon(title):
+        e = next(e for e in json.loads((GLODON / "index.json").read_text(encoding="utf-8")) if e["title"] == title)
+        content = (GLODON / e["file"]).read_bytes()
+        return (parse_cn_express if e["kind"] == "express" else parse_cn_report)(e["title"], content)
+
+    annual = glodon("2025 annual report")
+    assert annual.values["revenue"] == pytest.approx([6068.49345408, 6202.87398982]) and annual.values["eps"] == [0.2467, 0.1513]
+    q1 = glodon("2026 Q1 report")  # the EPS is on the third page of the income statement
+    assert q1.quarterly and q1.values["eps"] == [0.0209, 0.0181] and q1.values["revenue"][0] == pytest.approx(1155.89576812)
+    q3 = glodon("2026 Q3 report")
+    assert q3.values["eps"] == [0.045] and q3.values["wa_shares"] == pytest.approx([1651.944342])

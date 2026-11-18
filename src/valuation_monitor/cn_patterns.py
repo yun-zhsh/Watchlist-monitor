@@ -48,7 +48,9 @@ EXPRESS_EQUITY = r"归属于上市公司股东的所有者权益"
 EXPRESS_SHARES = r"股本"
 
 
-BALANCE_SHEET_TITLE = "合并资产负债表"
+# The consolidated balance sheet, or the only one of a company without subsidiaries (Innolight before its 2017 acquisition);
+# not the parent-company balance sheet that follows the consolidated one
+BALANCE_SHEET_TITLE_RE = re.compile(r"合并资产负债表|(?<!母公司)资产负债表\s*编制单位")
 EQUITY_TOTAL_WORD = "权益合计"
 
 

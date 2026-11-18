@@ -63,12 +63,15 @@ def to_number(token: str) -> float:
     return float(token.replace(",", ""))
 
 
-def row(text: str, name: str, label: str, count: int, start: int = 0, optional: str = "") -> tuple[list[float], int]:
+NOT_A_CHANGE = r"(?![\d.,])(?!\s*-?[\d,]+(?:\.\d+)?\s?%)"  # the whole last number, then no percentage
+
+
+def row(text: str, name: str, label: str, count: int, start: int = 0, optional: str = "", end: str = "") -> tuple[list[float], int]:
     """The `count` numbers that follow `label` (a footnote marker or note number may sit in between).
 
     Returns (numbers, end position of the row in the text); raises if the row cannot be found.
     """
-    m = re.compile(rf"(?:{label})\s*{optional}\s*{cn.NOTE}" + r"\s+".join([NUM] * count)).search(text, start)
+    m = re.compile(rf"(?:{label})\s*{optional}\s*{cn.NOTE}" + r"\s+".join([NUM] * count) + end).search(text, start)
     if not m:
         raise ValueError(f"Row not found in the report: {name}")
     return [to_number(g) for g in m.groups()], m.end()
@@ -111,8 +114,9 @@ def parse_cn_report(title: str, pdf: bytes) -> Parsed:
     eps, _ = row(text, "basic EPS", cn.INCOME_EPS, 2, pos)
     values = {"revenue": [v / MILLION for v in revenue], "profit": [v / MILLION for v in profit], "eps": eps}
 
-    equity, _ = row(text, "equity", cn.EQUITY, 2)
-    share_capital, _ = row(text, "share capital", cn.SHARE_CAPITAL, 2)
+    # Balance sheet rows, not the "major changes" table, which lists beginning and end and then a change in percent (Innolight 2017 Q3)
+    equity, _ = row(text, "equity", cn.EQUITY, 2, end=NOT_A_CHANGE)
+    share_capital, _ = row(text, "share capital", cn.SHARE_CAPITAL, 2, end=NOT_A_CHANGE)
     values["equity"] = [equity[0] / MILLION, equity[1] / MILLION]
     values["wa_shares"] = [share_capital[0] / MILLION]  # period-end total shares (millions)
 

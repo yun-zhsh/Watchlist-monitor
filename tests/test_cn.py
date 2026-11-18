@@ -300,6 +300,27 @@ def test_a_balance_sheet_over_four_pages_is_kept_in_full_and_a_key_table_heading
         "附注",  # 10
     ]
     assert wanted_pages(texts) == [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    # A company without subsidiaries has only a "balance sheet"; the parent-company balance sheet is not a start
+    standalone = ["目录", "1、资产负债表 编制单位：山东中际电工装备股份有限公司", "所有者权益： 股本 216,010,800.00 216,010,800.00", "归属于母公司所有者权益合计 1 2", "附注", "附注", "附注"]
+    assert wanted_pages(standalone) == [1, 2, 3, 4]
+    assert wanted_pages(["目录", "2、母公司资产负债表 编制单位：某公司", "股本 1 2", "附注", "附注", "附注", "附注"]) == []
+
+
+def test_share_capital_comes_from_the_balance_sheet_not_the_major_changes_table(monkeypatch):
+    text = (
+        "主要会计数据和财务指标 本报告期 上年同期 营业收入（元） 1,068,900,000.00 30.00% 归属于上市公司股东的净利润（元） 122,300,000.00 "
+        "基本每股收益（元/股） 0.33 "
+        "报告期主要财务数据、财务指标发生重大变动的情况及原因 项目 期初余额 期末余额 变动幅度 "
+        "股本 216,010,800.00 473,857,056.00 119.37% 主要原因是本期发行股份购买资产 "
+        "1、合并资产负债表 所有者权益： 股本 473,857,056.00 216,010,800.00 资本公积 3,523,845,291.06 232,337,575.52 "
+        "归属于母公司所有者权益合计 4,225,900,000.00 555,782,210.10 "
+        "合并年初到报告期末利润表 一、营业总收入 1,200,000,000.00 50,000,000.00 归属于母公司所有者的净利润 126,000,000.00 1,000,000.00 "
+        "（一）基本每股收益 0.35 0.01 "
+    )
+    monkeypatch.setattr("valuation_monitor.cn_report.read_text", lambda pdf: text)
+    p = parse_cn_report("2017 Q3 report", b"")
+    assert p.values["wa_shares"] == pytest.approx([473.857056])  # period end, not the beginning figure of the changes table
+    assert p.values["equity"] == pytest.approx([4225.9, 555.7822101])
 
 
 @saved_innolight

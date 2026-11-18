@@ -86,19 +86,29 @@ def published_time(listed: pd.Timestamp, last_modified: str | None) -> tuple[pd.
     return listed, LISTING_DATE_BASIS
 
 
+def wanted_pages(texts: list[str]) -> list[int]:
+    """The pages the parser needs: key data table, income statement and balance sheet, plus the next page of each, and a
+    balance sheet that runs over several pages (Innolight: four) in full, up to its equity total."""
+    wanted: set[int] = set()
+    for i, t in enumerate(texts):
+        if cn.is_wanted_page(t):
+            wanted.update({i, i + 1})
+        if cn.BALANCE_SHEET_TITLE in t:
+            for j in range(i, min(i + 6, len(texts))):
+                wanted.add(j)
+                if cn.EQUITY_TOTAL_WORD in texts[j]:
+                    break
+    return sorted(w for w in wanted if w < len(texts))
+
+
 def excerpt_pages(pdf: bytes) -> bytes:
-    """Keep only the pages the parser needs (key data table, income statement, balance sheet, plus the next page of each); the pages are unchanged."""
+    """Keep only the pages the parser needs (see wanted_pages); the pages are unchanged."""
     reader = PdfReader(io.BytesIO(pdf))
     if len(reader.pages) <= 6:
         return pdf  # an express report has two pages; keep the whole file
     texts = [" ".join((p.extract_text() or "").split()) for p in reader.pages]
-    wanted: set[int] = set()
-    for i, t in enumerate(texts):
-        wanted_page = cn.is_wanted_page(t)
-        if wanted_page:
-            wanted.update({i, i + 1})
     writer = PdfWriter()
-    for i in sorted(w for w in wanted if w < len(texts)):
+    for i in wanted_pages(texts):
         writer.add_page(reader.pages[i])
     out = io.BytesIO()
     writer.write(out)

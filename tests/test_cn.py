@@ -240,3 +240,74 @@ def test_saved_glodon_figures():
     assert q1.quarterly and q1.values["eps"] == [0.0209, 0.0181] and q1.values["revenue"][0] == pytest.approx(1155.89576812)
     q3 = glodon("2026 Q3 report")
     assert q3.values["eps"] == [0.045] and q3.values["wa_shares"] == pytest.approx([1651.944342])
+
+
+# --- Innolight (300308.SZ, ChiNext): older report templates and a large balance sheet ---------------------------------------
+
+INNOLIGHT = Path(__file__).parent.parent / "data" / "filings" / "300308.SZ"
+saved_innolight = pytest.mark.skipif(not (INNOLIGHT / "index.json").exists(), reason="no saved Innolight filings (the scheduled update saves them)")
+
+
+def test_thousands_separators_read_as_a_dot_and_spaces_are_repaired():
+    assert clean_text("营业收入（元） 4.842 546 924 23 1,837,163,216.03 163.59%") == "营业收入（元） 4,842,546,924.23 1,837,163,216.03 163.59%"
+    assert clean_text("基本每股收益（元/股） 0.731 0.512 42.77%") == "基本每股收益（元/股） 0.731 0.512 42.77%"  # untouched
+
+
+def test_older_key_tables_label_the_total_and_the_ordinary_shareholders(monkeypatch):
+    text = (
+        "一、主要会计数据和财务指标 本报告期 上年同期 本报告期比上年同期增减 营业总收入（元） 1,398,598,185.75 14,564,576.12 9,502.74% "
+        "归属于公司普通股股东的净利润（元） 147,766,656.23 -4,381,527.36 3,472.49% 基本每股收益（元/股） 0.31 -0.02 1,650.00% "
+        "3、合并利润表 单位：元 项目 本期发生额 上期发生额 一、营业总收入 1,398,598,185.75 14,564,576.12 "
+        "其中：营业收入 1,398,598,185.75 14,564,576.12 利息收入 已赚保费 二、营业总成本 1,243,721,773.73 20,480,646.88 "
+        "归属于母公司所有者的净利润 147,766,656.23 -4,381,527.36 八、每股收益： （一）基本每股收益 0.31 -0.02 "
+        "股本 474,661,948.00 474,661,948.00 资本公积 归属于母公司所有者权益合计 4,176,421,182.93 4,005,858,286.24 "
+    )
+    monkeypatch.setattr("valuation_monitor.cn_report.read_text", lambda pdf: text)
+    p = parse_cn_report("2018 Q1 report", b"")
+    assert p.values["revenue"] == pytest.approx([1398.59818575, 14.56457612]) and p.values["eps"] == [0.31, -0.02]
+    assert p.values["profit"] == pytest.approx([147.76665623, -4.38152736])
+
+
+def test_eps_rounded_to_two_decimals_in_the_income_statement_keeps_the_precise_figure(monkeypatch):
+    text = (
+        "主要会计数据和财务指标 2019 年 2018 年 本年比上年增减 营业收入（元） 4,757,567,128.02 5,156,511,018.44 -7.74% "
+        "归属于上市公司股东的净利润（元） 516,616,327.08 668,094,659.05 -22.67% 基本每股收益（元/股） 0.731 0.951 -23.13% "
+        "合并利润表 一、营业总收入 4,757,567,128.02 5,156,511,018.44 其中：营业收入 4,757,567,128.02 5,156,511,018.44 "
+        "归属于母公司所有者的净利润 516,616,327.08 668,094,659.05 （一）基本每股收益 0.73 0.95 "
+        "股本 713,031,166.00 475,354,111.00 资本公积 归属于母公司所有者权益合计 7,224,569,045.45 6,736,004,813.58 "
+    )
+    monkeypatch.setattr("valuation_monitor.cn_report.read_text", lambda pdf: text)
+    assert parse_cn_report("2019 annual report", b"").values["eps"] == [0.731, 0.95]
+    with pytest.raises(ValueError, match="eps"):  # a real difference still fails
+        monkeypatch.setattr("valuation_monitor.cn_report.read_text", lambda pdf: text.replace("（一）基本每股收益 0.73", "（一）基本每股收益 0.74"))
+        parse_cn_report("2019 annual report", b"")
+
+
+def test_a_balance_sheet_over_four_pages_is_kept_in_full_and_a_key_table_heading_keeps_the_next_page():
+    from valuation_monitor.providers.cninfo import wanted_pages
+
+    texts = [
+        "目录",  # 0
+        "四、主要会计数据和财务指标",  # 1: the heading ends the page...
+        "营业收入（元） 43,076,710.47 58,185,324.15",  # 2: ...and the table starts on the next
+        "管理层讨论与分析",  # 3
+        "1、合并资产负债表 流动资产： 货币资金 53,532,493,243.56",  # 4
+        "非流动资产： 固定资产",  # 5
+        "流动负债： 短期借款",  # 6
+        "所有者权益： 股本 1,177,909,641.00 1,111,118,334.00",  # 7
+        "资本公积 归属于母公司所有者权益合计 1 2",  # 8
+        "现金流量表",  # 9
+        "附注",  # 10
+    ]
+    assert wanted_pages(texts) == [1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+
+@saved_innolight
+def test_saved_innolight_reports_parse():
+    index = json.loads((INNOLIGHT / "index.json").read_text(encoding="utf-8"))
+    assert len(index) >= 45
+    for e in index:
+        content = (INNOLIGHT / e["file"]).read_bytes()
+        p = parse_cn_express(e["title"], content) if e["kind"] == "express" else parse_cn_report(e["title"], content)
+        assert p.period == pd.Period(year=e["year"], quarter=e["quarter"], freq="Q")
+        assert {"revenue", "profit", "eps", "equity", "wa_shares"} <= p.values.keys()

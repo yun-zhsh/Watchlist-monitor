@@ -92,3 +92,8 @@ stocks:
     market: CN   # Chinese periodic reports and express reports on CNINFO, like Hikvision
     filing_format: cn_report   # RMB; revenue is the operating revenue (the total also has the interest income of a small finance business)
     metrics: [pe, ps, pb]
+  - symbol: 300308.SZ
+    name: Zhongji Innolight
+    market: CN   # ChiNext; Chinese periodic reports on CNINFO. Optical transceivers since the 2017 acquisition of Suzhou Innolight
+    filing_format: cn_report   # RMB; no Non-GAAP figures
+    metrics: [pe, ps, pb]

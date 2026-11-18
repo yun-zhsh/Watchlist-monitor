@@ -29,7 +29,36 @@ def test_nothing_is_published_after_a_code_change_unless_the_tests_pass():
     assert build["needs"] == "tests"
     condition = build["if"]
     assert "needs.tests.result == 'success'" in condition and "needs.tests.result == 'skipped'" in condition  # not "always run"
-    assert pages["jobs"]["deploy"]["needs"] == "build"  # a skipped build skips the deployment
+    deploy = pages["jobs"]["deploy"]
+    assert deploy["needs"] == "build"
+    assert deploy["if"] == "${{ !cancelled() && needs.build.result == 'success' }}"  # published only after a good build
+
+
+def upstream(jobs, name):
+    """Every job that `name` needs, directly or through other jobs."""
+    needs = jobs[name].get("needs", [])
+    direct = [needs] if isinstance(needs, str) else list(needs)
+    return set(direct).union(*(upstream(jobs, job) for job in direct))
+
+
+def test_a_job_after_a_skippable_job_is_not_skipped_with_it():
+    # GitHub skips a job when any job upstream of it, however far back, was skipped, unless the job has a condition with a
+    # status check function. The scheduled runs skip "tests", which once left the deployment skipped on every scheduled
+    # run, while the runs still showed as successful.
+    for name in ("ci.yml", "pages.yml"):
+        jobs = load(name)["jobs"]
+        for job_name, job in jobs.items():
+            skippable = [up for up in upstream(jobs, job_name) if "if" in jobs[up]]
+            if skippable:
+                condition = str(job.get("if", ""))
+                assert "!cancelled()" in condition or "always()" in condition, (name, job_name, skippable)
+
+
+def test_the_scheduled_run_reaches_the_deployment():
+    jobs = load("pages.yml")["jobs"]
+    assert "deploy" in jobs and upstream(jobs, "deploy") == {"build", "tests"}
+    assert "schedule" in str(jobs["tests"]["if"])  # the job a scheduled run skips is upstream of the deployment...
+    assert "!cancelled()" in jobs["deploy"]["if"]  # ...so the deployment must not inherit the skip
 
 
 def test_the_database_size_check_runs_before_the_data_is_committed():

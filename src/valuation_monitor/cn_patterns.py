@@ -22,7 +22,8 @@ BODY_TEXT_WORD = "正文"  # a report is published twice, as "full text" and as 
 
 # --- text of the reports ---------------------------------------------------------------------------------
 # A report typeset in Hong Kong fonts (Bank of Nanjing's 2017 annual report) reads as traditional characters once its fonts
-# are decoded (cid_fonts.py), and some of its punctuation as look-alike glyphs (δ…ε for （…）, Ƚ for 、, φ for ：, θ for ，).
+# are decoded (cid_fonts.py), and some of its punctuation as look-alike Greek and Latin letters (round brackets, the
+# enumeration comma, the colon and the comma); TO_SIMPLIFIED maps those back as well.
 # Such a document is detected by traditional words that never occur in simplified text, and the characters of the labels
 # the parser looks for are converted to simplified ones; nothing else changes.
 TRADITIONAL_RE = re.compile(r"營業收入|歸屬於")
@@ -31,11 +32,11 @@ TO_SIMPLIFIED = str.maketrans(
     "会计数据财务标营业归属于东净润释权优续债单币总资产负并损内个为与结余准备际税经",
 )
 TO_SIMPLIFIED.update(str.maketrans("δεȽφθ", "（）、：，"))
-TRADITIONAL_ENUMERATION_COMMA = r"\s*Ƚ\s*"  # "一 Ƚ營業收入": the spaces around it go too, so it reads "一、营业收入"
+TRADITIONAL_ENUMERATION_COMMA = r"\s*Ƚ\s*"  # the look-alike enumeration comma comes with spaces around it after an item number; they are removed with it
 CJK_CHAR = r"[一-鿿]"  # a Chinese character: a page without any has no usable text layer (a scan)
 CJK_GAP_RE = r"(?<=[一-鿿（）]) (?=[一-鿿（）])"  # PDF text extraction inserts spaces where lines wrap inside Chinese text
 # Annual and half-year statements have a note column after the item name: a Chinese numeral in brackets or followed by a separator, then the note number.
-# Banks' audited statements give just the note number ("基本每股收益 47 1.76 1.83", "交易性金融资产 7(a) ..."): a one- or
+# Banks' audited statements give just the note number ("basic EPS 47 1.76 1.83", "trading assets 7(a) ..."): a one- or
 # two-digit integer is a note only when an amount with a thousands separator or decimals follows.
 NOTE = (
     r"(?:(?:[（(][一二三四五六七八九十]+[)）]|[一二三四五六七八九十]+、)\s?\d+(?:、\d+)*\s+"
@@ -51,11 +52,11 @@ KEY_REVENUE = r"营业(?:总)?收入（元）"  # older ChiNext reports (Innolig
 KEY_PROFIT = r"归属于(?:上市)?公司(?:普通股)?股东的净利润（元）"  # older reports (Innolight) say "the company's ordinary shareholders"
 KEY_EPS = r"基本每股收益（元\s*/\s*股）"
 THOUSAND = r"(?:\s*[（(]\s*千元\s*[)）])?"
-# a table row: the number is followed by another one (the prose of a bank report also says "营业收入409.25亿元")
+# a table row: the number is followed by another one (the prose of a bank report also gives the revenue in hundred million yuan)
 TABLE_ROW = r"(?=\s*-?[\d,]+(?:\.\d+)?\s+[-(\d])"
 KEY_REVENUE_FALLBACK = r"营业收入" + THOUSAND + TABLE_ROW
-KEY_PROFIT_FALLBACK = r"归属于(?:上市公司|母公司)股东的?净利润" + THOUSAND + TABLE_ROW  # "...股东净利润" without 的 in some bank tables
-KEY_EPS_FALLBACK = r"基本每股收益\s*[（(]\s*(?:人民币)?元\s*(?:[/／╱]\s*股\s*)?[)）]"  # "元╱股", "元 ／ 股" or just "元"
+KEY_PROFIT_FALLBACK = r"归属于(?:上市公司|母公司)股东的?净利润" + THOUSAND + TABLE_ROW  # some bank tables leave out the particle before "net profit"
+KEY_EPS_FALLBACK = r"基本每股收益\s*[（(]\s*(?:人民币)?元\s*(?:[/／╱]\s*股\s*)?[)）]"  # yuan per share with other slashes, or just yuan
 INCOME_REVENUE = r"一、营业(?:总)?收入"
 # Banks' audited statements do not number the items: the operating revenue is the row before the net interest income
 INCOME_REVENUE_FALLBACK = r"营业收入"
@@ -69,7 +70,7 @@ INCOME_OPERATING_REVENUE = r"其中\s*[：:]\s*营业收入"
 BEFORE_OPERATING_REVENUE = r"[^、]{0,80}?"  # a page footer may sit between the total and the operating revenue, but no other numbered item
 INCOME_EPS = r"基本每股收益(?:\s*[（(]\s*元\s*/\s*股\s*[)）])?"
 EQUITY = r"归属于母公司(?:所有者|股东)权益合计"
-EQUITY_FALLBACK = r"归属于母公司(?:股东的|股权)权益(?:合计)?"  # banks' reports (sic: "股权权益"; 2019 H1 without "total")
+EQUITY_FALLBACK = r"归属于母公司(?:股东的|股权)权益(?:合计)?"  # banks' reports (a typo in some; 2019 H1 without "total")
 INCOME_EPS_FALLBACK = r"基本每股收益(?:及|和)稀释每股收益(?:\s*[（(]\s*人民币元\s*/\s*股\s*[)）])?"  # one row for both (banks, 2014-2017)
 SHARE_CAPITAL = r"(?:实收资本（或股本）|(?<!总)股本)"
 SHARE_CAPITAL_FALLBACK = r"普通股总股本"  # a bank's key-data table (Bank of Nanjing's 2019 Q1 report)
@@ -80,10 +81,15 @@ OTHER_EQUITY_INSTRUMENTS = r"其他权益工具(?!投资)"
 # out, but only in a report that gives the equity of the ordinary shareholders separately
 ORDINARY_SHAREHOLDERS_RE = re.compile(r"普通股股东的(?:每股)?(?:净资产|所有者权益)")
 PREFERENCE_SHARES = r"优先股"
+NO_AMOUNT = r"(?:[-–—－]|不适用)"  # an empty cell: a dash, or "not applicable"
 PERPETUAL_BONDS = r"永续债"
-# The unit of the amounts: the last unit statement before a row. Thousand yuan in bank reports, yuan elsewhere
-# (A row whose own name says yuan, e.g. "营业收入（元）", is in yuan whatever was stated before it: YUAN_LABEL_RE.)
-UNIT_RE = re.compile(r"(千元|千股)|(万元|万股)|(亿元|亿股)|单位\s*[：:]\s*(?:人民币)?\s*(?:元|股)(?![/／╱])")
+# The unit of the amounts in a periodic report: the last unit statement before a row. Yuan, or thousand yuan in bank
+# reports: a "unit: RMB thousand" line in its several wordings, a statement page header "RMB thousand", or "(thousand
+# yuan)" after a row name. Amounts in the prose (in hundred million yuan) are not unit statements.
+UNIT_RE = re.compile(
+    r"(单位\s*(?:均为|为)?\s*[：:]?\s*(?:人民币)?\s*千元|人民币千元|千元人民币|[（(]\s*千元\s*[)）])"
+    r"|单位\s*(?:均为|为)?\s*[：:]\s*(?:人民币)?\s*元(?![/／╱])"
+)
 YUAN_LABEL_RE = re.compile(r"[（(]\s*元\s*[)）]")
 
 EXPRESS_REVENUE = r"营业总收入"

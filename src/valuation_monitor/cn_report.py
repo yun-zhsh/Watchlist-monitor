@@ -35,7 +35,7 @@ NUM = r"(-?[\d,]+(?:\.\d+)?|\(\s*[\d,]+(?:\.\d+)?\s*\))"
 MILLION = 1e6
 TEN_THOUSAND = 1e4  # the unit of some express reports
 HUNDRED_MILLION = 1e8  # the unit of banks' express reports
-UNIT_SIZES = (1e3, TEN_THOUSAND, HUNDRED_MILLION)  # the groups of cn.UNIT_RE; a match of none of them means yuan
+UNIT_SIZES = (1e3,)  # the groups of cn.UNIT_RE (thousand yuan); a match of none of them means yuan
 # Titles are English and built by the CNINFO provider: "2026 Q3 report", "2025 annual report", "2025 annual express report"
 REPORT_TITLE_RE = re.compile(r"^(?P<year>\d{4}) (?P<kind>Q1|H1|Q3|annual) report$")
 EXPRESS_TITLE_RE = re.compile(r"^(?P<year>\d{4}) (?P<kind>H1|annual) express report$")
@@ -134,7 +134,7 @@ def balance_row(text: str, name: str, labels: tuple[str, ...]) -> tuple[list[flo
     """A balance sheet row (yuan): this and the earlier balance sheet date.
 
     Not a row of a "major changes" table, which gives the end of the period and then a change: in percent (Innolight 2017
-    Q3), or as a bare number with decimals after an amount without them (Bank of Nanjing 2016 Q3: "股本 6,058,720 80.00").
+    Q3), or as a bare number with decimals after an amount without them (Bank of Nanjing 2016 Q3: share capital "6,058,720 80.00").
     """
     start = 0
     while True:
@@ -147,12 +147,12 @@ def balance_row(text: str, name: str, labels: tuple[str, ...]) -> tuple[list[flo
         return [to_number(g) * unit for g in m.groups()], m.end()
 
 
-def preference_and_perpetual(text: str, equity_at: int) -> list[float]:
+def preference_and_perpetual(text: str, equity_at: int) -> tuple[list[float], bool]:
     """Preference shares plus perpetual bonds (yuan, this and the earlier balance sheet date) in the equity section that ends at `equity_at`.
 
     They are rows under the other equity instruments, after the share capital. Where the other equity instruments are not
     broken down, all of them, if the report gives the equity of the ordinary shareholders separately (so it does not count
-    them as theirs). A company without them gives [0, 0].
+    them as theirs). A company without them gives [0, 0]. The second item says whether the rows were found.
     """
     section_start = max(0, equity_at - 4000)
     section = text[section_start:equity_at]
@@ -161,8 +161,8 @@ def preference_and_perpetual(text: str, equity_at: int) -> list[float]:
         pass
     total = [0.0, 0.0]
     if other is None:
-        return total
-    dash = r"(?:[-–—－]|不适用)"
+        return total, False
+    dash = cn.NO_AMOUNT
     broken_down = False
     for label in (cn.PREFERENCE_SHARES, cn.PERPETUAL_BONDS):
         m = re.compile(rf"{label}\s+({NUM[1:-1]}|{dash})\s+({NUM[1:-1]}|{dash})").search(section, other.end())
@@ -174,8 +174,8 @@ def preference_and_perpetual(text: str, equity_at: int) -> list[float]:
                     total[i] += to_number(g) * unit
     if not broken_down and cn.ORDINARY_SHAREHOLDERS_RE.search(text):
         unit = unit_at(text, section_start + other.start(1))
-        total = [to_number(g) * unit for g in other.groups()]
-    return total
+        return [to_number(g) * unit for g in other.groups()], False
+    return total, broken_down
 
 
 def decimals(x: float) -> int:
@@ -243,12 +243,16 @@ def parse_cn_report(title: str, pdf: bytes) -> Parsed:
     # Balance sheet rows, not the "major changes" table, which lists beginning and end and then a change in percent (Innolight 2017 Q3)
     equity, _ = balance_row(text, "equity", (cn.EQUITY, cn.EQUITY_FALLBACK))
     # PB is for the ordinary shareholders: preference shares and perpetual bonds (banks) are left out. They are listed in the
-    # balance sheet, which is not always the first table with the equity total (an analysis table can come first)
+    # balance sheet, which is not always the first table with the equity total (an analysis table can come first, with the
+    # other equity instruments but not their breakdown): the first breakdown found is used, the whole row only if there is none
     excluded = [0.0, 0.0]
     for total_row in re.finditer(rf"(?:{cn.EQUITY}|{cn.EQUITY_FALLBACK})\s*{cn.NOTE}{NUM}\s+{NUM}", text):
-        excluded = preference_and_perpetual(text, total_row.start())
-        if any(excluded):
+        amounts, broken_down = preference_and_perpetual(text, total_row.start())
+        if broken_down:
+            excluded = amounts
             break
+        if not any(excluded):
+            excluded = amounts
     if any(excluded):
         equity = [e - x for e, x in zip(equity, excluded)]
     share_capital, _ = balance_row(text, "share capital", (cn.SHARE_CAPITAL, cn.SHARE_CAPITAL_FALLBACK))

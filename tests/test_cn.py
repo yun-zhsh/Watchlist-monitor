@@ -2,6 +2,7 @@
 
 import io
 import json
+import re
 from datetime import datetime
 from pathlib import Path
 
@@ -409,7 +410,11 @@ def test_fonts_without_a_unicode_map_are_decoded_with_adobe_tables():
     assert read_text(cid_font_pdf(cids, cid_set=False)) == "营业收入"  # without a CIDSet the whole table is used
     # traditional Chinese fonts (Adobe-CNS1) as well
     cns1 = {chr(int(u, 16)): cid for cid, u in cid_to_unicode("CNS1").items() if len(u) == 4}
-    assert read_text(cid_font_pdf([cns1[c] for c in "營業收入"], ordering="CNS1")) == "營業收入"
+    reader = PdfReader(io.BytesIO(cid_font_pdf([cns1[c] for c in "營業收入"], ordering="CNS1")))
+    add_missing_unicode_maps(reader)
+    assert reader.pages[0].extract_text() == "營業收入"
+    # read_text then converts the traditional item names to simplified ones (cn_patterns.TO_SIMPLIFIED)
+    assert read_text(cid_font_pdf([cns1[c] for c in "營業收入"], ordering="CNS1")) == "营业收入"
 
 
 def test_fonts_that_have_a_unicode_map_or_another_collection_are_left_alone():
@@ -446,3 +451,149 @@ def test_a_scanned_listing_is_skipped_for_a_same_day_listing_with_text(tmp_path,
     http.lists[""], http.lists["业绩快报"] = [row("7", "2018年第一季度报告", ms("2018-04-26"), "2018-04-26")], []
     found = CninfoProvider(http, single).results_announcements("002415.SZ", datetime(2018, 1, 1))
     assert [f.url.rsplit("/", 1)[1] for f in found] == ["7.PDF"]
+
+
+# --- Bank of Nanjing (601009.SS): a bank's reports, in thousand yuan -------------------------------------------------------
+NJ_FOLDER = Path(__file__).parent.parent / "data" / "filings" / "601009.SS"
+nj_saved = pytest.mark.skipif(not (NJ_FOLDER / "index.json").exists(), reason="no saved Bank of Nanjing filings")
+
+# 2025 annual report: key table and audited statements (no item numbers, note numbers before the amounts, page headers with the unit)
+NJ_2025_ANNUAL = (
+    "主要会计数据和财务指标秦淮河一、 可比期间主要会计数据和财务指标单位 ：人民币千元主要会计数据 2025年 2024年同比增减(%) 2023年"
+    "经营业绩营业收入 55,541,916 50,273,070 10.48 45,159,511 营业利润 26,140,228 24,688,181 5.88 21,849,721 "
+    "归属于上市公司股东净利润 21,807,089 20,176,728 8.08 18,502,084 "
+    "每股计基本每股收益（元╱股） 1.76 1.83 -3.83 1.68 归属于上市公司普通股股东的每股净资产（元╱股） 14.66 14.33 2.30 13.50 "
+    "规模指标 2025年末 2024年末比期初增减(%) 2023年末普通股股本 12,363,567 11,067,585 11.71 10,343,733 "
+    "管理层讨论与分析报告期内，公司营业收入555.42亿元，较去年增加52.69亿元。单位 ：人民币千元 "
+    "股东权益股本 30 12,363,567 11,067,585 其他权益工具 31 24,973,814 30,941,010 其中 ：优先股 4,976,003 9,849,813 "
+    "永续债 19,997,811 19,997,811 资本公积 32 42,866,348 32,424,371 未分配利润 36 77,112,664 70,741,583 "
+    "归属于母公司股东权益合计 206,301,002 188,529,458 少数股东权益 37 4,003,810 3,426,919 "
+    "合并资产负债表（续） 2025年12月31日人民币千元附注五 2025年度 2024年度营业收入 55,541,916 50,273,070 "
+    "利息净收入 39 34,901,851 26,626,683 归属于母公司股东的净利润 21,807,089 20,176,728 少数股东损益 250,319 188,206 "
+    "每股收益（人民币元╱股）基本每股收益 47 1.76 1.83 稀释每股收益 47 1.68 1.61 "
+)
+
+
+def test_bank_annual_report_in_thousand_yuan(monkeypatch):
+    monkeypatch.setattr("valuation_monitor.cn_report.read_text", lambda pdf: NJ_2025_ANNUAL)
+    p = parse_cn_report("2025 annual report", b"")
+    assert p.values["revenue"] == pytest.approx([55541.916, 50273.07])  # the operating income, not the amount in hundred million yuan in the prose
+    assert p.values["profit"] == pytest.approx([21807.089, 20176.728])
+    assert p.values["eps"] == [1.76, 1.83]  # the note number 47 before the figures is skipped
+    # equity of the ordinary shareholders: without the preference shares and perpetual bonds
+    assert p.values["equity"] == pytest.approx([(206301002 - 4976003 - 19997811) / 1e3, (188529458 - 9849813 - 19997811) / 1e3])
+    assert p.values["wa_shares"] == pytest.approx([12363.567])
+    assert p.values["equity"][0] / p.values["wa_shares"][0] == pytest.approx(14.66, abs=0.01)  # the bank's own book value per ordinary share
+
+
+# 2017 Q3 report: the key table gives only year-to-date figures; the income statement has four columns, the single quarter first
+NJ_2017_Q3 = (
+    "主要财务数据单位：千元人民币本报告期末上年度期末本报告期末比上年度期末增减(%) 归属于母公司股东的权益 66,113,626 61,921,540 6.77 "
+    "归属于母公司普通股股东的每股净资产(元) 6.63 6.14 7.98 普通股总股本 8,482,208 6,058,720 40.00 "
+    "每股经营活动产生的现金流量净额(元) -1.71 6.71 -125.48 年初至报告期期末（1-9 月） 营业收入 18,567,114 21,060,894 -11.84 "
+    "归属于母公司股东的净利润 7,433,096 6,352,072 17.02 基本每股收益(元) 0.88 0.75 17.33 "
+    "合并资产负债表单位：千元人民币股本 8,482,208 6,058,720 其他权益工具 9,849,813 9,849,813 资本公积 15,199,537 15,199,537 "
+    "归属于母公司股东的权益合计 66,113,626 61,921,540 少数股东权益 563,286 456,241 "
+    "合并利润表单位：千元人民币项目本期金额（7-9 月）上期金额（7-9 月）年初至报告期期末金额（1-9 月）上年年初至报告期期末金额（1-9 月）"
+    "一、营业收入 6,142,031 6,083,909 18,567,114 21,060,894 利息净收入 4,955,331 4,862,612 15,047,925 15,990,232 "
+    "归属于母公司股东的净利润 2,328,569 1,990,249 7,433,096 6,352,072 少数股东损益 27,244 29,408 83,080 81,157 "
+    "六、每股收益(金额单位为人民币元/股) 基本每股收益及稀释每股收益 0.28 0.24 0.88 0.75 "
+)
+
+
+def test_bank_q3_single_quarter_from_a_four_column_income_statement(monkeypatch):
+    monkeypatch.setattr("valuation_monitor.cn_report.read_text", lambda pdf: NJ_2017_Q3)
+    p = parse_cn_report("2017 Q3 report", b"")
+    assert p.values["revenue"] == pytest.approx([6142.031])  # not the year-to-date 18,567.114 of the key table
+    assert p.values["profit"] == pytest.approx([2328.569])
+    assert p.values["eps"] == [0.28]
+    # no breakdown of the other equity instruments, but the report gives the ordinary shareholders' figures: all of them are deducted
+    assert p.values["equity"] == pytest.approx([(66113626 - 9849813) / 1e3, (61921540 - 9849813) / 1e3])
+    assert p.values["wa_shares"] == pytest.approx([8482.208])
+    assert p.quarterly
+
+
+def test_other_equity_instruments_stay_without_a_breakdown_or_ordinary_figures(monkeypatch):
+    text = NJ_2017_Q3.replace("归属于母公司普通股股东的每股净资产(元) 6.63 6.14 7.98 ", "")
+    monkeypatch.setattr("valuation_monitor.cn_report.read_text", lambda pdf: text)
+    assert parse_cn_report("2017 Q3 report", b"").values["equity"] == pytest.approx([66113.626, 61921.54])
+
+
+def test_bank_balance_rows_skip_a_change_column_without_a_percent_sign(monkeypatch):
+    # 2016 Q3: the "major changes" table comes first and gives the change as a bare number with decimals
+    text = NJ_2017_Q3.replace("主要财务数据", "股本 6,058,720 80.00 转增股数 主要财务数据", 1)
+    monkeypatch.setattr("valuation_monitor.cn_report.read_text", lambda pdf: text)
+    assert parse_cn_report("2017 Q3 report", b"").values["wa_shares"] == pytest.approx([8482.208])
+
+
+def test_yuan_reports_are_not_rescaled_by_amounts_in_the_prose(monkeypatch):
+    # a yuan report that mentions ten thousand or hundred million yuan between the unit statement and a row
+    text = GLODON_KEY_TABLE + GLODON_INCOME + "单位：元 本期回购股份金额 3.5 亿元，合计 9,000 万元。 " + GLODON_BALANCE
+    monkeypatch.setattr("valuation_monitor.cn_report.read_text", lambda pdf: text)
+    p = parse_cn_report("2025 annual report", b"")
+    assert p.values["equity"] == pytest.approx([6048.1814257, 5959.19971788])
+    assert p.values["wa_shares"] == pytest.approx([1651.944342])
+
+
+def test_traditional_character_labels_are_converted():
+    from valuation_monitor import cn_patterns as cn
+    from valuation_monitor.cn_report import clean_text
+
+    # the 2017 annual report, typeset in Hong Kong fonts, with look-alike punctuation glyphs
+    raw = "一 Ƚ營業收入 24,838,737 26,616,410 歸屬於母公司股東的淨利潤 9,668,173 8,261,635 基本每股收益δ元╱股ε 1.09 0.95"
+    assert cn.TRADITIONAL_RE.search(raw)
+    text = clean_text(re.sub(cn.TRADITIONAL_ENUMERATION_COMMA, "Ƚ", raw).translate(cn.TO_SIMPLIFIED))
+    assert text == "一、营业收入 24,838,737 26,616,410 归属于母公司股东的净利润 9,668,173 8,261,635 基本每股收益（元╱股） 1.09 0.95"
+    assert not cn.TRADITIONAL_RE.search("一、营业收入 归属于母公司股东的净利润")  # simplified text is never converted
+
+
+def test_bank_express_report_in_hundred_million_yuan(monkeypatch):
+    text = (
+        "一、2025年度主要财务数据和指标单位：人民币亿元项目本报告期（未经审计）上年同期（经审计）增减变动幅度（%）"
+        "营业收入 555.40 502.73 10.48 营业利润 261.74 246.88 6.02 归属于上市公司股东的净利润 218.07 201.77 8.08 "
+        "归属于上市公司股东的扣除非经常性损益的净利润 216.78 199.37 8.73 基本每股收益（元/股） 1.76 1.83 -3.83 "
+        "总资产 30,224.24 25,914.00 16.63 归属于上市公司股东的所有者权益 2,065.30 1,885.29 9.55 "
+        "归属于上市公司普通股股东的所有者权益 1,815.30 1,586.29 14.44 普通股股本 123.64 110.68 11.71 "
+    )
+    monkeypatch.setattr("valuation_monitor.cn_report.read_text", lambda pdf: text)
+    p = parse_cn_express("2025 annual express report", b"")
+    assert p.values["revenue"] == pytest.approx([55540.0, 50273.0])
+    assert p.values["profit"] == pytest.approx([21807.0, 20177.0])
+    assert p.values["eps"] == [1.76, 1.83]
+    assert p.values["equity"] == pytest.approx([181530.0, 158629.0])  # the ordinary shareholders' equity
+    assert p.values["wa_shares"] == pytest.approx([12364.0])
+    # share capital labelled in hundred million shares in older ones, and an EPS row with a note marker
+    older = "单位：人民币亿元 营业收入 134.96 124.25 8.62 归属于母公司股东的净利润 59.78 51.05 17.10 基本每股收益（元）注： 0.70 0.60 16.67 " \
+        "归属于母公司股东的净资产 718.37 673.40 6.68 股本（亿股） 84.82 84.82 -"
+    monkeypatch.setattr("valuation_monitor.cn_report.read_text", lambda pdf: older)
+    p = parse_cn_express("2018 H1 express report", b"")
+    assert p.values["eps"] == [0.70, 0.60] and p.values["wa_shares"] == pytest.approx([8482.0])
+    assert p.values["equity"] == pytest.approx([71837.0, 67340.0])
+
+
+@nj_saved
+def test_saved_bank_of_nanjing_reports_parse():
+    index = json.loads((NJ_FOLDER / "index.json").read_text(encoding="utf-8"))
+    parsed = {}
+    for e in index:
+        content = (NJ_FOLDER / e["file"]).read_bytes()
+        parsed[e["title"]] = (parse_cn_express if e["kind"] == "express" else parse_cn_report)(e["title"], content)
+    annual = parsed["2025 annual report"].values
+    assert annual["revenue"] == pytest.approx([55541.916, 50273.07])
+    assert annual["profit"] == pytest.approx([21807.089, 20176.728])
+    assert annual["eps"] == [1.76, 1.83]
+    assert annual["equity"] == pytest.approx([181327.188, 158681.834])
+    assert annual["wa_shares"] == pytest.approx([12363.567])
+    # the 2017 annual report reads as traditional characters once its fonts are decoded
+    assert parsed["2017 annual report"].values["revenue"] == pytest.approx([24838.737, 26616.41])
+    assert parsed["2017 annual report"].values["equity"] == pytest.approx([57490.665, 52071.727])
+    # a Q3 key table with only year-to-date figures
+    assert parsed["2015 Q3 report"].values["revenue"] == pytest.approx([5689.633])
+    # net profit / EPS stays near the share count: it is higher where preference dividends and perpetual bond interest are
+    # deducted from EPS (up to 6.5%) and lower where shares were issued during the period (weighted average, down to -12%);
+    # the 2017 half-year report gives EPS after the July 2017 bonus issue against the share count of 30 June (x1.4)
+    for title, p in parsed.items():
+        v = p.values
+        ratio = v["profit"][0] / v["eps"][0] / v["wa_shares"][0]
+        expected = 1.4 if title == "2017 H1 report" else 1.0
+        assert 0.87 * expected < ratio < 1.07 * expected, title

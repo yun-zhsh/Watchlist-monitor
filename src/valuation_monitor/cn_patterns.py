@@ -10,8 +10,10 @@ from __future__ import annotations
 import re
 
 # --- CNINFO announcement titles -------------------------------------------------------------------------
-TITLE_RE = re.compile(r"^(?P<year>\d{4})年(?P<kind>第一季度|一季度|半年度|第三季度|三季度|年度)报告(?:全文|正文)?(?:（更新后）)?$")
-EXPRESS_RE = re.compile(r"^(?P<year>\d{4})年(?P<kind>半年度|度)业绩快报$")
+# Shanghai-listed companies put their full company name before the title (Bank of Nanjing from 2021 on)
+COMPANY_PREFIX = r"(?:[一-鿿]+股份有限公司)?"
+TITLE_RE = re.compile(r"^" + COMPANY_PREFIX + r"(?P<year>\d{4})年(?P<kind>第一季度|一季度|半年度|第三季度|三季度|年度)报告(?:全文|正文)?(?:（更新后）)?$")
+EXPRESS_RE = re.compile(r"^" + COMPANY_PREFIX + r"(?P<year>\d{4})年(?P<kind>半年度|度)业绩快报(?:公告)?$")  # Shanghai: "... announcement"
 QUARTER_OF = {"第一季度": 1, "一季度": 1, "半年度": 2, "第三季度": 3, "三季度": 3, "年度": 4, "度": 4}
 # Titles containing any of these are summaries, English translations, ESG reports, corrections and the like.
 EXCLUDED_TITLE_WORDS = ("摘要", "英文", "ESG", "社会责任", "内部控制", "审计", "环境", "更正", "取消", "补充", "说明", "预告")

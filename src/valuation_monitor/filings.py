@@ -147,6 +147,7 @@ class Announcement:
     shares_basis: str = ""  # period the disclosed weighted average shares refer to: empty means this period, "full year" means the full-year figure is disclosed (Q4)
     shares_label: str = "basic EPS weighted average shares"  # what kind of share count the filing discloses (A-share companies disclose the period-end total shares)
     note: str = ""  # explanation of the publication time etc.
+    per_share_factors: tuple[float, float] = (1.0, 1.0)  # set by adjust_for_splits: what per-share figures were divided by (this and the previous period; prior year)
 
     @property
     def available(self) -> pd.Timestamp:
@@ -167,6 +168,7 @@ class QuarterValue:
     available: pd.Timestamp
     published: pd.Timestamp  # publication time of the earliest filing that published this value
     observations: list[Observation] = field(default_factory=list)
+    factor: float = 1.0  # what the filing's figure was divided by for splits (per-share data), to show the original figure
 
     @property
     def max_deviation(self) -> float:
@@ -335,7 +337,7 @@ def parse_announcement(filing: Filing, fmt: str = "highlights", market: Market =
         parsed = parse_cn_express(filing.title, filing.content) if "express" in filing.title else parse_cn_report(filing.title, filing.content)
         return Announcement(
             parsed.period, filing.published, filing.url, parsed.currency, parsed.quarterly, parsed.values, market.key,
-            filing.provisional, "", "period-end total shares", filing.note,
+            filing.provisional, "", PERIOD_END_SHARES, filing.note,
         )
     if fmt in ("press_release", "us_press_release", "us_gaap_statements", "kifrs_statements"):  # the parse result carries its own reporting period and whether it is a single quarter
         if fmt == "press_release":
@@ -370,24 +372,97 @@ def parse_announcement(filing: Filing, fmt: str = "highlights", market: Market =
     return Announcement(period, filing.published, filing.url, currency, quarterly, values, market.key, False, basis)
 
 
-def split_factor(published: pd.Timestamp, splits: pd.Series) -> float:
-    """The factor by which per-share data in the filing must be divided for splits that happened after the filing was published."""
+PERIOD_END_SHARES = "period-end total shares"
+PRIOR_BASIS_TOLERANCE = 0.05  # relative: a prior-year EPS vs the earlier filing's figure for that period (both rounded the same way)
+CURRENT_BASIS_TOLERANCE = 0.15  # relative: net profit / EPS vs the filing's share count (period-end shares differ from the weighted average)
+
+
+def split_factor(after: pd.Timestamp, splits: pd.Series) -> float:
+    """The product of the splits that took effect after this time: what a per-share figure on the share basis of that time
+    must be divided by (and a share count multiplied by) to be on the current basis of the split-adjusted prices."""
     if splits.empty:
         return 1.0
-    after = splits[splits.index > published.normalize()]
-    return float(after.prod()) if len(after) else 1.0
+    later = splits[splits.index > after.normalize()]
+    return float(later.prod()) if len(later) else 1.0
+
+
+def _snap(needed: float, candidates: set[float], usual: float, tolerance: float) -> float:
+    """The candidate factor closest to what the evidence needs; the usual one unless another fits clearly better."""
+    best = min(candidates, key=lambda c: abs(c / needed - 1))
+    if best == usual or abs(best / needed - 1) > tolerance or abs(best / needed - 1) >= abs(usual / needed - 1):
+        return usual
+    return best
+
+
+def per_share_basis(a: Announcement, earlier: list[Announcement], splits: pd.Series, shares_factor: float) -> tuple[float, float, str]:
+    """The split factors for the per-share figures of a filing: (this period and the previous period, the prior-year column), and a note when one is not the usual.
+
+    Usually per-share figures are on the share basis of the filing's publication (accounting standards restate EPS for splits
+    before the report is issued). When a split took effect during the period the filing covers or before it was published,
+    the filing's own figures decide, column by column, using only what was published by then:
+      this period     profit / EPS gives the shares the EPS was computed on; they must match the filing's share count
+                      (Zhongji Innolight's 2024 half-year report: 2,358 / 3.03 = 778 million shares, before the June 2024
+                      bonus issue, while its share count is 1,121 million, after it)
+      prior year      the figure must match what the earlier filing for that period reported (Innolight's 2019 and 2024
+                      half-year reports repeat the earlier 0.67 and 0.77 unchanged, though the 2019 current figure is restated)
+    """
+    usual = split_factor(a.published, splits)
+    if splits.empty:
+        return usual, usual, ""
+    span_start = a.period.start_time - pd.DateOffset(months=9)  # a year-to-date figure covers up to four quarters
+    during = splits[(splits.index > span_start) & (splits.index <= a.published.normalize())]
+    eps = a.values.get("eps") or []
+    if during.empty or not eps:
+        return usual, usual, ""
+    candidates = {split_factor(t, splits) for t in [span_start, *during.index, a.published]}
+    notes = []
+
+    current = usual
+    profit, shares = (a.values.get("profit") or [None])[0], (a.values.get("wa_shares") or [None])[0]
+    if eps[0] and profit and shares:
+        implied = profit / eps[0]
+        current = _snap(shares * shares_factor / implied, candidates, usual, CURRENT_BASIS_TOLERANCE)
+        if current != usual:
+            notes.append(
+                f"the EPS {num(eps[0])} is on the shares before the split (net profit / EPS = {implied:,.1f} million shares, the "
+                f"filing's share count is {shares:,.1f} million), so it is divided by a further {num(current / usual)}"
+            )
+
+    prior = current
+    previous = [
+        e for e in earlier
+        if e.period == a.period - 4 and e.is_quarterly_table == a.is_quarterly_table and e.published < a.published and (e.values.get("eps") or [0])[0]
+    ]
+    if len(eps) > 1 and eps[1] and previous:
+        before = min(previous, key=lambda e: e.published)
+        # On the current basis the prior-year figure must equal the earlier filing's: prior / factor = earlier figure / its factor
+        needed = split_factor(before.published, splits) * eps[1] / before.values["eps"][0]
+        prior = _snap(needed, candidates, current, PRIOR_BASIS_TOLERANCE)
+        if prior != current:
+            notes.append(
+                f"its prior-year EPS {num(eps[1])} repeats the earlier filing's {num(before.values['eps'][0])} without restating it, "
+                f"so it is adjusted like that figure (divided by {num(prior)} in all)"
+            )
+    note = ("Split basis: " + "; ".join(notes)) if notes else ""
+    return current, prior, note
 
 
 def adjust_for_splits(announcements: list[Announcement], splits: pd.Series) -> list[Announcement]:
-    """Convert per-share data to the current share basis (consistent with split-adjusted prices); amounts are not affected by splits."""
+    """Convert per-share data and share counts to the current share basis (consistent with split-adjusted prices); amounts are not affected by splits.
+
+    Share counts: a weighted average disclosed with EPS is restated like EPS, so its basis is that of the publication; the
+    period-end total shares of A-share companies are on the basis of the period end. Per-share figures: see per_share_basis.
+    """
     out = []
     for a in announcements:
-        factor = split_factor(a.published, splits)
+        shares_factor = split_factor(a.period.end_time if a.shares_label == PERIOD_END_SHARES else a.published, splits)
+        current, prior, note = per_share_basis(a, announcements, splits, shares_factor)
+        factors = [current, prior, current]  # this period, same period last year, previous period
         values = {
-            k: [v / factor for v in vs] if k in PER_SHARE else [v * factor for v in vs] if k in SHARE_COUNTS else vs
+            k: [v / f for v, f in zip(vs, factors)] if k in PER_SHARE else [v * shares_factor for v in vs] if k in SHARE_COUNTS else vs
             for k, vs in a.values.items()
         }
-        out.append(replace(a, values=values))
+        out.append(replace(a, values=values, per_share_factors=(current, prior), note="; ".join(x for x in (a.note, note) if x)))
     return out
 
 
@@ -575,7 +650,8 @@ def build_history(parsed: list[Announcement], splits: pd.Series | None = None) -
     shares_basis: dict[pd.Period, str] = {}
 
     def record(series: str, period: pd.Period, value: float, a: Announcement, derived: bool) -> None:
-        q = quarters[series].setdefault(period, QuarterValue(value, a.available, a.published))
+        factor = (a.per_share_factors[1] if period == a.period - 4 else a.per_share_factors[0]) if series in PER_SHARE else 1.0
+        q = quarters[series].setdefault(period, QuarterValue(value, a.available, a.published, factor=factor))
         q.observations.append(Observation(value, a.url, derived))
 
     for a in sorted(announcements.values(), key=lambda x: x.available):
@@ -626,7 +702,7 @@ def _ttm_row(
         for p in periods:
             q = qs[p]
             derived = q.observations[0].derived
-            factor = split_factor(q.published, splits) if series in PER_SHARE and not derived else 1.0
+            factor = q.factor if series in PER_SHARE and not derived else 1.0
             out.append(Component(period_label(p, per_year), q.value, derived, q.value * factor if factor != 1.0 else None))
         return out
 

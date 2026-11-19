@@ -25,8 +25,8 @@ NOTE = r"(?:(?:[（(][一二三四五六七八九十]+[)）]|[一二三四五六
 FOOTNOTE = r"(?:\[\s*注\s*\d*\s*\])?"  # footnote marker in the key-data table, e.g. "[note 2]"
 
 KEY_TABLE = "主要会计数据和财务指标"
-KEY_REVENUE = r"营业收入（元）"
-KEY_PROFIT = r"归属于上市公司股东的净利润（元）"
+KEY_REVENUE = r"营业(?:总)?收入（元）"  # older ChiNext reports (Innolight) label the total operating revenue
+KEY_PROFIT = r"归属于(?:上市)?公司(?:普通股)?股东的净利润（元）"  # older reports (Innolight) say "the company's ordinary shareholders"
 KEY_EPS = r"基本每股收益（元\s*/\s*股）"
 INCOME_REVENUE = r"一、营业(?:总)?收入"
 INCOME_PROFIT = r"归属于母公司(?:所有者|股东)的净利润"
@@ -48,9 +48,16 @@ EXPRESS_EQUITY = r"归属于上市公司股东的所有者权益"
 EXPRESS_SHARES = r"股本"
 
 
+# The consolidated balance sheet, or the only one of a company without subsidiaries (Innolight before its 2017 acquisition);
+# not the parent-company balance sheet that follows the consolidated one
+BALANCE_SHEET_TITLE_RE = re.compile(r"合并资产负债表|(?<!母公司)资产负债表\s*编制单位")
+EQUITY_TOTAL_WORD = "权益合计"
+
+
 def is_wanted_page(text: str) -> bool:
     """Is this page of a report one the parser needs (key-data table, income statement, balance sheet)?"""
-    key_table = KEY_TABLE in text and "营业收入" in text
+    # The heading of the key-data table can end a page and the table start the next one (Innolight's half-year reports)
+    key_table = KEY_TABLE in text or re.search(KEY_REVENUE, text)
     # The income statement can run over three pages (Glodon's Q1 reports): the page with the net profit keeps the EPS page after it
     income = re.search(INCOME_REVENUE, text) or re.search(INCOME_PROFIT, text)
     balance = ("归属于母公司" in text and "权益合计" in text) or (re.search(r"(?<!总)股本", text) and "资本公积" in text)

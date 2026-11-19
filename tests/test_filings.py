@@ -342,3 +342,63 @@ def test_parse_statements_does_not_take_equity_or_comprehensive_income_as_profit
     assert v["profit"] == pytest.approx([1808.364, 1646.133])
     # the spelling "Profit (loss) for the year"
     assert first_profit_match("Profit (loss) for the year attributable to: Owners of the Company 10 20").group("a") == "10"
+
+
+# ---- the share basis of per-share figures around a split (Zhongji Innolight's bonus issues of 2019 and 2024) ----
+
+BONUS_2024 = pd.Series([1.4], index=pd.to_datetime(["2024-06-06"]))
+
+
+def a_share(period, published, eps, profit, shares, quarterly=False):
+    return Announcement(
+        pd.Period(period, freq="Q"), pd.Timestamp(published), f"https://example.com/{period}", "CNY", quarterly,
+        {"eps": eps, "profit": profit, "wa_shares": [shares]}, "CN", shares_label="period-end total shares",
+    )
+
+
+def test_eps_not_restated_for_a_split_during_the_period_is_detected_from_the_filing_itself():
+    h1_2023 = a_share("2023Q2", "2023-08-20 16:00", [0.77, 0.55], [613.8, 437.0], 802.8)  # before the bonus issue
+    h1_2024 = a_share("2024Q2", "2024-08-25 15:30", [3.03, 0.77], [2358.4, 613.8], 1121.2)  # after it, but 3.03 and 0.77 are not restated
+    adjusted = adjust_for_splits([h1_2023, h1_2024], BONUS_2024)
+    assert adjusted[0].values["eps"] == pytest.approx([0.55, 0.3929], abs=1e-4)  # published before the split: divided by 1.4 as usual
+    assert adjusted[1].values["eps"] == pytest.approx([2.1643, 0.55], abs=1e-4)  # 3.03 / 1.4; the prior year agrees with the earlier filing
+    assert adjusted[1].values["wa_shares"] == [1121.2]  # the period-end shares are after the split already
+    assert adjusted[1].per_share_factors == (1.4, 1.4)
+    assert "net profit / EPS = 778.3 million shares" in adjusted[1].note and "repeats" not in adjusted[1].note
+
+
+def test_a_restated_current_eps_with_an_unrestated_prior_year_column():
+    bonus_2019 = pd.Series([1.4], index=pd.to_datetime(["2019-06-04"]))
+    h1_2018 = a_share("2018Q2", "2018-08-20 16:00", [0.67, 0.02], [316.9, 4.0], 473.9)
+    h1_2019 = a_share("2019Q2", "2019-08-24 00:00", [0.28, 0.67], [207.3, 316.9], 713.8)  # 207.3 / 0.28 = 740: restated; 0.67 is not
+    adjusted = adjust_for_splits([h1_2018, h1_2019], bonus_2019)[1]
+    assert adjusted.values["eps"] == pytest.approx([0.28, 0.67 / 1.4])
+    assert adjusted.per_share_factors == (1.0, 1.4) and "prior-year EPS 0.67" in adjusted.note
+
+
+def test_a_restated_filing_and_a_filing_without_a_split_keep_the_usual_basis():
+    h1_2023 = a_share("2023Q2", "2023-08-20 16:00", [0.77, 0.55], [613.8, 437.0], 802.8)
+    restated = a_share("2024Q2", "2024-08-25 15:30", [2.10, 0.55], [2358.4, 613.8], 1121.2)  # 0.55 = 0.77 / 1.4
+    adjusted = adjust_for_splits([h1_2023, restated], BONUS_2024)[1]
+    assert adjusted.values["eps"] == [2.10, 0.55] and adjusted.per_share_factors == (1.0, 1.0) and adjusted.note == ""
+    later = a_share("2026Q2", "2026-08-21 16:00", [12.31, 3.64], [13651.1, 3995.1], 1115.2)  # no split during the period
+    assert adjust_for_splits([later], BONUS_2024)[0].values["eps"] == [12.31, 3.64]
+
+
+def test_period_end_shares_of_a_shares_take_the_split_basis_of_the_period_end():
+    # A split after the period end but before publication: the balance sheet still has the shares before it
+    q3 = a_share("2014Q3", "2014-10-25 16:00", [0.04], [8.6], 120.0, quarterly=True)
+    adjusted = adjust_for_splits([q3], pd.Series([1.8], index=pd.to_datetime(["2014-10-08"])))[0]
+    assert adjusted.values["wa_shares"] == [216.0]  # multiplied by 1.8, though the filing came out after the split
+    weighted = Announcement(pd.Period("2014Q3", freq="Q"), pd.Timestamp("2014-10-25 16:00"), "u", "HKD", True, {"eps": [0.5], "wa_shares": [100.0]})
+    assert adjust_for_splits([weighted], pd.Series([1.8], index=pd.to_datetime(["2014-10-08"])))[0].values["wa_shares"] == [100.0]
+
+
+def test_the_audit_note_shows_the_figure_of_the_filing_and_the_factor_used():
+    h1_2023 = a_share("2023Q2", "2023-08-20 16:00", [0.77, 0.55], [613.8, 437.0], 802.8)
+    q1_2024 = a_share("2024Q1", "2024-04-21 15:35", [1.30, 0.31], [1009.3, 249.9], 802.8, quarterly=True)
+    h1_2024 = a_share("2024Q2", "2024-08-25 15:30", [3.03, 0.77], [2358.4, 613.8], 1121.2)
+    history = build_history(adjust_for_splits([h1_2023, q1_2024, h1_2024], BONUS_2024), BONUS_2024)
+    q1 = history.quarters["eps"][pd.Period("2024Q1")]
+    assert q1.factor == 1.4 and q1.value == pytest.approx(1.30 / 1.4)
+    assert history.quarters["eps"][pd.Period("2024Q2")].value == pytest.approx(3.03 / 1.4 - 1.30 / 1.4)  # derived from the half year

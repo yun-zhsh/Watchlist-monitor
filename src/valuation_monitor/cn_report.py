@@ -1,5 +1,5 @@
 """Extract earnings data from the Chinese periodic reports and express reports of A-share companies
-(PDF originals; verified on all Hikvision and Glodon reports from 2014 on).
+(PDF originals; verified on all Hikvision, Glodon and Zhongji Innolight reports from 2014 on).
 
 The report type decides which numbers are used:
   Q1 report        consolidated income statement, current period and prior period (single quarter)
@@ -43,6 +43,8 @@ def clean_text(text: str) -> str:
     text = re.sub(cn.CJK_GAP_RE, "", text)
     text = re.sub(r"(\d,\d{3}(?:,\d{3})*\.\d) (\d)(?![\d,])", r"\1\2", text)  # the last decimal digit gets split off, e.g. "158.1 1"
     # The last digit group of the integer part gets split, e.g. "9,335,806,1 14.00": merge only when the pieces add up to three digits
+    # The thousands separators of an amount come out as a dot and spaces, e.g. "4.842 546 924 23" for 4,842,546,924.23
+    text = re.sub(r"(?<![\d.,])(\d{1,3})\.(\d{3}) (\d{3}) (\d{3}) (\d{2})(?![\d.,%])", r"\1,\2,\3,\4.\5", text)
     return re.sub(
         r"(?<![\d,])(\d{1,3}(?:,\d{3})*,)(\d{1,2}) (\d{1,2})(?![\d,])",
         lambda m: m.group(1) + m.group(2) + m.group(3) if len(m.group(2) + m.group(3)) == 3 else m.group(0),
@@ -61,15 +63,27 @@ def to_number(token: str) -> float:
     return float(token.replace(",", ""))
 
 
-def row(text: str, name: str, label: str, count: int, start: int = 0, optional: str = "") -> tuple[list[float], int]:
+NOT_A_CHANGE = r"(?![\d.,])(?!\s*-?[\d,]+(?:\.\d+)?\s?%)"  # the whole last number, then no percentage
+
+
+def row(text: str, name: str, label: str, count: int, start: int = 0, optional: str = "", end: str = "") -> tuple[list[float], int]:
     """The `count` numbers that follow `label` (a footnote marker or note number may sit in between).
 
     Returns (numbers, end position of the row in the text); raises if the row cannot be found.
     """
-    m = re.compile(rf"(?:{label})\s*{optional}\s*{cn.NOTE}" + r"\s+".join([NUM] * count)).search(text, start)
+    m = re.compile(rf"(?:{label})\s*{optional}\s*{cn.NOTE}" + r"\s+".join([NUM] * count) + end).search(text, start)
     if not m:
         raise ValueError(f"Row not found in the report: {name}")
     return [to_number(g) for g in m.groups()], m.end()
+
+
+def decimals(x: float) -> int:
+    return len(f"{x:.6f}".rstrip("0").split(".")[1])
+
+
+def rounded_alike(a: float, b: float) -> bool:
+    """One EPS is the other rounded to two decimals (Innolight's 2019 income statement: 0.73; key table: 0.731)."""
+    return min(decimals(a), decimals(b)) <= 2 and round(a, 2) == round(b, 2)
 
 
 def parse_cn_report(title: str, pdf: bytes) -> Parsed:
@@ -91,7 +105,8 @@ def parse_cn_report(title: str, pdf: bytes) -> Parsed:
     }
 
     # Consolidated statements: current and prior period (the prior period as restated in this report)
-    revenue, pos = row(text, "revenue", cn.INCOME_REVENUE, 2)
+    total, pos = row(text, "revenue", cn.INCOME_REVENUE, 2)
+    revenue = total
     operating = re.compile(rf"{cn.BEFORE_OPERATING_REVENUE}{cn.INCOME_OPERATING_REVENUE}\s*" + r"\s+".join([NUM] * 2)).match(text, pos)
     if operating:  # total operating revenue includes interest and fee income: use the operating revenue under it
         revenue, pos = [to_number(g) for g in operating.groups()], operating.end()
@@ -99,8 +114,9 @@ def parse_cn_report(title: str, pdf: bytes) -> Parsed:
     eps, _ = row(text, "basic EPS", cn.INCOME_EPS, 2, pos)
     values = {"revenue": [v / MILLION for v in revenue], "profit": [v / MILLION for v in profit], "eps": eps}
 
-    equity, _ = row(text, "equity", cn.EQUITY, 2)
-    share_capital, _ = row(text, "share capital", cn.SHARE_CAPITAL, 2)
+    # Balance sheet rows, not the "major changes" table, which lists beginning and end and then a change in percent (Innolight 2017 Q3)
+    equity, _ = row(text, "equity", cn.EQUITY, 2, end=NOT_A_CHANGE)
+    share_capital, _ = row(text, "share capital", cn.SHARE_CAPITAL, 2, end=NOT_A_CHANGE)
     values["equity"] = [equity[0] / MILLION, equity[1] / MILLION]
     values["wa_shares"] = [share_capital[0] / MILLION]  # period-end total shares (millions)
 
@@ -112,8 +128,15 @@ def parse_cn_report(title: str, pdf: bytes) -> Parsed:
         values["eps"] = [key["eps"]]
     else:
         for name, scale in (("revenue", MILLION), ("profit", MILLION), ("eps", 1.0)):
-            if abs(values[name][0] - key[name] / scale) > (1e-6 if scale > 1 else 0.0006) * max(1.0, abs(values[name][0])):
-                raise ValueError(f"{name}: the key table says {key[name]} but the consolidated income statement says {values[name][0] * scale}")
+            stated = key[name] / scale
+            # Older key tables (Innolight) give the total operating revenue, which may include more than the operating revenue
+            candidates = [values[name][0]] + ([total[0] / MILLION] if name == "revenue" else [])
+            if any(abs(c - stated) <= (1e-6 if scale > 1 else 0.0006) * max(1.0, abs(c)) for c in candidates):
+                continue
+            if name == "eps" and rounded_alike(values["eps"][0], stated):
+                values["eps"][0] = max(values["eps"][0], stated, key=decimals)  # keep the more precise of the two
+                continue
+            raise ValueError(f"{name}: the key table says {key[name]} but the consolidated income statement says {values[name][0] * scale}")
     return Parsed("CNY", values, period, quarterly)
 
 

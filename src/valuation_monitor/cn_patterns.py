@@ -21,6 +21,7 @@ EXPRESS_SEARCH_WORD = "业绩快报"
 BODY_TEXT_WORD = "正文"  # a report is published twice, as "full text" and as "body text"; the full text is preferred
 
 # --- text of the reports ---------------------------------------------------------------------------------
+CJK_CHAR = r"[一-鿿]"  # a Chinese character: a page without any has no usable text layer (a scan)
 CJK_GAP_RE = r"(?<=[一-鿿（）]) (?=[一-鿿（）])"  # PDF text extraction inserts spaces where lines wrap inside Chinese text
 # Annual and half-year statements have a note column after the item name: a Chinese numeral in brackets or followed by a separator, then the note number.
 NOTE = r"(?:(?:[（(][一二三四五六七八九十]+[)）]|[一二三四五六七八九十]+、)\s?\d+(?:、\d+)*\s+)?"

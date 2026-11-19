@@ -28,6 +28,7 @@ import pandas as pd
 from pypdf import PdfReader
 
 from valuation_monitor import cn_patterns as cn
+from valuation_monitor.cid_fonts import add_missing_unicode_maps
 from valuation_monitor.parsed import Parsed
 
 NUM = r"(-?[\d,]+(?:\.\d+)?|\(\s*[\d,]+(?:\.\d+)?\s*\))"
@@ -53,8 +54,15 @@ def clean_text(text: str) -> str:
     )
 
 
+def page_texts(pdf: bytes) -> list[str]:
+    """The raw text of each page; fonts without a ToUnicode map are decoded with Adobe's tables (see cid_fonts.py)."""
+    reader = PdfReader(io.BytesIO(pdf))
+    add_missing_unicode_maps(reader)
+    return [p.extract_text() or "" for p in reader.pages]
+
+
 def read_text(pdf: bytes) -> str:
-    return clean_text(" ".join((p.extract_text() or "") for p in PdfReader(io.BytesIO(pdf)).pages))
+    return clean_text(" ".join(page_texts(pdf)))
 
 
 def to_number(token: str) -> float:

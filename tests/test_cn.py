@@ -1,5 +1,6 @@
 """A-shares (Hikvision, Glodon): the CNINFO announcement list, publication time rules, and parsing verified with the saved original Chinese reports. The Chinese strings in this file are fixtures: titles and text of the Chinese-language source filings."""
 
+import io
 import json
 from datetime import datetime
 from pathlib import Path
@@ -25,7 +26,12 @@ def test_classify_titles():
     assert classify("2025年半年度报告") == ("report", 2025, 2)
     assert classify("2025年年度报告") == ("report", 2025, 4)
     assert classify("2025年度业绩快报") == ("express", 2025, 4)
-    for skipped in ("2025年年度报告摘要", "2025年年度报告（英文版）", "2025年度业绩快报（英文版）", "2025年环境、社会及治理报告", "2025年第三季度报告更正公告"):
+    # Shanghai-listed companies put the company name first, and their express report titles end with "announcement"
+    assert classify("南京银行股份有限公司2025年年度报告") == ("report", 2025, 4)
+    assert classify("南京银行股份有限公司2021年第一季度报告全文") == ("report", 2021, 1)
+    assert classify("南京银行股份有限公司2025年度<em>业绩</em><em>快报</em>公告") == ("express", 2025, 4)
+    assert classify("2019年半年度业绩快报公告") == ("express", 2019, 2)
+    for skipped in ("南京银行股份有限公司2025年年度报告摘要", "2025年年度报告摘要", "2025年年度报告（英文版）", "2025年度业绩快报（英文版）", "2025年环境、社会及治理报告", "2025年第三季度报告更正公告"):
         assert classify(skipped) is None
 
 
@@ -346,3 +352,97 @@ def test_saved_innolight_reports_parse():
         p = parse_cn_express(e["title"], content) if e["kind"] == "express" else parse_cn_report(e["title"], content)
         assert p.period == pd.Period(year=e["year"], quarter=e["quarter"], freq="Q")
         assert {"revenue", "profit", "eps", "equity", "wa_shares"} <= p.values.keys()
+
+
+def cid_font_pdf(cids, ordering="GB1", to_unicode=None, cid_set=True):
+    """A one-page PDF that shows `cids` in an Identity-H CID font of the Adobe `ordering` collection (no font program embedded)."""
+    from pypdf import PdfWriter
+    from pypdf.generic import ArrayObject, DecodedStreamObject, DictionaryObject, NameObject, NumberObject, StreamObject, TextStringObject
+
+    def name(s):
+        return NameObject(s)
+
+    writer = PdfWriter()
+    page = writer.add_blank_page(200, 200)
+    descriptor = DictionaryObject({name("/Type"): name("/FontDescriptor"), name("/FontName"): name("/TestFont"), name("/Flags"): NumberObject(4)})
+    if cid_set:
+        bits = bytearray((max(cids) // 8) + 1)
+        for c in cids:
+            bits[c // 8] |= 0x80 >> (c % 8)
+        s = DecodedStreamObject()
+        s.set_data(bytes(bits))
+        descriptor[name("/CIDSet")] = writer._add_object(s)
+    info = DictionaryObject({name("/Registry"): TextStringObject("Adobe"), name("/Ordering"): TextStringObject(ordering), name("/Supplement"): NumberObject(4)})
+    descendant = DictionaryObject({name("/Type"): name("/Font"), name("/Subtype"): name("/CIDFontType0"), name("/BaseFont"): name("/TestFont"),
+                                   name("/CIDSystemInfo"): info, name("/FontDescriptor"): writer._add_object(descriptor), name("/DW"): NumberObject(1000)})
+    font = DictionaryObject({name("/Type"): name("/Font"), name("/Subtype"): name("/Type0"), name("/BaseFont"): name("/TestFont"),
+                             name("/Encoding"): name("/Identity-H"), name("/DescendantFonts"): ArrayObject([writer._add_object(descendant)])})
+    if to_unicode is not None:
+        s = DecodedStreamObject()
+        s.set_data(to_unicode.encode())
+        font[name("/ToUnicode")] = writer._add_object(s)
+    page[name("/Resources")] = DictionaryObject({name("/Font"): DictionaryObject({name("/F1"): writer._add_object(font)})})
+    content = StreamObject()
+    content._data = ("BT /F1 12 Tf 10 100 Td <" + "".join(f"{c:04X}" for c in cids) + "> Tj ET").encode()
+    page[name("/Contents")] = writer._add_object(content)
+    out = io.BytesIO()
+    writer.write(out)
+    return out.getvalue()
+
+
+def test_fonts_without_a_unicode_map_are_decoded_with_adobe_tables():
+    from pypdf import PdfReader
+
+    from valuation_monitor.cid_fonts import add_missing_unicode_maps, cid_to_unicode
+    from valuation_monitor.cn_report import read_text
+
+    gb1 = {chr(int(u, 16)): cid for cid, u in cid_to_unicode("GB1").items() if len(u) == 4}
+    cids = [gb1[c] for c in "营业收入"]
+    assert cids[1:] == [4156, 3436, 3270]  # what pypdf alone shows as the characters U+103C, U+0D6C, U+0CC6
+    pdf = cid_font_pdf(cids)
+    assert "营业收入" not in (PdfReader(io.BytesIO(pdf)).pages[0].extract_text() or "")
+    assert read_text(pdf) == "营业收入"
+    reader = PdfReader(io.BytesIO(pdf))
+    assert add_missing_unicode_maps(reader) == 1
+    unicode_map = reader.pages[0]["/Resources"]["/Font"]["/F1"].get_object()["/ToUnicode"].get_object().get_data().decode()
+    assert unicode_map.count("beginbfchar") == 1 and "4 beginbfchar" in unicode_map  # only the CIDs in the font's CIDSet
+    assert read_text(cid_font_pdf(cids, cid_set=False)) == "营业收入"  # without a CIDSet the whole table is used
+    # traditional Chinese fonts (Adobe-CNS1) as well
+    cns1 = {chr(int(u, 16)): cid for cid, u in cid_to_unicode("CNS1").items() if len(u) == 4}
+    assert read_text(cid_font_pdf([cns1[c] for c in "營業收入"], ordering="CNS1")) == "營業收入"
+
+
+def test_fonts_that_have_a_unicode_map_or_another_collection_are_left_alone():
+    from pypdf import PdfReader
+
+    from valuation_monitor.cid_fonts import add_missing_unicode_maps
+
+    own_map = "begincmap 1 begincodespacerange <0000> <FFFF> endcodespacerange 1 beginbfchar <103C> <0041> endbfchar endcmap"
+    pdf = cid_font_pdf([4156], to_unicode=own_map)
+    reader = PdfReader(io.BytesIO(pdf))
+    assert add_missing_unicode_maps(reader) == 0
+    assert reader.pages[0].extract_text() == "A"  # the font's own map wins, even where Adobe's table says something else
+    assert add_missing_unicode_maps(PdfReader(io.BytesIO(cid_font_pdf([4156], ordering="Japan1")))) == 0
+
+
+def test_a_scanned_listing_is_skipped_for_a_same_day_listing_with_text(tmp_path, monkeypatch):
+    monkeypatch.setattr("valuation_monitor.providers.cninfo.excerpt_pages", lambda pdf: pdf)
+    monkeypatch.setattr("valuation_monitor.providers.cninfo.has_text", lambda pdf: pdf != b"scan")
+
+    class Http(FakeHttp):
+        def get_response(self, url, retries=5):
+            resp = super().get_response(url, retries)
+            resp.content = b"scan" if "/7." in url else b"text"
+            return resp
+
+    http = Http()
+    ms = lambda s: int(pd.Timestamp(s, tz="Asia/Shanghai").timestamp() * 1000)  # noqa: E731
+    http.lists[""] = [row("7", "2018年第一季度报告", ms("2018-04-26"), "2018-04-26"), row("8", "2018年第一季度报告", ms("2018-04-26"), "2018-04-26")]
+    http.lists["业绩快报"] = []
+    found = CninfoProvider(http, tmp_path).results_announcements("002415.SZ", datetime(2018, 1, 1))
+    assert [f.url.rsplit("/", 1)[1] for f in found] == ["8.PDF"] and found[0].content == b"text"
+    # with a single listing nothing is checked: the file is taken as before
+    http, single = Http(), tmp_path / "single"
+    http.lists[""], http.lists["业绩快报"] = [row("7", "2018年第一季度报告", ms("2018-04-26"), "2018-04-26")], []
+    found = CninfoProvider(http, single).results_announcements("002415.SZ", datetime(2018, 1, 1))
+    assert [f.url.rsplit("/", 1)[1] for f in found] == ["7.PDF"]

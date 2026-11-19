@@ -46,6 +46,9 @@ EXPRESS_EPS = r"基本每股收益"
 EXPRESS_EPS_UNIT = r"(?:（元(?:\s*/\s*股)?）)?"
 EXPRESS_EQUITY = r"归属于上市公司股东的所有者权益"
 EXPRESS_SHARES = r"股本"
+# Units stated as ten thousand yuan and ten thousand shares (Innolight's 2025 annual express report)
+EXPRESS_TEN_THOUSAND_RE = re.compile(r"单位\s*[：:]\s*(?:人民币)?万元")
+EXPRESS_TEN_THOUSAND_SHARES = r"（万股）"
 
 
 # The consolidated balance sheet, or the only one of a company without subsidiaries (Innolight before its 2017 acquisition);

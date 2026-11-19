@@ -323,6 +323,20 @@ def test_share_capital_comes_from_the_balance_sheet_not_the_major_changes_table(
     assert p.values["equity"] == pytest.approx([4225.9, 555.7822101])
 
 
+def test_express_report_in_ten_thousand_yuan_and_shares(monkeypatch):
+    text = (
+        "一、2025 年度主要财务数据和指标 单位：人民币万元 项目 本报告期 上年同期 增减变动幅度 "
+        "营业总收入 3,823,998.21 2,386,215.97 60.25% 归属于上市公司股东的净利润 1,079,863.45 517,148.60 108.81% "
+        "基本每股收益（元） 9.80 4.72 107.63% 项目 本报告期末 本报告期初 增减变动幅度 "
+        "归属于上市公司股东的所有者权益 3,000,398.71 1,913,388.70 56.81% 股本（万股） 111,111.83 112,116.65 -0.90% "
+    )
+    monkeypatch.setattr("valuation_monitor.cn_report.read_text", lambda pdf: text)
+    p = parse_cn_express("2025 annual express report", b"")
+    assert p.values["revenue"] == pytest.approx([38239.9821, 23862.1597])  # millions, not ten thousand times smaller
+    assert p.values["profit"] == pytest.approx([10798.6345, 5171.486]) and p.values["eps"] == [9.8, 4.72]
+    assert p.values["equity"] == pytest.approx([30003.9871, 19133.887]) and p.values["wa_shares"] == pytest.approx([1111.1183])
+
+
 @saved_innolight
 def test_saved_innolight_reports_parse():
     index = json.loads((INNOLIGHT / "index.json").read_text(encoding="utf-8"))

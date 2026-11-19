@@ -32,6 +32,7 @@ from valuation_monitor.parsed import Parsed
 
 NUM = r"(-?[\d,]+(?:\.\d+)?|\(\s*[\d,]+(?:\.\d+)?\s*\))"
 MILLION = 1e6
+TEN_THOUSAND = 1e4  # the unit of some express reports
 # Titles are English and built by the CNINFO provider: "2026 Q3 report", "2025 annual report", "2025 annual express report"
 REPORT_TITLE_RE = re.compile(r"^(?P<year>\d{4}) (?P<kind>Q1|H1|Q3|annual) report$")
 EXPRESS_TITLE_RE = re.compile(r"^(?P<year>\d{4}) (?P<kind>H1|annual) express report$")
@@ -149,15 +150,20 @@ def parse_cn_express(title: str, pdf: bytes) -> Parsed:
     period = pd.Period(year=int(m.group("year")), quarter=quarter, freq="Q")
     text = read_text(pdf)
     revenue, _ = row(text, "revenue", cn.EXPRESS_REVENUE, 2, 0, cn.FOOTNOTE)
+    # Amounts in yuan, or in ten thousand yuan where the table says so (Innolight's 2025 annual express report); shares likewise
+    unit = cn.EXPRESS_TEN_THOUSAND_RE.search(text[: text.find(cn.EXPRESS_REVENUE)])
+    unit_size = TEN_THOUSAND if unit else 1.0
     profit, _ = row(text, "net profit", cn.EXPRESS_PROFIT, 2, 0, cn.FOOTNOTE)
     eps, _ = row(text, "basic EPS", cn.EXPRESS_EPS, 2, 0, cn.EXPRESS_EPS_UNIT + cn.FOOTNOTE)
     equity, _ = row(text, "equity", cn.EXPRESS_EQUITY, 2, 0, cn.FOOTNOTE)
-    shares, _ = row(text, "share capital", cn.EXPRESS_SHARES, 2, 0, cn.FOOTNOTE)
+    shares, _ = row(text, "share capital", cn.EXPRESS_SHARES, 2, 0, rf"(?:{cn.EXPRESS_TEN_THOUSAND_SHARES})?" + cn.FOOTNOTE)
+    in_ten_thousands = re.search(rf"{cn.EXPRESS_SHARES}\s*{cn.EXPRESS_TEN_THOUSAND_SHARES}", text) is not None
+    share_unit = TEN_THOUSAND if in_ten_thousands else 1.0
     values = {
-        "revenue": [v / MILLION for v in revenue],
-        "profit": [v / MILLION for v in profit],
+        "revenue": [v * unit_size / MILLION for v in revenue],
+        "profit": [v * unit_size / MILLION for v in profit],
         "eps": eps,
-        "equity": [equity[0] / MILLION, equity[1] / MILLION],
-        "wa_shares": [shares[0] / MILLION],
+        "equity": [equity[0] * unit_size / MILLION, equity[1] * unit_size / MILLION],
+        "wa_shares": [shares[0] * share_unit / MILLION],
     }
     return Parsed("CNY", values, period, quarterly=False)

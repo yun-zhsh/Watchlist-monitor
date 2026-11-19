@@ -96,7 +96,7 @@ def wanted_pages(texts: list[str]) -> list[int]:
         if cn.BALANCE_SHEET_TITLE_RE.search(t):
             for j in range(i, min(i + 6, len(texts))):
                 wanted.add(j)
-                if cn.EQUITY_TOTAL_WORD in texts[j]:
+                if cn.EQUITY_TOTAL_RE.search(texts[j]):
                     break
     return sorted(w for w in wanted if w < len(texts))
 

@@ -1,4 +1,4 @@
-"""A-shares (Hikvision, Glodon): the CNINFO announcement list, publication time rules, and parsing verified with the saved original Chinese reports. The Chinese strings in this file are fixtures: titles and text of the Chinese-language source filings."""
+"""A-shares (Hikvision, Glodon, Zhongji Innolight, China Northern Rare Earth): the CNINFO announcement list, publication time rules, and parsing verified with the saved original Chinese reports. The Chinese strings in this file are fixtures: titles and text of the Chinese-language source filings."""
 
 import json
 from datetime import datetime
@@ -346,3 +346,163 @@ def test_saved_innolight_reports_parse():
         p = parse_cn_express(e["title"], content) if e["kind"] == "express" else parse_cn_report(e["title"], content)
         assert p.period == pd.Period(year=e["year"], quarter=e["quarter"], freq="Q")
         assert {"revenue", "profit", "eps", "equity", "wa_shares"} <= p.values.keys()
+
+
+# --- China Northern Rare Earth (600111.SS): the first Shanghai-listed stock; its report templates differ from Shenzhen's --------
+
+NORTHERN_RARE_EARTH = Path(__file__).parent.parent / "data" / "filings" / "600111.SS"
+saved_northern = pytest.mark.skipif(
+    not (NORTHERN_RARE_EARTH / "index.json").exists(), reason="no saved China Northern Rare Earth filings (the scheduled update saves them)"
+)
+
+
+def test_classify_shanghai_titles():
+    assert classify("北方稀土2021年第三季度报告") == ("report", 2021, 3)  # the short name before the year
+    assert classify("北方稀土2020年度报告全文") == ("report", 2020, 4)  # "annual report" right after the year, without a second "year" character
+    assert classify("2019年度报告") == ("report", 2019, 4)
+    assert classify("北方稀土2021年第一季度报告正文") == ("report", 2021, 1)
+    assert classify("北方稀土2025年度<em>业绩</em><em>快报</em>公告") == ("express", 2025, 4)
+    assert classify("北方稀土2022年半年度业绩快报公告") == ("express", 2022, 2)
+    for skipped in ("北方稀土2025年年度报告摘要", "北方稀土2025年度业绩预告", "关于2025年年度报告的更正公告", "北方稀土2025年度社会责任报告"):
+        assert classify(skipped) is None
+
+
+# Text fragments of the 2025 annual report: the unit is in the table header, not in the rows, and "yuan/share" has a full-width slash
+NORTHERN_ANNUAL = (
+    "主要会计数据和财务指标 (一) 主要会计数据单位：元币种：人民币主要会计数据 2025年 2024年本期比上年同期增减(%) 2023年"
+    "营业收入 42,563,083,233.34 32,966,314,898.03 29.11 33,496,993,130.09 利润总额 3,384,289,543.79 1,837,244,280.03 84.20 3,132,100,036.33 "
+    "归属于上市公司股东的净利润 2,251,272,073.68 1,004,276,921.89 124.17 2,370,740,184.54 "
+    "(二) 主要财务指标主要财务指标 2025年 2024年本期比上年同期增减(%) 2023年基本每股收益（元／股） 0.6227 0.2778 124.17 0.6558 "
+    "合并资产负债表 所有者权益（或股东权益）： 实收资本（或股本） 七、53 3,615,065,842.00 3,615,065,842.00 "
+    "归属于母公司所有者权益（或股东权益）合计 24,660,969,712.52 22,431,731,792.87 少数股东权益 "
+    "合并利润表 一、营业总收入七、61 42,563,083,233.34 32,966,314,898.03 其中：营业收入七、61 42,563,083,233.34 32,966,314,898.03 "
+    "二、营业总成本 39,273,756,306.11 31,311,132,511.63 "
+    "1.归属于母公司股东的净利润（净亏损以“-”号填列） 2,251,272,073.68 1,004,276,921.89 2.少数股东损益 "
+    "八、每股收益： （一）基本每股收益(元/股) 0.6227 0.2778 （二）稀释每股收益(元/股) 0.6227 0.2778 "
+)
+
+
+def test_shanghai_annual_report(monkeypatch):
+    monkeypatch.setattr("valuation_monitor.cn_report.read_text", lambda pdf: NORTHERN_ANNUAL)
+    p = parse_cn_report("2025 annual report", b"")
+    assert not p.quarterly and p.values["eps"] == [0.6227, 0.2778]
+    assert p.values["revenue"] == pytest.approx([42563.08323334, 32966.31489803])
+    assert p.values["profit"] == pytest.approx([2251.27207368, 1004.27692189])
+    assert p.values["equity"] == pytest.approx([24660.96971252, 22431.73179287])
+    assert p.values["wa_shares"] == pytest.approx([3615.065842])
+
+
+def test_notes_written_with_a_prefix_are_skipped(monkeypatch):
+    text = NORTHERN_ANNUAL.replace("一、营业总收入七、61", "一、营业总收入附注七、61").replace("其中：营业收入七、61", "其中：营业收入附注七、61")
+    monkeypatch.setattr("valuation_monitor.cn_report.read_text", lambda pdf: text)
+    assert parse_cn_report("2025 annual report", b"").values["revenue"][0] == pytest.approx(42563.08323334)
+    text = NORTHERN_ANNUAL.replace("一、营业总收入七、61", "一、营业总收入注释 40").replace("其中：营业收入七、61", "其中：营业收入")
+    monkeypatch.setattr("valuation_monitor.cn_report.read_text", lambda pdf: text)
+    assert parse_cn_report("2025 annual report", b"").values["revenue"][0] == pytest.approx(42563.08323334)
+
+
+def test_a_page_break_inside_the_sign_convention_note(monkeypatch):
+    # 2026 Q3: the last words of the net profit's sign convention note come after the numbers and the page footer
+    text = NORTHERN_ANNUAL.replace(
+        "（净亏损以“-”号填列） 2,251,272,073.68 1,004,276,921.89",
+        "（净亏损以“-”号 2,251,272,073.68 1,004,276,921.89 中国北方稀土（集团）高科技股份有限公司 2025年年度报告 13 填列）",
+    )
+    monkeypatch.setattr("valuation_monitor.cn_report.read_text", lambda pdf: text)
+    assert parse_cn_report("2025 annual report", b"").values["profit"] == pytest.approx([2251.27207368, 1004.27692189])
+
+
+# Text fragments of the 2020 Q3 report: the key table has only year-to-date figures; the income statement has four columns
+NORTHERN_OLD_Q3 = (
+    "二、公司主要财务数据和股东变化 2.1 主要财务数据单位：元币种：人民币本报告期末上年度末本报告期末比上年度末增减(%) "
+    "总资产 25,489,260,274.11 23,160,906,959.34 10.05 归属于上市公司股东的净资产 10,071,814,195.91 9,584,739,411.14 5.08 "
+    "年初至报告期末（1-9 月）上年初至上年报告期末（1-9 月）比上年同期增减（%）营业收入 15,528,960,902.13 14,084,534,616.96 10.26 "
+    "归属于上市公司股东的净利润 507,885,984.04 461,175,009.99 10.13 "
+    "加权平均净资产收益率（%） 5.17 5.02 增加 0.15 个百分点基本每股收益（元/股） 0.1405 0.1269 10.72 稀释每股收益（元/股） 0.1405 0.1269 10.72 "
+    "合并资产负债表 归属于母公司所有者权益（或股东权益）合计 10,071,814,195.91 9,584,739,411.14 少数股东权益 "
+    "所有者权益（或股东权益）： 实收资本（或股本） 3,633,066,000.00 3,633,066,000.00 其他权益工具 "
+    "合并利润表 项目 2020 年第三季度（7-9 月） 2019 年第三季度（7-9 月） 2020 年前三季度（1-9 月） 2019 年前三季度（1-9 月）"
+    "一、营业总收入 5,918,394,483.24 5,565,314,416.50 15,528,960,902.13 14,084,534,616.96 "
+    "其中：营业收入 5,918,394,483.24 5,565,314,416.50 15,528,960,902.13 14,084,534,616.96 二、营业总成本 "
+    "（二）按所有权归属分类 1.归属于母公司股东的净利润（净亏损以“-”号填列） 179,722,749.23 195,144,932.44 507,885,984.04 461,175,009.99 "
+    "八、每股收益： （一）基本每股收益(元/股) 0.1405 0.1269 （二）稀释每股收益(元/股) 0.1405 0.1269 "
+)
+
+
+def test_old_shanghai_q3_report_is_read_as_year_to_date(monkeypatch):
+    monkeypatch.setattr("valuation_monitor.cn_report.read_text", lambda pdf: NORTHERN_OLD_Q3)
+    p = parse_cn_report("2020 Q3 report", b"")
+    assert not p.quarterly and p.period == pd.Period("2020Q3")  # year to date: Q3 = this - the half year
+    assert p.values["revenue"] == pytest.approx([15528.96090213, 14084.53461696])
+    assert p.values["profit"] == pytest.approx([507.88598404, 461.17500999])
+    assert p.values["eps"] == [0.1405, 0.1269]
+    assert p.values["equity"] == pytest.approx([10071.81419591, 9584.73941114]) and p.values["wa_shares"] == pytest.approx([3633.066])
+    # 2015: the income statement also gives the Q3 EPS, so the year-to-date EPS are its third and fourth numbers
+    text = NORTHERN_OLD_Q3.replace("（一）基本每股收益(元/股) 0.1405 0.1269", "（一）基本每股收益(元/股) 0.0495 0.0537 0.1405 0.1269")
+    monkeypatch.setattr("valuation_monitor.cn_report.read_text", lambda pdf: text)
+    assert parse_cn_report("2020 Q3 report", b"").values["eps"] == [0.1405, 0.1269]
+    # the key table and the income statement must agree on the year to date
+    text = NORTHERN_OLD_Q3.replace("0.1405 0.1269 （二）", "0.1505 0.1269 （二）")
+    monkeypatch.setattr("valuation_monitor.cn_report.read_text", lambda pdf: text)
+    with pytest.raises(ValueError, match="eps"):
+        parse_cn_report("2020 Q3 report", b"")
+
+
+def test_express_report_in_ten_thousand_yuan_with_share_capital_in_the_same_unit(monkeypatch):
+    text = (
+        "一、2024年度主要财务数据和指标单位：人民币万元项目本报告期上年同期增减变动幅度（%）营业总收入 3,296,631.49 3,349,699.31 -1.58 "
+        "营业利润 184,009.52 311,419.58 -40.91 归属于上市公司股东的净利润 100,427.69 237,074.02 -57.64 "
+        "基本每股收益（元） 0.2778 0.6558 -57.64 本报告期末本报告期初增减变动幅度（%）总资产 4,538,091.95 4,049,665.50 12.06 "
+        "归属于上市公司股东的所有者权益 2,243,173.18 2,161,935.76 3.76 股本 361,506.58 361,506.58 0 "
+    )
+    monkeypatch.setattr("valuation_monitor.cn_report.read_text", lambda pdf: text)
+    p = parse_cn_express("2024 annual express report", b"")
+    assert p.values["revenue"] == pytest.approx([32966.3149, 33496.9931]) and p.values["eps"] == [0.2778, 0.6558]
+    assert p.values["wa_shares"] == pytest.approx([3615.0658])  # millions of shares, not 0.36
+
+
+def test_shanghai_key_data_and_balance_sheet_pages_are_kept():
+    from valuation_monitor.providers.cninfo import wanted_pages
+
+    texts = [
+        "目录",  # 0
+        "2.1 主要财务数据单位：元币种：人民币",  # 1: the key table of a quarterly report before 2021
+        "股东总数",  # 2
+        "附注",  # 3
+        "合并资产负债表 流动资产：",  # 4
+        "非流动资产：",  # 5
+        "归属于母公司所有者权益（或股东权益）合计 1 2",  # 6: the equity total ends the balance sheet
+        "母公司资产负债表",  # 7
+        "附注", "附注", "附注",
+    ]
+    assert wanted_pages(texts) == [1, 2, 4, 5, 6, 7]
+
+
+@saved_northern
+def test_saved_northern_rare_earth_reports_parse():
+    index = json.loads((NORTHERN_RARE_EARTH / "index.json").read_text(encoding="utf-8"))
+    assert len(index) >= 50
+    for e in index:
+        content = (NORTHERN_RARE_EARTH / e["file"]).read_bytes()
+        p = parse_cn_express(e["title"], content) if e["kind"] == "express" else parse_cn_report(e["title"], content)
+        assert p.period == pd.Period(year=e["year"], quarter=e["quarter"], freq="Q")
+        profit, eps, shares = p.values["profit"][0], p.values["eps"][0], p.values["wa_shares"][0]
+        if abs(eps) >= 0.03:  # smaller EPS (2016 and 2017 Q1: 0.002, 0.02) are dominated by rounding
+            assert profit / eps == pytest.approx(shares, rel=0.03), e["title"]
+
+
+@saved_northern
+def test_saved_northern_rare_earth_figures():
+    def report(title):
+        e = next(e for e in json.loads((NORTHERN_RARE_EARTH / "index.json").read_text(encoding="utf-8")) if e["title"] == title)
+        content = (NORTHERN_RARE_EARTH / e["file"]).read_bytes()
+        return (parse_cn_express if e["kind"] == "express" else parse_cn_report)(e["title"], content)
+
+    q3, h1 = report("2020 Q3 report"), report("2020 H1 report")
+    assert not q3.quarterly and q3.values["eps"] == [0.1405, 0.1269]
+    # year to date - half year = the Q3 column of the income statement (5,918,394,483.24 yuan)
+    assert q3.values["revenue"][0] - h1.values["revenue"][0] == pytest.approx(5918.39448324)
+    assert report("2015 Q3 report").values["eps"] == [0.083, 0.109]  # year to date, not the 0.011 of the quarter
+    new_q3 = report("2026 Q3 report")
+    assert new_q3.quarterly and new_q3.values["eps"] == [0.4407] and new_q3.values["profit"] == pytest.approx([1592.92996878])
+    assert report("2014 annual report").values["wa_shares"] == pytest.approx([2422.044])  # before the 10-for-5 conversion of 2015
+    assert report("2025 annual express report").values["wa_shares"] == pytest.approx([3615.0658])

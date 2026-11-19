@@ -61,3 +61,11 @@ def test_the_deployment_fails_when_a_stock_cannot_be_loaded():
     text = (ROOT / "scripts" / "deploy-cloud.sh").read_text(encoding="utf-8")
     block = text[text.index('phase "Check the deployed service'):]
     assert '"name":"list_stocks"' in block and '"error" in s' in block and "sys.exit" in block and "exit 1" in block
+
+
+def test_the_adobe_cid_tables_ship_with_the_package_and_their_license():
+    pyproject = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
+    assert '"valuation_monitor" = ["cmaps/*"]' in pyproject  # package data: installed by `pip install .` in the image too
+    folder = ROOT / "src" / "valuation_monitor" / "cmaps"
+    assert {p.name for p in folder.iterdir()} == {"Adobe-GB1-UCS2", "Adobe-CNS1-UCS2", "NOTICE"}
+    assert "Redistribution and use in source and binary forms" in (folder / "NOTICE").read_text(encoding="utf-8")

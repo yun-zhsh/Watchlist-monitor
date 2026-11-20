@@ -122,6 +122,7 @@ The incident closes by itself an hour after the last failure.
 | 2026-11-03 | MCP service | 111 s | 146 s | the `Dockerfile` (the `mcp` extra) |
 | 2026-11-03 | v0.4.0 (`all`, then `mcp` at once) | 86 s, then 23 s | 123 s | `pyproject.toml` again; the second build in a row had nothing new at all |
 | 2026-11-04 | three companies: job, then web and MCP | 29 s, 23 s, 24 s | 47 s, 50 s, 72 s | code, data and `config.yaml` only |
+| 2026-11-20 | v0.4.2 (four companies): MCP, after `all` and one update run | 26 s | 82 s | code and `config.yaml`; the check reported "12 of 12 stocks load" |
 
 **Result: the layer cache works.** A change that leaves `pyproject.toml` and the `Dockerfile` alone builds in about 25 to 30 seconds (the dependencies are not installed again), against about 90 to 110 seconds when either changes.
 

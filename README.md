@@ -137,7 +137,7 @@ On start it first updates the data (a few seconds to a dozen or so), then opens 
   - data sources and cross-check status;
   - download buttons: historical prices, historical earnings, per-share metrics (with formulas), daily valuation detail, all raw data (zip). The CSVs have English column names (file names such as `0700.HK_historical_prices.csv`) and open directly in Excel.
   - **Checking the calculation**: hover over a day on a trend chart to see the full formula of that day's ratio, e.g. `PE = close / (per-share value x FX rate) = 232,000 KRW / (32,308 KRW x 1) = 7.18`, followed by how the per-share value was obtained (`TTM EPS = 2025Q4 2,874* + 2026Q1 7,123 + 2026Q2 10,849 + 2026Q3 11,462 = 32,308`; for PS and PB it also lists the revenue of each period, and how equity and shares were obtained), which period of earnings it came from and when that was published.
-- **Update data**: the button at the top right fetches the latest prices and filings over the network.
+- **Update data**: the button at the top right fetches the latest prices and filings over the network. A line at the top of the page then says whether new data was loaded or there was none (on Google Cloud, while the update job runs, that it is still running).
 
 Options: `--port` sets the port (default 8050), `--no-browser` does not open the browser; `-c`, `--data-dir` and `--refresh` are the same as in the CLI. By default only the local machine may connect.
 

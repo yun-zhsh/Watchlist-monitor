@@ -10,6 +10,9 @@ Settings (environment variables):
   VALUATION_DB_PATH      where the local copy lives (the data directory's valuation.db by default)
   VALUATION_UPDATE_JOB   projects/PROJECT/locations/REGION/jobs/NAME: the Cloud Run job the "Update data" button starts
 
+Next to the database, the update job keeps a small status object (update-status.json, see STATUS_NAME): when the last update
+started and finished and whether it brought new data. The page reads it after "Update data" to say how far the update is.
+
 The version of an object is its GCS "generation". An upload carries "only if the generation is still N", so two jobs running
 at the same time cannot overwrite each other: the second one fails and nothing is lost.
 """
@@ -17,7 +20,10 @@ at the same time cannot overwrite each other: the second one fails and nothing i
 from __future__ import annotations
 
 import hashlib
+import json
 import os
+import sys
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Protocol
 
@@ -35,6 +41,12 @@ class ObjectStore(Protocol):
 
     def upload(self, uri: str, path: Path, if_generation_match: int) -> int:
         """Upload `path` only if the object's generation is still `if_generation_match` (0: it must not exist). Returns the new generation."""
+
+    def read_text(self, uri: str) -> str | None:
+        """The text of a small object, None if it does not exist."""
+
+    def write_text(self, uri: str, text: str) -> None:
+        """Replace a small text object."""
 
 
 def split_uri(uri: str) -> tuple[str, str]:
@@ -80,6 +92,14 @@ class GcsObjectStore:
         except PreconditionFailed as e:
             raise ConcurrentUpdate(f"{uri} was changed by someone else since it was downloaded; nothing was uploaded") from e
         return blob.generation
+
+    def read_text(self, uri: str) -> str | None:
+        blob = self._blob(uri)
+        return blob.download_as_text() if blob else None
+
+    def write_text(self, uri: str, text: str) -> None:
+        bucket, name = split_uri(uri)
+        self._client.bucket(bucket).blob(name).upload_from_string(text, content_type="application/json")
 
 
 def file_sha(path: Path) -> str:
@@ -145,6 +165,49 @@ class RemoteDatabase:
         self._marker.write_text(str(generation))
         self._pulled_sha = file_sha(self.local)
         return True
+
+
+STATUS_NAME = "update-status.json"
+
+# results an update can end with (the "result" field of the status object; "running" while it runs)
+RUNNING, NEW_DATA, NO_NEW_DATA, FAILED = "running", "new_data", "no_new_data", "failed"
+
+
+def status_uri(db_uri: str) -> str:
+    """The status object that sits next to the database object (same bucket and folder)."""
+    bucket, name = split_uri(db_uri)
+    folder = name.rsplit("/", 1)[0] + "/" if "/" in name else ""
+    return f"gs://{bucket}/{folder}{STATUS_NAME}"
+
+
+def utc_now() -> datetime:
+    return datetime.now(timezone.utc).replace(microsecond=0)
+
+
+def format_time(moment: datetime) -> str:
+    return moment.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def parse_time(text: str | None) -> datetime | None:
+    try:
+        return datetime.strptime(text or "", "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+    except ValueError:
+        return None
+
+
+def write_status(store: ObjectStore, uri: str, status: dict) -> None:
+    store.write_text(uri, json.dumps(status, sort_keys=True))
+
+
+def read_status(store: ObjectStore, uri: str) -> dict | None:
+    """The last status the update job wrote, None if there is none or it cannot be read (the page then just says it is updating)."""
+    try:
+        text = store.read_text(uri)
+        status = json.loads(text) if text else None
+    except Exception as e:  # a missing permission or a broken object must not break the page
+        print(f"Could not read the update status {uri}: {e}", file=sys.stderr)
+        return None
+    return status if isinstance(status, dict) else None
 
 
 def start_job(job: str, session=None) -> str:

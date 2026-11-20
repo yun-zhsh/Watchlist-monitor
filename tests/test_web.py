@@ -48,7 +48,9 @@ def test_downloads(client):
 
 def test_refresh_redirects_back(client):
     r = client.post("/refresh", data={"next": "/stock/0700.HK/"})
-    assert r.status_code == 302 and r.headers["Location"].endswith("/stock/0700.HK/")
+    assert r.status_code == 302 and r.headers["Location"].startswith("/stock/0700.HK/?updated=")
+    page = client.get(r.headers["Location"]).get_data(as_text=True)
+    assert "Update finished at" in page and ("new data loaded" in page or "no new data" in page)
     for target in ("https://example.com", "//example.com"):
         r = client.post("/refresh", data={"next": target})
         assert "example.com" not in r.headers["Location"]

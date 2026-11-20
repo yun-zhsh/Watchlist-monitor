@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}Stock Valuation Monitor{% endblock %}</title>
+  {% if update_notice and update_notice.refresh %}<meta http-equiv="refresh" content="15">{% endif %}
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
@@ -24,7 +25,7 @@
     </div>
   </header>
   <main class="container">
-    {% if request.args.get("updating") %}<div class="notice">Update started. It takes about a minute; reload this page in a few minutes. Only completed trading days are saved: a day's closing price appears after midnight in the market's own time zone (for example after 00:00 Hong Kong time for Hong Kong stocks and A-shares, after 00:00 New York time for US stocks). Until then the previous close is shown.</div>{% endif %}
+    {% if update_notice %}<div class="notice{% if update_notice.kind == 'error' %} notice-error{% endif %}" role="status">{{ update_notice.text }}</div>{% endif %}
     {% if request.args.get("update_failed") %}<div class="notice notice-error">The update could not be started. Check the server log.</div>{% endif %}
     {% block content %}{% endblock %}
   </main>

@@ -267,12 +267,23 @@ After code or `config.yaml` changes are merged into `main`, run these four steps
    cd ~/Watchlist-monitor && git pull origin main && scripts/deploy-cloud.sh all
    ```
 
-3. Run the update job once and wait for it, so that stocks added since the last deployment get their data in the bucket. The first
-   run after adding a stock downloads all of its filings and takes longer than usual.
+3. Run the update job once, so that stocks added since the last deployment get their data in the bucket. The first run after adding
+   a stock downloads all of its filings and takes longer than usual (the job's limit is 30 minutes per attempt, with one retry).
 
    ```bash
-   gcloud run jobs execute valuation-update --region=$REGION --wait
+   gcloud run jobs execute valuation-update --region=$REGION
    ```
+
+   Do not add `--wait`: Cloud Shell disconnects after a while without input, and the progress line then stays at "0 / 1 complete"
+   although the execution has long finished. The status is kept by Google Cloud, not by the terminal. Check it a few minutes later,
+   in the console (Cloud Run -> Jobs -> `valuation-update` -> Executions, with logs) or with:
+
+   ```bash
+   gcloud run jobs executions list --job=valuation-update --region=$REGION --limit=3
+   ```
+
+   Then open the web page: every stock must show a price and its metrics, not "Failed to load data". A stock that is configured but
+   has no data yet is listed by name with that error, so seeing the names alone does not prove the update succeeded.
 
 4. Only if the public MCP service is deployed (`valuation-mcp`; it is never part of `all`):
 

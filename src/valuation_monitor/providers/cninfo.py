@@ -35,6 +35,7 @@ import pandas as pd
 from pypdf import PdfReader, PdfWriter
 
 from valuation_monitor import cn_patterns as cn
+from valuation_monitor.cn_report import page_texts
 from valuation_monitor.providers.base import Filing, Release, save_index
 from valuation_monitor.providers.http import HttpClient
 
@@ -96,9 +97,14 @@ def wanted_pages(texts: list[str]) -> list[int]:
         if cn.BALANCE_SHEET_TITLE_RE.search(t):
             for j in range(i, min(i + 6, len(texts))):
                 wanted.add(j)
-                if cn.EQUITY_TOTAL_WORD in texts[j]:
+                if cn.EQUITY_TOTAL_RE.search(texts[j]):
                     break
     return sorted(w for w in wanted if w < len(texts))
+
+
+def has_text(pdf: bytes) -> bool:
+    """Does the PDF have a text layer with Chinese text (not only scanned images)?"""
+    return any(re.search(cn.CJK_CHAR, t) for t in page_texts(pdf))
 
 
 def excerpt_pages(pdf: bytes) -> bytes:
@@ -106,7 +112,7 @@ def excerpt_pages(pdf: bytes) -> bytes:
     reader = PdfReader(io.BytesIO(pdf))
     if len(reader.pages) <= 6:
         return pdf  # an express report has two pages; keep the whole file
-    texts = [" ".join((p.extract_text() or "").split()) for p in reader.pages]
+    texts = [" ".join(t.split()) for t in page_texts(pdf)]  # read from a separate copy: the pages written below stay unchanged
     writer = PdfWriter()
     for i in wanted_pages(texts):
         writer.add_page(reader.pages[i])
@@ -215,7 +221,7 @@ class CninfoProvider:
         found += self._listing(code, org_id, f"{pd.Timestamp(since).year - 1}-01-01", end, search=cn.EXPRESS_SEARCH_WORD)
 
         known = {str(e["id"]) for e in index}
-        best: dict[tuple[str, int, int], dict] = {}
+        candidates: dict[tuple[str, int, int], list[dict]] = {}
         for a in found:
             title = a["announcementTitle"].replace("<em>", "").replace("</em>", "").strip()
             cls = classify(title)
@@ -226,16 +232,23 @@ class CninfoProvider:
             if any((e["kind"], e["year"], e["quarter"]) == key for e in index):
                 continue
             rank = (listing_time(a["announcementTime"]), 0 if cn.BODY_TEXT_WORD not in title else 1)
-            if key not in best or rank < best[key]["rank"]:
-                best[key] = {"rank": rank, "title": title, "a": a}
+            candidates.setdefault(key, []).append({"rank": rank, "title": title, "a": a})
 
         added = False
-        for (kind, year, quarter), item in sorted(best.items(), key=lambda kv: kv[1]["rank"]):
-            a, listed = item["a"], item["rank"][0]
-            if listed + timedelta(days=1) < pd.Timestamp(since):
+        for (kind, year, quarter), items in sorted(candidates.items(), key=lambda kv: min(i["rank"] for i in kv[1])):
+            items.sort(key=lambda i: i["rank"])  # stable: equal ranks keep the listing order
+            if items[0]["rank"][0] + timedelta(days=1) < pd.Timestamp(since):
                 continue
-            url = STATIC + a["adjunctUrl"]
-            resp = self.http.get_response(url)
+            # The first-ranked file, unless it is a scan without a text layer and another listing of the same period and day has one
+            # (Bank of Nanjing's 2018 Q1 report was listed twice on one day, once as a scanned image)
+            same_day = [i for i in items if i["rank"][0] == items[0]["rank"][0]]
+            for n, item in enumerate(same_day):
+                a, listed = item["a"], item["rank"][0]
+                url = STATIC + a["adjunctUrl"]
+                resp = self.http.get_response(url)
+                if n == len(same_day) - 1 or has_text(resp.content):  # only read the text when there is another listing to fall back on
+                    break
+                print(f"{symbol}: {url} has no text layer; trying the next listing of the {english_title(kind, year, quarter)}", file=sys.stderr)
             published, basis = published_time(listed, resp.headers.get("Last-Modified"))
             folder.mkdir(parents=True, exist_ok=True)
             name = f"{published:%Y-%m-%d}_{a['announcementId']}.pdf"

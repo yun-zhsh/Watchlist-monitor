@@ -25,4 +25,8 @@
 - Run the tests with `.venv/bin/pytest` (offline).
 - Bump the layout's number in `PARSER_VERSIONS` (`filings.py`) whenever parsing rules or output text of a parser change.
 - The MCP server (`mcp_server.py`, docs/mcp-server.md) must stay read-only and offline. A new tool needs an `as_of` date, sources in its result, and no arithmetic outside Python, with tests in `tests/test_mcp_server.py`. Test it on the real saved data of every configured stock with writes refused and no secrets (`tests/test_mcp_production.py`), not only on synthetic data.
+- Google Cloud is not deployed automatically. After a pull request is merged into `main`, ask the maintainer whether to deploy it to
+  Google Cloud. If yes, give the four steps of "Updating later" in `docs/deploy-google-cloud.md` (region, `scripts/deploy-cloud.sh all`,
+  run the update job and wait, then `scripts/deploy-cloud.sh mcp`), explained in the language of the conversation. There are no GCP
+  credentials here, so the maintainer runs them in Cloud Shell.
 - The trading calendar module is specified in `docs/trading-calendar.md` (decisions, data files, rules, the four pull requests, golden dates). It is **on hold**: do not build any part of it unless the maintainer asks. When it is built, build it as written there (sections 21 and 22 first); if something in it turns out wrong, correct the document in the same pull request.

@@ -249,12 +249,47 @@ If your organization forbids public services, the deployment is refused; keep us
 
 ## Updating later
 
-After code or `config.yaml` changes are merged, in Cloud Shell:
+Deploying is **not automatic**. The schedule of step 7 only refreshes the data of the stocks the deployed image knows. Code and
+`config.yaml` are built into the image (`COPY config.yaml` in the `Dockerfile`), so a stock added on `main` appears on Cloud Run only
+after a new deployment. The GitHub workflow publishes the GitHub Pages site only; it has no Google Cloud credentials.
+
+After code or `config.yaml` changes are merged into `main`, run these four steps in Cloud Shell, in this order:
+
+1. Set the region (needed again whenever Cloud Shell is reopened):
+
+   ```bash
+   export REGION=asia-east2
+   ```
+
+2. Get the latest `main`, build the image once and deploy the update job and the web page from it:
+
+   ```bash
+   cd ~/Watchlist-monitor && git pull origin main && scripts/deploy-cloud.sh all
+   ```
+
+3. Run the update job once and wait for it, so that stocks added since the last deployment get their data in the bucket. The first
+   run after adding a stock downloads all of its filings and takes longer than usual.
+
+   ```bash
+   gcloud run jobs execute valuation-update --region=$REGION --wait
+   ```
+
+4. Only if the public MCP service is deployed (`valuation-mcp`; it is never part of `all`):
+
+   ```bash
+   scripts/deploy-cloud.sh mcp
+   ```
+
+The order of steps 3 and 4 matters. The MCP service only reads the data already in the bucket, and the script fails the MCP deployment
+when any configured stock cannot be loaded. A stock that the update job has not fetched yet reports "Saved data could not be read",
+so the script prints "deployed but NOT healthy": the new revision is live, but that stock cannot be looked up yet. If you skip step 3
+and wait for the scheduled update instead, check that an execution started after step 2 has succeeded before step 4:
 
 ```bash
-cd ~/Watchlist-monitor && git pull origin main
-scripts/deploy-cloud.sh          # or: scripts/deploy-cloud.sh job   /   scripts/deploy-cloud.sh web   /   scripts/deploy-cloud.sh mcp
+gcloud run jobs executions list --job=valuation-update --region=$REGION --limit=3
 ```
+
+To deploy only one part, use `scripts/deploy-cloud.sh job`, `scripts/deploy-cloud.sh web` or `scripts/deploy-cloud.sh mcp`.
 
 The script builds the container image **once** and deploys the update job and the web page from it (the commands of steps 5 and 6 build
 twice, one image each). It also makes rebuilds faster in two ways: `.gcloudignore` keeps `data/` (the original filings, about 70 MB) out

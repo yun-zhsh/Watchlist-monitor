@@ -97,6 +97,11 @@ stocks:
     market: CN   # ChiNext; Chinese periodic reports on CNINFO. Optical transceivers since the 2017 acquisition of Suzhou Innolight
     filing_format: cn_report   # RMB; no Non-GAAP figures
     metrics: [pe, ps, pb]
+  - symbol: 600111.SS
+    name: China Northern Rare Earth
+    market: CN   # the first Shanghai-listed stock; Chinese periodic reports and express reports on CNINFO. Formerly Baotou Steel Rare-Earth
+    filing_format: cn_report   # RMB; no Non-GAAP figures
+    metrics: [pe, ps, pb]
   - symbol: 601009.SS
     name: Bank of Nanjing
     market: CN   # Shanghai; Chinese periodic reports and express reports on CNINFO. A commercial bank

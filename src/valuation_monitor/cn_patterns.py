@@ -10,9 +10,11 @@ from __future__ import annotations
 import re
 
 # --- CNINFO announcement titles -------------------------------------------------------------------------
-# Shanghai-listed companies put their full company name before the title (Bank of Nanjing from 2021 on)
-COMPANY_PREFIX = r"(?:[一-鿿]+股份有限公司)?"
-TITLE_RE = re.compile(r"^" + COMPANY_PREFIX + r"(?P<year>\d{4})年(?P<kind>第一季度|一季度|半年度|第三季度|三季度|年度)报告(?:全文|正文)?(?:（更新后）)?$")
+# Shanghai-listed companies put their full company name (Bank of Nanjing from 2021 on) or their short name (China Northern
+# Rare Earth from 2021 on) before the title. Some annual report titles drop the second "year" character (China Northern Rare
+# Earth's 2019 annual report).
+COMPANY_PREFIX = r"(?:[一-鿿]+股份有限公司|[一-鿿A-Za-z*]{2,8})?"
+TITLE_RE = re.compile(r"^" + COMPANY_PREFIX + r"(?P<year>\d{4})年(?P<kind>第一季度|一季度|半年度|第三季度|三季度|年度|度)报告(?:全文|正文)?(?:（更新后）)?$")
 EXPRESS_RE = re.compile(r"^" + COMPANY_PREFIX + r"(?P<year>\d{4})年(?P<kind>半年度|度)业绩快报(?:公告)?$")  # Shanghai: "... announcement"
 QUARTER_OF = {"第一季度": 1, "一季度": 1, "半年度": 2, "第三季度": 3, "三季度": 3, "年度": 4, "度": 4}
 # Titles containing any of these are summaries, English translations, ESG reports, corrections and the like.
@@ -36,26 +38,37 @@ TRADITIONAL_ENUMERATION_COMMA = r"\s*Ƚ\s*"  # the look-alike enumeration comma 
 CJK_CHAR = r"[一-鿿]"  # a Chinese character: a page without any has no usable text layer (a scan)
 CJK_GAP_RE = r"(?<=[一-鿿（）]) (?=[一-鿿（）])"  # PDF text extraction inserts spaces where lines wrap inside Chinese text
 # Annual and half-year statements have a note column after the item name: a Chinese numeral in brackets or followed by a separator, then the note number.
+# Shanghai reports may put a "note" word before the note number (note VII.61, or note 40 without the Chinese numeral).
 # Banks' audited statements give just the note number ("basic EPS 47 1.76 1.83", "trading assets 7(a) ..."): a one- or
 # two-digit integer is a note only when an amount with a thousands separator or decimals follows.
 NOTE = (
-    r"(?:(?:[（(][一二三四五六七八九十]+[)）]|[一二三四五六七八九十]+、)\s?\d+(?:、\d+)*\s+"
+    r"(?:(?:附注\s*)?(?:[（(][一二三四五六七八九十]+[)）]|[一二三四五六七八九十]+、)\s?\d+(?:、\d+)*\s+|注释\s*\d+\s+"
     r"|\d{1,2}(?:\([a-z]\))?\s+(?=[(-]?\d{1,3}(?:,\d{3})+(?:\.\d+)?(?![\d,])|[(-]?\d+\.\d+))?"
 )
 FOOTNOTE = r"(?:\[\s*注\s*\d*\s*\])?"  # footnote marker in the key-data table, e.g. "[note 2]"
 
 KEY_TABLE = "主要会计数据和财务指标"
-# Banks (Bank of Nanjing) word the headings and rows of the key-data table differently, without a unit in the row name
-# (the table states thousand yuan once). Each FALLBACK is tried only where the usual name is not found.
+# Shanghai quarterly reports before 2021 (China Northern Rare Earth) call the key-data table just "main financial data"; banks
+# (Bank of Nanjing) also use "main accounting data and financial indicators" with another conjunction. Each FALLBACK is
+# tried only where the usual name is not found.
 KEY_TABLE_FALLBACK = r"主要会计数据(?:和|及)财务指标|主要财务数据"
 KEY_REVENUE = r"营业(?:总)?收入（元）"  # older ChiNext reports (Innolight) label the total operating revenue
-KEY_PROFIT = r"归属于(?:上市)?公司(?:普通股)?股东的净利润（元）"  # older reports (Innolight) say "the company's ordinary shareholders"
-KEY_EPS = r"基本每股收益（元\s*/\s*股）"
+# In the parser the unit is optional: Shanghai reports state "unit: yuan" (banks: thousand yuan) above the table instead of in
+# every row; some bank tables say "(thousand yuan)" in the row name
+KEY_UNIT = r"(?:（元）)?"
 THOUSAND = r"(?:\s*[（(]\s*千元\s*[)）])?"
-# a table row: the number is followed by another one (the prose of a bank report also gives the revenue in hundred million yuan)
-TABLE_ROW = r"(?=\s*-?[\d,]+(?:\.\d+)?\s+[-(\d])"
-KEY_REVENUE_FALLBACK = r"营业收入" + THOUSAND + TABLE_ROW
-KEY_PROFIT_FALLBACK = r"归属于(?:上市公司|母公司)股东的?净利润" + THOUSAND + TABLE_ROW  # some bank tables leave out the particle before "net profit"
+# not an amount in the prose: a bank report also gives the revenue in hundred million (or ten thousand) yuan, or a growth rate
+NOT_PROSE = r"(?!\s*(?:\[\s*注\s*\d*\s*\])?\s*-?[\d,]+(?:\.\d+)?\s*[亿万%％])"
+KEY_REVENUE_ROW = r"营业(?:总)?收入" + KEY_UNIT + THOUSAND + NOT_PROSE
+KEY_PROFIT = r"归属于(?:上市)?公司(?:普通股)?股东的净利润" + KEY_UNIT + THOUSAND + NOT_PROSE  # older reports (Innolight) say "the company's ordinary shareholders"
+KEY_EPS = r"基本每股收益[（(]元\s*[/／]\s*股[)）]"  # Shanghai reports may use a full-width slash
+# Shanghai Q3 reports before 2021 give only year-to-date (January to September) figures in the key-data table: this header
+# stands right before the revenue row instead of the "this reporting period" (single quarter) column of other reports
+KEY_YTD_ONLY_HEADER = (
+    r"年初至报告期末\s*[（(]\s*1\s*[-－—]\s*9\s*月\s*[)）]\s*上年初至上年报告期末\s*[（(]\s*1\s*[-－—]\s*9\s*月\s*[)）]"
+    r"\s*比上年同期增减\s*[（(]\s*%\s*[)）]\s*"
+)
+KEY_PROFIT_FALLBACK = r"归属于(?:上市公司|母公司)股东的?净利润" + THOUSAND + NOT_PROSE  # some bank tables leave out the particle before "net profit"
 KEY_EPS_FALLBACK = r"基本每股收益\s*[（(]\s*(?:人民币)?元\s*(?:[/／╱]\s*股\s*)?[)）]"  # yuan per share with other slashes, or just yuan
 INCOME_REVENUE = r"一、营业(?:总)?收入"
 # Banks' audited statements do not number the items: the operating revenue is the row before the net interest income
@@ -63,13 +76,14 @@ INCOME_REVENUE_FALLBACK = r"营业收入"
 INCOME_REVENUE_FALLBACK_NEXT = r"(?=\s*利息净收入)"
 INCOME_PROFIT = r"归属于母公司(?:所有者|股东)的净利润"
 # Some companies (Glodon) add the sign convention after the item name ("net loss shown with a minus sign")
-LOSS_SIGN_NOTE = r"(?:[（(]\s*净亏损以\s*[“\"]?\s*[-－—]\s*[”\"]?\s*号填列\s*[)）])?"
+# Its last words ("filled in" and the bracket) can be pushed past the numbers by a page break (China Northern Rare Earth's 2026 Q3 report)
+LOSS_SIGN_NOTE = r"(?:[（(]\s*净亏损以\s*[“\"]?\s*[-－—]\s*[”\"]?\s*号(?:\s*填列\s*[)）])?)?"
 # Companies with a finance business (Glodon) report total operating revenue = operating revenue + interest and fee income;
 # the key-data table and the headline revenue are the operating revenue, the first item under the total.
 INCOME_OPERATING_REVENUE = r"其中\s*[：:]\s*营业收入"
 BEFORE_OPERATING_REVENUE = r"[^、]{0,80}?"  # a page footer may sit between the total and the operating revenue, but no other numbered item
 INCOME_EPS = r"基本每股收益(?:\s*[（(]\s*元\s*/\s*股\s*[)）])?"
-EQUITY = r"归属于母公司(?:所有者|股东)权益合计"
+EQUITY = r"归属于母公司(?:所有者|股东)权益(?:（或股东权益）)?合计"  # Shanghai reports add "(or shareholders' equity)"
 EQUITY_FALLBACK = r"归属于母公司(?:股东的|股权)权益(?:合计)?"  # banks' reports (a typo in some; 2019 H1 without "total")
 INCOME_EPS_FALLBACK = r"基本每股收益(?:及|和)稀释每股收益(?:\s*[（(]\s*人民币元\s*/\s*股\s*[)）])?"  # one row for both (banks, 2014-2017)
 SHARE_CAPITAL = r"(?:实收资本（或股本）|(?<!总)股本)"
@@ -114,7 +128,7 @@ EXPRESS_TEN_THOUSAND_SHARES = r"（万股）"
 # The consolidated balance sheet, or the only one of a company without subsidiaries (Innolight before its 2017 acquisition);
 # not the parent-company balance sheet that follows the consolidated one
 BALANCE_SHEET_TITLE_RE = re.compile(r"合并资产负债表|(?<!母公司)资产负债表\s*编制单位")
-EQUITY_TOTAL_WORD = "权益合计"
+EQUITY_TOTAL_RE = re.compile(r"权益(?:（或股东权益）)?合计")
 
 
 def is_wanted_page(text: str) -> bool:
@@ -123,5 +137,5 @@ def is_wanted_page(text: str) -> bool:
     key_table = KEY_TABLE in text or re.search(KEY_REVENUE, text) or re.search(KEY_TABLE_FALLBACK, text)
     # The income statement can run over three pages (Glodon's Q1 reports): the page with the net profit keeps the EPS page after it
     income = re.search(INCOME_REVENUE, text) or re.search(INCOME_PROFIT, text) or re.search(INCOME_REVENUE_FALLBACK + r"\s+[\d,]+\s+[\d,]+" + INCOME_REVENUE_FALLBACK_NEXT, text)
-    balance = ("归属于母公司" in text and "权益合计" in text) or (re.search(r"(?<!总)股本", text) and "资本公积" in text)
+    balance = ("归属于母公司" in text and EQUITY_TOTAL_RE.search(text)) or (re.search(r"(?<!总)股本", text) and "资本公积" in text)
     return bool(key_table or income or balance)

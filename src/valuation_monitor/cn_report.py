@@ -1,10 +1,11 @@
 """Extract earnings data from the Chinese periodic reports and express reports of A-share companies
-(PDF originals; verified on all Hikvision, Glodon and Zhongji Innolight reports from 2014 on).
+(PDF originals; verified on all Hikvision, Glodon, Zhongji Innolight, China Northern Rare Earth and Bank of Nanjing reports from 2014 on).
 
 The report type decides which numbers are used:
   Q1 report        consolidated income statement, current period and prior period (single quarter)
   Half-year report consolidated income statement, current and prior period (cumulative, first half)
-  Q3 report        the single-quarter Q3 figures are only in the "key accounting data" table (its first column)
+  Q3 report        the single-quarter Q3 figures are only in the "key accounting data" table (its first column); where
+                   that table gives only year-to-date figures (Shanghai reports before 2021), see year_to_date_q3
   Annual report    consolidated income statement, current and prior period (full year, cumulative)
   Express report   preliminary annual figures (not audited by the accounting firm), published before the annual
                    report: revenue, net profit, EPS, equity, share capital
@@ -123,9 +124,11 @@ def unit_at(text: str, pos: int, row_start: int | None = None) -> float:
     return next((size for size, group in zip(UNIT_SIZES, last.groups()) if group), 1.0)
 
 
-def amount_row(text: str, name: str, labels: str | tuple[str, ...], count: int, start: int = 0, optional: str = "", end: str = "") -> tuple[list[float], int]:
+def amount_row(
+    text: str, name: str, labels: str | tuple[str, ...], count: int, start: int = 0, optional: str = "", end: str = "", earliest: bool = False
+) -> tuple[list[float], int]:
     """Like row, but the amounts in yuan (or shares): banks state them in thousands."""
-    m = find_row(text, name, labels, count, start, optional, end)
+    m = find_row(text, name, labels, count, start, optional, end, earliest)
     unit = unit_at(text, m.start(1), m.start())
     return [to_number(g) * unit for g in m.groups()], m.end()
 
@@ -187,6 +190,15 @@ def rounded_alike(a: float, b: float) -> bool:
     return min(decimals(a), decimals(b)) <= 2 and round(a, 2) == round(b, 2)
 
 
+def year_to_date_eps(text: str, start: int, first_two: list[float]) -> list[float]:
+    """The year-to-date EPS of an income statement with Q3 and year-to-date columns: the third and fourth numbers where the EPS
+    row has four (2015), otherwise the only two there are (later reports give the year-to-date EPS only)."""
+    rows = [re.compile(rf"(?:{cn.INCOME_EPS})\s*{cn.NOTE}" + r"\s+".join([NUM] * n)).search(text, start) for n in (2, 4)]
+    if rows[1] and rows[1].start() == rows[0].start():
+        return [to_number(g) for g in rows[1].groups()[2:]]
+    return first_two
+
+
 def statement_single_quarter(text: str, key: dict[str, float]) -> dict[str, float] | None:
     """The Q3 single-quarter figures (revenue and profit in millions) from an income statement with four columns (Q3 this
     year, Q3 last year, year-to-date this year and last year), when the key-data table gives only the year-to-date figures:
@@ -221,11 +233,18 @@ def parse_cn_report(title: str, pdf: bytes) -> Parsed:
         key_start = fallback.start()
     if key_start < 0:
         raise ValueError("The key accounting data table was not found")
-    key = {
-        "revenue": amount_row(text, "revenue (key table)", (cn.KEY_REVENUE, cn.KEY_REVENUE_FALLBACK), 1, key_start, cn.FOOTNOTE)[0][0],
-        "profit": amount_row(text, "net profit (key table)", (cn.KEY_PROFIT, cn.KEY_PROFIT_FALLBACK), 1, key_start, cn.FOOTNOTE)[0][0],
-        "eps": row(text, "basic EPS (key table)", (cn.KEY_EPS, cn.KEY_EPS_FALLBACK), 1, key_start, cn.FOOTNOTE)[0][0],
+    # A Q3 key table with only year-to-date figures (current and prior year) has a header that says so (Shanghai reports before
+    # 2021, China Northern Rare Earth); a bank's says it differently and is recognised from the income statement instead
+    ytd_only = quarter == 3 and re.compile(cn.KEY_YTD_ONLY_HEADER + cn.KEY_REVENUE_ROW + r"\s*" + NUM).search(text, key_start) is not None
+    count = 2 if ytd_only else 1
+    key_rows = {
+        "revenue": amount_row(text, "revenue (key table)", cn.KEY_REVENUE_ROW, count, key_start, cn.FOOTNOTE)[0],
+        # the first profit row of the table, whichever name it has: a bank's key table leaves out a particle in the name, and a
+        # later table of quarterly figures in the same report uses the usual name
+        "profit": amount_row(text, "net profit (key table)", (cn.KEY_PROFIT, cn.KEY_PROFIT_FALLBACK), count, key_start, cn.FOOTNOTE, earliest=True)[0],
+        "eps": row(text, "basic EPS (key table)", (cn.KEY_EPS, cn.KEY_EPS_FALLBACK), count, key_start, cn.FOOTNOTE)[0],
     }
+    key = {name: values[0] for name, values in key_rows.items()}
 
     # Consolidated statements: current and prior period (the prior period as restated in this report)
     try:
@@ -233,11 +252,12 @@ def parse_cn_report(title: str, pdf: bytes) -> Parsed:
     except ValueError:
         total, pos = amount_row(text, "revenue", cn.INCOME_REVENUE_FALLBACK, 2, end=cn.INCOME_REVENUE_FALLBACK_NEXT)
     revenue = total
-    operating = re.compile(rf"{cn.BEFORE_OPERATING_REVENUE}{cn.INCOME_OPERATING_REVENUE}\s*" + r"\s+".join([NUM] * 2)).match(text, pos)
+    operating = re.compile(rf"{cn.BEFORE_OPERATING_REVENUE}{cn.INCOME_OPERATING_REVENUE}\s*{cn.NOTE}" + r"\s+".join([NUM] * 2)).match(text, pos)
     if operating:  # total operating revenue includes interest and fee income: use the operating revenue under it
         revenue, pos = [to_number(g) for g in operating.groups()], operating.end()
     profit, pos = amount_row(text, "net profit", cn.INCOME_PROFIT, 2, pos, cn.LOSS_SIGN_NOTE)
     eps, _ = row(text, "basic EPS", (cn.INCOME_EPS, cn.INCOME_EPS_FALLBACK), 2, pos, earliest=True)
+    eps_pos = pos
     values = {"revenue": [v / MILLION for v in revenue], "profit": [v / MILLION for v in profit], "eps": eps}
 
     # Balance sheet rows, not the "major changes" table, which lists beginning and end and then a change in percent (Innolight 2017 Q3)
@@ -260,9 +280,22 @@ def parse_cn_report(title: str, pdf: bytes) -> Parsed:
     values["wa_shares"] = [share_capital[0] / MILLION]  # period-end total shares (millions)
 
     quarterly = quarter in (1, 3)
-    if quarter == 3:
+    if ytd_only:
+        # Year-to-date figures (quarterly=False): the single Q3 is then this minus the half year. The income statement of these
+        # reports has four columns (Q3, prior-year Q3, year to date, prior year to date) but its EPS is year to date only.
+        statement = {
+            "revenue": row(text, "revenue", cn.INCOME_REVENUE, 4)[0][2:],
+            "profit": row(text, "net profit", cn.INCOME_PROFIT, 4, 0, cn.LOSS_SIGN_NOTE)[0][2:],
+            "eps": year_to_date_eps(text, eps_pos, eps),
+        }
+        for name, scale in (("revenue", MILLION), ("profit", MILLION), ("eps", 1.0)):
+            if any(abs(k - s) > (1e-6 if scale > 1 else 0.0006) * max(1.0, abs(k)) for k, s in zip(key_rows[name], statement[name])):
+                raise ValueError(f"{name}: the key table says {key_rows[name]} year to date but the consolidated income statement says {statement[name]}")
+            values[name] = [v / scale for v in key_rows[name]]
+        quarterly = False
+    elif quarter == 3:
         # The Q3 consolidated income statement is year-to-date, so the single quarter comes from the key table; unless the
-        # key table is year-to-date as well and the statement has the single quarter first (Bank of Nanjing 2015, 2017)
+        # key table is year-to-date as well without saying so and the statement has the single quarter first (Bank of Nanjing 2015-2020)
         single = statement_single_quarter(text, key)
         values["revenue"] = [single["revenue"] if single else key["revenue"] / MILLION]
         values["profit"] = [single["profit"] if single else key["profit"] / MILLION]
@@ -303,7 +336,9 @@ def parse_cn_express(title: str, pdf: bytes) -> Parsed:
     share_units = rf"(?:{cn.EXPRESS_TEN_THOUSAND_SHARES}|{cn.EXPRESS_HUNDRED_MILLION_SHARES})?"
     shares, _ = row(text, "share capital", cn.EXPRESS_SHARES, 2, 0, share_units + cn.FOOTNOTE)
     in_ten_thousands = re.search(rf"{cn.EXPRESS_SHARES}\s*{cn.EXPRESS_TEN_THOUSAND_SHARES}", text) is not None
-    share_unit = TEN_THOUSAND if in_ten_thousands else HUNDRED_MILLION if hundred_million else 1.0
+    # Without a unit of its own the share capital is an amount like the others (par value RMB 1), so it is in ten thousand
+    # shares when the table is in ten thousand yuan (China Northern Rare Earth's express reports), hundred million likewise (banks)
+    share_unit = TEN_THOUSAND if in_ten_thousands or unit else HUNDRED_MILLION if hundred_million else 1.0
     values = {
         "revenue": [v * unit_size / MILLION for v in revenue],
         "profit": [v * unit_size / MILLION for v in profit],

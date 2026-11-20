@@ -30,6 +30,11 @@ Cloud Storage bucket:  valuation.db (object)  ---->  Cloud Run service "valuatio
   are plain files in the same bucket, mounted at `/data`.
 - **The "Update data" button** starts the update job (it does not fetch by itself) and the page says so; the new data appears
   after about a minute plus the page's own 10-minute check. The page never uploads anything.
+- **Only completed trading days are saved** (`store.py`): the job fetches today's price too, but saves a day only once it is over
+  in the market's own time zone. So a day's close reaches this page with the first update after local midnight (the schedule runs
+  every 4 hours), e.g. a Hong Kong or A-share close of the 20th after 00:00 Hong Kong time on the 21st. Before that, the job logs
+  "latest close ... on" today's date but "Database unchanged: nothing to upload", and the page still shows the previous close.
+  The GitHub Pages site can show the day earlier because it is exported in the same run that fetched today's live price.
 - **Login** is handled by Identity-Aware Proxy (IAP): visitors sign in with a Google account, and only accounts you
   list can get in.
 - **Secrets**: `SEC_USER_AGENT` (your contact for SEC EDGAR) is kept in Secret Manager, never in the repository.
@@ -334,7 +339,8 @@ If the job and page were deployed before the database existed, they keep running
 - **The page shows a permission error:** your account is not on the IAP list (step 6), or you are signed in with a
   different Google account.
 - **The page is empty or an old date shows:** check that the job ran (`gcloud run jobs executions list --job=valuation-update --region=$REGION`)
-  and wait up to 10 minutes for the page to reload, or press "Update data".
+  and wait up to 10 minutes for the page to reload, or press "Update data". The newest date is the last day that is over in the
+  market's own time zone (see "Only completed trading days are saved" above), not today.
 - **"The update could not be started" after pressing "Update data":** the service account lacks the Run Invoker role on the job
   (step 6), or `VALUATION_UPDATE_JOB` is wrong; the service log has the exact error (Cloud Run -> `valuation-web` -> Logs).
 - **The job fails with "was changed by someone else since it was downloaded":** two executions overlapped (for example the schedule

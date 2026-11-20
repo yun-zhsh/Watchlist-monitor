@@ -24,7 +24,7 @@
     </div>
   </header>
   <main class="container">
-    {% if request.args.get("updating") %}<div class="notice">Update started. It takes about a minute; reload this page afterwards (new data appears within a few minutes).</div>{% endif %}
+    {% if request.args.get("updating") %}<div class="notice">Update started. It takes about a minute; reload this page in a few minutes. Only completed trading days are saved: a day's closing price appears after midnight in the market's own time zone (for example after 00:00 Hong Kong time for Hong Kong stocks and A-shares, after 00:00 New York time for US stocks). Until then the previous close is shown.</div>{% endif %}
     {% if request.args.get("update_failed") %}<div class="notice notice-error">The update could not be started. Check the server log.</div>{% endif %}
     {% block content %}{% endblock %}
   </main>

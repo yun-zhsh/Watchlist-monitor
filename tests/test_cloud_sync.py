@@ -178,6 +178,7 @@ def test_update_button_starts_the_job_instead_of_fetching(monitor):
     assert started == [1] and r.status_code == 302 and r.headers["Location"] == "/stock/0700.HK/?updating=1"
     page = client.get("/?updating=1").get_data(as_text=True)
     assert "Update started" in page and "Update started" not in client.get("/").get_data(as_text=True)
+    assert "Only completed trading days are saved" in page and "after midnight in the market" in page
 
 
 def test_update_button_reports_a_job_that_could_not_be_started(monitor, capsys):

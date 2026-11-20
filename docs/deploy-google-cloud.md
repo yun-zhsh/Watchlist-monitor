@@ -28,13 +28,20 @@ Cloud Storage bucket:  valuation.db (object)  ---->  Cloud Run service "valuatio
   in the meantime (so two jobs at once cannot overwrite each other: the second one fails and nothing is lost). The page
   downloads a newer version when there is one, checked every 10 minutes (`VALUATION_RELOAD_SECONDS`). The original filings
   are plain files in the same bucket, mounted at `/data`.
-- **The "Update data" button** starts the update job (it does not fetch by itself) and the page says so; the new data appears
-  after about a minute plus the page's own 10-minute check. The page never uploads anything.
+- **The "Update data" button** starts the update job (it does not fetch by itself). The page never uploads anything. The job
+  writes a small status object next to the database (`update-status.json`: started, finished, result), and after the click the
+  page shows one line at the top, read from it:
+  - "Updating... started at 16:21 UTC. This page refreshes itself." (the page reloads every 15 seconds);
+  - "Update finished at 16:23 UTC: new data loaded." (the page has already switched to the new database);
+  - "Update finished at 16:23 UTC: no new data. Latest prices: 2026-11-19.";
+  - "Update failed at 16:23 UTC.", or "No result after 35 minutes." when the job never reported back (see its executions).
 - **Only completed trading days are saved** (`store.py`): the job fetches today's price too, but saves a day only once it is over
-  in the market's own time zone. So a day's close reaches this page with the first update after local midnight (the schedule runs
-  every 4 hours), e.g. a Hong Kong or A-share close of the 20th after 00:00 Hong Kong time on the 21st. Before that, the job logs
-  "latest close ... on" today's date but "Database unchanged: nothing to upload", and the page still shows the previous close.
-  The GitHub Pages site can show the day earlier because it is exported in the same run that fetched today's live price.
+  in the market's own time zone, and only when its source has the day's close. Hong Kong prices come from Tencent, which has it
+  right after the close, so a Hong Kong close of the 20th is saved by the first update after 00:00 Hong Kong time on the 21st.
+  A-shares, US and Korean stocks use Yahoo only, whose daily bar keeps an empty close for some hours (for A-shares usually until
+  about 03:00 to 08:00 Hong Kong time the next day), so their close is saved by the first update after that. Before that, the job
+  logs "latest close ... on" today's date (Yahoo's live price) but "Database unchanged: nothing to upload", and the page says
+  "no new data". The GitHub Pages site can show the day earlier because it is exported in the same run that fetched the live price.
 - **Login** is handled by Identity-Aware Proxy (IAP): visitors sign in with a Google account, and only accounts you
   list can get in.
 - **Secrets**: `SEC_USER_AGENT` (your contact for SEC EDGAR) is kept in Secret Manager, never in the repository.

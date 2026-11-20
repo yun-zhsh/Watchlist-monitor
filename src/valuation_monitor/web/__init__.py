@@ -16,12 +16,13 @@ import threading
 import time
 import webbrowser
 from collections.abc import Callable
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pandas as pd
-from flask import Flask, abort, redirect, render_template, request, send_file, url_for
+from flask import Flask, abort, g, redirect, render_template, request, send_file, url_for
 
-from valuation_monitor import __version__
+from valuation_monitor import __version__, cloud
 from valuation_monitor.audit import explain
 from valuation_monitor.config import Config, load_config
 from valuation_monitor.service import PRICE_STATUS_LABELS, MetricResult, Monitor, StockReport
@@ -145,6 +146,7 @@ def create_app(
     cached_load_offline: bool = False,
     sync: Callable[[], object] | None = None,
     update_remotely: Callable[[], object] | None = None,
+    update_status: Callable[[], dict | None] | None = None,
 ) -> Flask:
     """reload_seconds: when > 0, pages older than this are rebuilt from the saved data on the next request (a server whose data
     is updated by another process, e.g. a scheduled job). cached_load_offline: such automatic loads do not use the network;
@@ -153,10 +155,13 @@ def create_app(
     sync: called before each automatic rebuild, to bring the saved data up to date first (e.g. download a newer database).
     update_remotely: when given, the "Update data" button calls this (e.g. starts the update job) instead of fetching itself;
     the page then shows that an update was started.
+    update_status: returns the status the update job last wrote (cloud.read_status); with it the page says, after "Update data",
+    whether the update is still running, brought new data, brought none or failed, and loads new data as soon as it is there.
     """
     app = Flask(__name__)
     state: dict[str, StockReport] = {}
     loaded_at = [0.0]
+    loaded_wall = [datetime.min.replace(tzinfo=timezone.utc)]  # when the data shown was loaded
     lock = threading.Lock()
 
     def refresh(offline: bool = False) -> None:
@@ -170,6 +175,7 @@ def create_app(
             state.clear()
             state.update({r.stock.symbol: r for r in reports})
             loaded_at[0] = time.monotonic()
+            loaded_wall[0] = datetime.now(timezone.utc)
 
     sync_lock = threading.Lock()
 
@@ -186,6 +192,33 @@ def create_app(
 
     app.config["refresh"] = refresh
 
+    @app.before_request
+    def status_of_the_update() -> None:
+        """After "Update data": the notice for the top of the page, and new data loaded at once when the job brought some."""
+        g.update_notice = None
+        if static_site:
+            return
+        if request.args.get("updated"):  # the page fetched by itself (no update job): the update is already over
+            at = _from_epoch(request.args.get("at"))
+            if at:
+                new_data = request.args.get("updated") == "new"
+                g.update_notice = update_message(cloud.NEW_DATA if new_data else cloud.NO_NEW_DATA, at, request.args.get("latest", ""))
+            return
+        clicked = _from_epoch(request.args.get("updating"))
+        if not clicked or not update_remotely:
+            return
+        status = update_status() if update_status else None
+        started = cloud.parse_time(status.get("started")) if status else None
+        finished = cloud.parse_time(status.get("finished")) if status else None
+        if started and started >= clicked - CLOCK_SLACK and finished and status.get("result") in FINAL_RESULTS:
+            if status["result"] == cloud.NEW_DATA and loaded_wall[0] < finished + timedelta(seconds=1):  # finished is cut to the second
+                loaded_at[0] = float("-inf")  # the next ensure_state() downloads the new database and rebuilds the pages
+            g.update_notice = update_message(status["result"], finished, status.get("latest_prices", ""))
+        elif cloud.utc_now() - clicked > UPDATE_TIMEOUT:
+            g.update_notice = {"kind": "error", "text": f"No result after {UPDATE_TIMEOUT.seconds // 60} minutes.", "refresh": False}
+        else:
+            g.update_notice = {"kind": "info", "text": f"Updating... started at {clicked:%H:%M} UTC. This page refreshes itself.", "refresh": True}
+
     @app.context_processor
     def helpers():
         levels = monitor.config.levels
@@ -200,6 +233,7 @@ def create_app(
             "static_site": static_site,
             "version": __version__,
             "download_name": downloads.download_name,
+            "update_notice": g.get("update_notice"),
         }
 
     @app.get("/")
@@ -226,13 +260,18 @@ def create_app(
         if update_remotely:
             try:
                 update_remotely()
-                note = "updating=1"
+                note = f"updating={int(time.time())}"
             except Exception as e:  # e.g. missing permission: the page says so instead of failing
                 print(f"Could not start the update: {e}", file=sys.stderr)
                 note = "update_failed=1"
             return redirect(f"{target}{'&' if '?' in target else '?'}{note}")
+        before = cloud.file_sha(monitor.db.path)
         refresh()
-        return redirect(target)
+        from valuation_monitor.cli import latest_saved_price
+
+        changed = cloud.file_sha(monitor.db.path) != before
+        note = f"updated={'new' if changed else 'none'}&at={int(time.time())}&latest={latest_saved_price(monitor.db)}"
+        return redirect(f"{target}{'&' if '?' in target else '?'}{note}")
 
     @app.get("/stock/<symbol>/download/<name>")
     def download(symbol: str, name: str):
@@ -243,6 +282,29 @@ def create_app(
         return send_file(io.BytesIO(content), as_attachment=True, download_name=downloads.download_name(symbol, name))
 
     return app
+
+
+CLOCK_SLACK = timedelta(seconds=5)  # the job starts after the click; this only absorbs clock differences between the machines
+UPDATE_TIMEOUT = timedelta(minutes=35)  # the job's limit (30 minutes) plus the time to start it
+FINAL_RESULTS = (cloud.NEW_DATA, cloud.NO_NEW_DATA, cloud.FAILED)
+
+
+def _from_epoch(text: str | None) -> datetime | None:
+    try:
+        return datetime.fromtimestamp(int(text or ""), timezone.utc)
+    except (ValueError, OverflowError, OSError):
+        return None
+
+
+def update_message(result: str, finished: datetime, latest: str) -> dict:
+    """The notice once an update is over: one sentence, so it is clear whether anything changed."""
+    at = f"{finished.astimezone(timezone.utc):%H:%M} UTC"
+    if result == cloud.NEW_DATA:
+        return {"kind": "info", "text": f"Update finished at {at}: new data loaded.", "refresh": False}
+    if result == cloud.NO_NEW_DATA:
+        latest_text = f" Latest prices: {latest}." if latest else ""
+        return {"kind": "info", "text": f"Update finished at {at}: no new data.{latest_text}", "refresh": False}
+    return {"kind": "error", "text": f"Update failed at {at}.", "refresh": False}
 
 
 def main(argv: list[str] | None = None) -> int:

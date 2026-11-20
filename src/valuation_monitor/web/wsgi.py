@@ -12,7 +12,8 @@ Settings come from environment variables:
   VALUATION_RELOAD_SECONDS pages are rebuilt when older than this (default: 600); a newer database is downloaded first, so data
                            saved by the scheduled update job shows up without restarting the server
 The server itself never fetches and never uploads the database: the scheduled job (valuation-monitor-update) does. The "Update data"
-button starts that job when VALUATION_UPDATE_JOB is set.
+button starts that job when VALUATION_UPDATE_JOB is set, and the page then follows the job through the status object it writes
+next to the database (cloud.py): running, new data, no new data or failed.
 """
 
 from __future__ import annotations
@@ -20,7 +21,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from valuation_monitor.cloud import RemoteDatabase, start_job
+from valuation_monitor.cloud import RemoteDatabase, read_status, start_job, status_uri
 from valuation_monitor.config import load_config
 from valuation_monitor.service import Monitor
 from valuation_monitor.web import create_app
@@ -45,6 +46,7 @@ def make_app():
         cached_load_offline=True,
         sync=remote.pull if remote else None,
         update_remotely=(lambda: start_job(job)) if job else None,
+        update_status=(lambda: read_status(remote.store, status_uri(remote.uri))) if remote and job else None,
     )
 
 

@@ -5,6 +5,7 @@ import os
 import sys
 from pathlib import Path
 
+from valuation_monitor import cloud
 from valuation_monitor.cloud import ConcurrentUpdate, RemoteDatabase
 from valuation_monitor.config import load_config
 from valuation_monitor.db import Database
@@ -82,6 +83,41 @@ def update_main(argv: list[str] | None = None) -> int:
 
     db_path = Path(args.db) if args.db else Path(args.data_dir) / "valuation.db"
     remote = RemoteDatabase.from_env(db_path)
+    if not remote:
+        return _update(args, db_path, None, lambda result, db=None: None)
+    status_uri = cloud.status_uri(remote.uri)
+    started = cloud.format_time(cloud.utc_now())
+
+    def report_status(result: str, db: Database | None = None) -> None:
+        """Tell the page how far the update is (see cloud.py); a failure here never fails the update."""
+        status = {"started": started, "result": result}
+        if result != cloud.RUNNING:
+            status["finished"] = cloud.format_time(cloud.utc_now())
+            status["latest_prices"] = latest_saved_price(db) if db else ""
+        try:
+            cloud.write_status(remote.store, status_uri, status)
+        except Exception as e:
+            print(f"Could not write the update status {status_uri}: {e}", file=sys.stderr)
+
+    report_status(cloud.RUNNING)
+    try:
+        return _update(args, db_path, remote, report_status)
+    except BaseException:
+        report_status(cloud.FAILED)
+        raise
+
+
+def latest_saved_price(db: Database) -> str:
+    """The newest day any stock has a saved closing price for (YYYY-MM-DD), "" if none."""
+    try:
+        with db.connect() as conn:
+            row = conn.execute("SELECT max(date) FROM prices_final").fetchone()
+    except Exception:
+        return ""
+    return str(row[0])[:10] if row and row[0] else ""
+
+
+def _update(args, db_path: Path, remote: RemoteDatabase | None, report_status) -> int:
     print(f"Data directory: {args.data_dir}")
     if remote:
         print(f"Database: {remote.uri} (local copy {db_path}): " + ("downloaded" if remote.pull() else "no newer version to download"))
@@ -96,10 +132,13 @@ def update_main(argv: list[str] | None = None) -> int:
             print(f"{report.stock.name} ({report.stock.symbol}): updated, latest close {last[1]:.2f} on {last[0]:%Y-%m-%d}" if last else f"{report.stock.name}: updated")
     if remote:  # upload what was updated even if one stock failed
         try:
-            print("Database uploaded" if remote.push() else "Database unchanged: nothing to upload")
+            uploaded = remote.push()
         except ConcurrentUpdate as e:
             print(f"ERROR: {e}", file=sys.stderr)
+            report_status(cloud.FAILED, monitor.db)
             return 1
+        print("Database uploaded" if uploaded else "Database unchanged: nothing to upload")
+        report_status(cloud.NEW_DATA if uploaded else cloud.FAILED if failed else cloud.NO_NEW_DATA, monitor.db)
     # last, after the data has been saved and uploaded: a price or FX source that silently stopped delivering fails the job
     stale = report_freshness(check_freshness(monitor.db, monitor.config))
     if stale:

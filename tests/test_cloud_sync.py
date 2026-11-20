@@ -1,5 +1,6 @@
 """Keeping the SQLite database in a bucket object: download, upload with a version check, the update job and the page."""
 
+import time
 from pathlib import Path
 
 import pytest
@@ -37,8 +38,15 @@ class FakeStore:
         self.uploads += 1
         return self.objects[uri][1]
 
+    def read_text(self, uri):
+        return self.objects[uri][0].decode() if uri in self.objects else None
+
+    def write_text(self, uri, text):
+        self.put(uri, text.encode())
+
 
 URI = "gs://bucket/valuation.db"
+STATUS = "gs://bucket/update-status.json"
 
 
 def test_pull_downloads_only_when_the_object_is_a_newer_version(tmp_path):
@@ -118,6 +126,9 @@ def test_update_job_downloads_updates_and_uploads(monitor, tmp_path, monkeypatch
     out = capsys.readouterr().out
     assert "Database uploaded" in out and "downloaded" in out and "Tencent Holdings (0700.HK): updated" in out
     assert store.objects[URI][0] == b"the updated database"
+    status = cloud.read_status(store, STATUS)
+    assert status["result"] == "new_data" and cloud.parse_time(status["started"]) <= cloud.parse_time(status["finished"])
+    assert status["latest_prices"] == f"{monitor.db.read_series('prices_final', {'symbol': '0700.HK'}, ['close']).index[-1]:%Y-%m-%d}"
 
 
 def test_update_job_fails_loudly_when_another_job_uploaded_first(monitor, tmp_path, monkeypatch, capsys):
@@ -139,6 +150,33 @@ def test_update_job_fails_loudly_when_another_job_uploaded_first(monitor, tmp_pa
     monkeypatch.setattr(cli, "check_freshness", lambda db, config: [])  # the fixture's old price would be stale: freshness has its own tests
     assert cli.update_main(["--db", str(local), "--data-dir", str(tmp_path)]) == 1
     assert "changed by someone else" in capsys.readouterr().err and store.objects[URI][0] == b"theirs"
+    assert cloud.read_status(store, STATUS)["result"] == "failed"
+
+
+def test_update_job_reports_no_new_data_and_a_crash(monitor, tmp_path, monkeypatch):
+    from valuation_monitor import cli
+
+    store = FakeStore()
+    store.put(URI, b"the database")
+    local = tmp_path / "valuation.db"
+    monkeypatch.setenv("VALUATION_DB_URI", URI)
+    monkeypatch.setattr(cloud.RemoteDatabase, "store", property(lambda self: store))
+    monkeypatch.setattr(cli, "Monitor", lambda *a, **k: monitor)  # changes nothing in the downloaded copy
+    monkeypatch.setattr(cli, "load_config", lambda path: monitor.config)
+    monkeypatch.setattr(cli, "check_freshness", lambda db, config: [])
+    assert cli.update_main(["--db", str(local), "--data-dir", str(tmp_path)]) == 0
+    assert cloud.read_status(store, STATUS)["result"] == "no_new_data" and store.objects[URI][0] == b"the database"
+
+    seen = []
+
+    def crash(*args, **kwargs):
+        seen.append(cloud.read_status(store, STATUS)["result"])  # "running" while the job works
+        raise RuntimeError("out of memory")
+
+    monkeypatch.setattr(cli, "Monitor", crash)
+    with pytest.raises(RuntimeError):
+        cli.update_main(["--db", str(local), "--data-dir", str(tmp_path)])
+    assert seen == ["running"] and cloud.read_status(store, STATUS)["result"] == "failed"
 
 
 def test_update_job_without_a_bucket_works_on_a_local_file(monitor, tmp_path, monkeypatch, capsys):
@@ -175,10 +213,71 @@ def test_update_button_starts_the_job_instead_of_fetching(monitor):
     app = create_app(monitor, update_remotely=lambda: started.append(1))
     client = app.test_client()
     r = client.post("/refresh", data={"next": "/stock/0700.HK/"})
-    assert started == [1] and r.status_code == 302 and r.headers["Location"] == "/stock/0700.HK/?updating=1"
-    page = client.get("/?updating=1").get_data(as_text=True)
-    assert "Update started" in page and "Update started" not in client.get("/").get_data(as_text=True)
-    assert "Only completed trading days are saved" in page and "after midnight in the market" in page
+    assert started == [1] and r.status_code == 302 and r.headers["Location"].startswith("/stock/0700.HK/?updating=")
+    page = client.get(r.headers["Location"]).get_data(as_text=True)
+    assert "Updating... started at" in page and 'http-equiv="refresh"' in page
+    assert 'role="status"' not in client.get("/").get_data(as_text=True) and "http-equiv" not in client.get("/").get_data(as_text=True)
+
+
+def _status(started, finished=None, result="running", latest=""):
+    status = {"started": cloud.format_time(started), "result": result}
+    if finished:
+        status.update(finished=cloud.format_time(finished), latest_prices=latest)
+    return status
+
+
+def test_page_follows_the_update_job_until_it_is_over(monitor):
+    """Running, then one of: new data (loaded at once), no new data, failed; a status from an earlier run is not taken for this one."""
+    from datetime import timedelta
+
+    clicked = cloud.utc_now() - timedelta(minutes=2)
+    url = f"/?updating={int(clicked.timestamp())}"
+    status, syncs = [None], []
+    app = create_app(monitor, reload_seconds=3600, cached_load_offline=True, sync=lambda: syncs.append(1),
+                     update_remotely=lambda: None, update_status=lambda: status[0])
+    client = app.test_client()
+
+    def notice():
+        page = client.get(url).get_data(as_text=True)
+        return page.split('role="status">')[1].split("<")[0] if 'role="status"' in page else None, 'http-equiv="refresh"' in page
+
+    assert notice() == (f"Updating... started at {clicked:%H:%M} UTC. This page refreshes itself.", True)
+    status[0] = _status(clicked - timedelta(hours=1), clicked + timedelta(seconds=30), "new_data")  # the scheduled run before the click
+    assert notice()[0].startswith("Updating... started at")
+    status[0] = _status(clicked + timedelta(seconds=20))  # this run has started
+    assert notice()[1]
+
+    finished = clicked + timedelta(seconds=95)
+    status[0] = _status(clicked + timedelta(seconds=20), finished, "no_new_data", "2026-11-19")
+    assert notice() == (f"Update finished at {finished:%H:%M} UTC: no new data. Latest prices: 2026-11-19.", False)
+    status[0] = _status(clicked + timedelta(seconds=20), finished, "failed")
+    assert notice() == (f"Update failed at {finished:%H:%M} UTC.", False)
+
+    loads = len(syncs)
+    time.sleep(2.1)  # the job finishes after the page last loaded its data
+    status[0] = _status(clicked + timedelta(seconds=20), cloud.utc_now() - timedelta(seconds=1), "new_data", "2026-11-20")
+    text, refreshing = notice()
+    assert text.endswith(": new data loaded.") and not refreshing and len(syncs) == loads + 1  # the new database was pulled at once
+    notice()
+    assert len(syncs) == loads + 1  # and only once
+
+
+def test_page_gives_up_waiting_after_the_job_limit(monitor):
+    from datetime import timedelta
+
+    clicked = cloud.utc_now() - timedelta(minutes=40)
+    client = create_app(monitor, update_remotely=lambda: None, update_status=lambda: None).test_client()
+    page = client.get(f"/?updating={int(clicked.timestamp())}").get_data(as_text=True)
+    assert "No result after 35 minutes." in page and "http-equiv" not in page
+
+
+def test_status_object_sits_next_to_the_database_and_a_broken_one_is_ignored(capsys):
+    assert cloud.status_uri("gs://bucket/valuation.db") == STATUS
+    assert cloud.status_uri("gs://bucket/folder/valuation.db") == "gs://bucket/folder/update-status.json"
+    store = FakeStore()
+    assert cloud.read_status(store, STATUS) is None
+    store.put(STATUS, b"not json")
+    assert cloud.read_status(store, STATUS) is None and "Could not read the update status" in capsys.readouterr().err
 
 
 def test_update_button_reports_a_job_that_could_not_be_started(monitor, capsys):

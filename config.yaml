@@ -68,6 +68,12 @@ stocks:
     market: KR   # earnings come from the English consolidated financial statements (K-IFRS) on the Samsung IR website, every quarter
     filing_format: kifrs_statements   # EPS is the basic EPS of common stock (KRW); the Yahoo price is in KRW too, so no FX rate is needed
     metrics: [pe, ps, pb]
+  - symbol: SE
+    name: Sea Limited (ADR)
+    market: US
+    cik: 1703399   # Sea Limited (Garena until 2017)
+    filing_format: us_press_release   # 6-K press release, USD, US GAAP; 1 ADS = 1 Class A ordinary share, so price and EPS need no ADS ratio
+    metrics: [pe, ps, pb]   # Sea's Non-GAAP measures changed over the years and today are only adjusted EBITDA, with no Non-GAAP EPS
   - symbol: JD
     name: JD.com (ADR)
     market: US

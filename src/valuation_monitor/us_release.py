@@ -1,14 +1,19 @@
 """Extract earnings data from condensed US GAAP income statements and balance sheets in HTML: the earnings press releases of US companies
-(exhibit 99.1 of Form 8-K; Meta Platforms, Cognizant) and the US GAAP summary financial statements that ASML furnishes with each quarterly 6-K (in euros).
+(exhibit 99.1 of Form 8-K; Meta Platforms, Cognizant), the 6-K press releases of Sea Limited, and the US GAAP summary financial statements that ASML
+furnishes with each quarterly 6-K (in euros).
 
 The document holds a condensed income statement and a condensed balance sheet as tables:
 
   income statement   a header with the groups ("Three Months Ended September 30," and "Nine Months Ended September 30," or "Year Ended ...") and one
                      column per year, then rows: revenue, net income, basic earnings per share and the basic weighted-average shares.
-                     The "three months" group has this quarter and the same quarter last year.
-  balance sheet      two columns, the end of this quarter and the end of last year; the row "Total stockholders' equity".
+                     The "three months" group has this quarter and the same quarter last year. A release without one (Sea's second and third
+                     quarters: six and nine months only) gives its year-to-date group instead (Parsed.quarterly is False).
+                     With non-controlling interests the net income attributable to the company's shareholders is taken, not the total.
+  balance sheet      two columns, the end of this quarter and the end of last year; the row "Total stockholders' equity", or the company's own
+                     shareholders' equity when there are non-controlling interests ("Total Sea Limited shareholders' equity").
 
-Amounts are converted to millions (the unit is in the table or the line before it), shares are in millions, per-share data is as published.
+Amounts are converted to millions (the unit is in the table or the line before it), shares are in millions (Sea: single shares when the unit note
+says "except for number of shares", thousands when the label says so), per-share data is as published.
 ASML's fiscal quarters end on a Sunday near the calendar quarter end (for example July 3, 2022), so a date belongs to the quarter ten days before it; its dates
 are one per column ("Jul 4," ... "Jul 3,") and its newest releases (2025 on) have no tables at all, only the text of the statements (parse_text).
 The same value in two tables must agree and a missing value is an error: nothing is guessed.
@@ -17,37 +22,61 @@ The same value in two tables must agree and a missing value is an error: nothing
 from __future__ import annotations
 
 import re
+from typing import NamedTuple
 
 import pandas as pd
 
 from valuation_monitor.parsed import Parsed
 from valuation_monitor.press_release import MONTHS, UNIT_RE, clean, parse_date, table_rows, to_number
 
-GROUP_RE = re.compile(r"^(?P<kind>three|six|nine|twelve) months ended (?P<month>[A-Z][a-z]+)\.? (?P<day>\d{1,2}),?$|^(?P<year_kind>year) ended (?P<ymonth>[A-Z][a-z]+)\.? (?P<yday>\d{1,2}),?$", re.I)
+GROUP_RE = re.compile(r"^(?P<kind>three|six|nine|twelve) months ended (?P<month>[A-Z][a-z]+)\.? (?P<day>\d{1,2}),?$|^(?:full )?(?P<year_kind>year) ended (?P<ymonth>[A-Z][a-z]+)\.? (?P<yday>\d{1,2}),?$", re.I)
 KIND_RE = re.compile(r"^(?P<kind>three|six|nine|twelve) months ended,?$|^(?P<year>year) ended,?$", re.I)  # older releases put the date in the next row
 DAY_RE = re.compile(r"^(?P<month>[A-Z][a-z]+)\.? (?P<day>\d{1,2}),?$")
 FULL_DATE_RE = re.compile(r"^(?P<month>[A-Z][a-z]+)\.? (?P<day>\d{1,2}), (?P<year>\d{4})$")
 MONTH_NUMBER = {**MONTHS, **{name[:3]: number for name, number in MONTHS.items()}}  # "Sep" as well as "September"
 YEAR_RE = re.compile(r"^(?:19|20)\d\d$")
 REVENUE_RE = re.compile(r"^(?:total )?(?:net )?(?:revenues?|sales)$", re.I)
-PROFIT_RE = re.compile(r"^net (?:\(loss\) )?income(?: \(loss\))?(?: attributable to (?!.*non-?controlling).*)?$", re.I)
+PROFIT_RE = re.compile(r"^net (?:\((?:loss|income)\) )?(?:income|loss)(?: \((?:loss|income)\))?(?P<owners> attributable to (?!.*non-?controlling).*)?$", re.I)
 BASIC_EPS_RE = re.compile(r"^basic (?:\((?:loss|losses)\) )?(?:earnings|net income)(?: \((?:loss|losses)\))? per (?:common |ordinary )?share$", re.I)
 BASIC_SHARES_RE = re.compile(r"^weighted[- ]average (?:number of )?(?:common |ordinary )?shares.*\bbasic\b", re.I)
-EQUITY_RE = re.compile(r"^(?:total )?(?:stockholders|shareholders).? equity$", re.I)
+SHARES_SECTION_RE = re.compile(r"^(?:weighted[- ]average|shares used in)", re.I)  # Sea before 2019: "Shares used in loss per share computation:"
+BASIC_ROW_RE = re.compile(r"^basic(?: and diluted)?$", re.I)  # in a loss year Sea has one row "Basic and diluted"
+EQUITY_WORDS = r"(?:stockholders|shareholders).? (?:\((?:deficit|equity)\) )?(?:equity|deficit)(?: \((?:deficit|equity)\))?$"  # Sea: "shareholders' (deficit) equity"
+EQUITY_RE = re.compile(rf"^(?:total )?{EQUITY_WORDS}", re.I)
+# the equity of the company's own shareholders, when the total also has non-controlling interests: "Total Sea Limited shareholders' equity (deficit)"
+OWNERS_EQUITY_RE = re.compile(rf"^total (?!liabilities)\S.*? {EQUITY_WORDS}", re.I)
+SHARES_UNIT_RE = re.compile(r"\(in (thousands|millions)\)", re.I)  # a unit in the label of the share rows: "computation (in thousands):"
+RAW_SHARES_RE = re.compile(r"except (?:for )?(?:the )?number of shares", re.I)  # "in thousands of US dollars except for number of shares & per share data"
+PREFIX_RE = re.compile(r"^(?:for the|as of)\s+", re.I)  # Sea: "For the Three Months ended September 30,", "As of December 31,"
 TOLERANCE = 0.001
 NOTE_SUFFIX_RE = re.compile(r"\s+\d(?:,\d)*$")  # footnote numbers after a label: "Diluted net income per ordinary share 4"
 
 
-def unit_scale(table, rows: list[list[str]]) -> float | None:
-    """Factor converting the amounts of a table to millions; None if the unit is not stated."""
+def unit_note(table, rows: list[list[str]]) -> str | None:
+    """The text that states the unit of a table: a cell of its first rows or a line before it; None if the unit is not stated."""
     for row in rows[:8]:
         for cell in row:
-            if m := UNIT_RE.search(cell):
-                return 0.001 if m.group(1).lower() == "thousands" else 1.0
+            if UNIT_RE.search(cell):
+                return cell
     for s in table.find_all_previous(string=True, limit=40):
-        if m := UNIT_RE.search(clean(s)):
-            return 0.001 if m.group(1).lower() == "thousands" else 1.0
+        if UNIT_RE.search(clean(s)):
+            return clean(s)
     return None
+
+
+def unit_scale(table, rows: list[list[str]]) -> float | None:
+    """Factor converting the amounts of a table to millions; None if the unit is not stated."""
+    note = unit_note(table, rows)
+    if note is None:
+        return None
+    return 0.001 if UNIT_RE.search(note).group(1).lower() == "thousands" else 1.0
+
+
+def shares_scale(table, rows: list[list[str]], scale: float | None) -> float | None:
+    """Factor converting the share counts of a table to millions: single shares if the table's unit excludes the number of shares (Sea),
+    else the unit of the amounts. A unit in the label of the share rows ("(in thousands):") overrides it, see parse_income."""
+    note = unit_note(table, rows)
+    return 1e-6 if note is not None and RAW_SHARES_RE.search(note) else scale
 
 
 def currency_of(rows: list[list[str]]) -> str:
@@ -56,8 +85,9 @@ def currency_of(rows: list[list[str]]) -> str:
 
 
 def header_cell(cell: str) -> str:
-    """A header cell without its footnote mark: "2019*" and "December 31, 2016 (1)" become "2019" and "December 31, 2016"."""
-    return re.sub(r"\s*(?:\([\da-z]\)|\*+|†)+$", "", cell).strip()
+    """A header cell without its footnote mark or a leading "For the" / "As of": "2019*", "December 31, 2016 (1)" and "As of June 30,"
+    become "2019", "December 31, 2016" and "June 30,"."""
+    return PREFIX_RE.sub("", re.sub(r"\s*(?:\([\da-z]\)|\*+|†)+$", "", cell).strip())
 
 
 def numbers(row: list[str]) -> list[float]:
@@ -92,8 +122,16 @@ def quarter_of(day: pd.Timestamp) -> pd.Period:
     return pd.Period(day - pd.Timedelta(days=10), freq="Q")
 
 
-def income_columns(rows: list[list[str]]) -> tuple[int, list[pd.Timestamp]] | None:
-    """(index of the first data row, the period-end date of each value column of the three-months group) of an income statement table.
+class Columns(NamedTuple):
+    first_row: int  # index of the first data row
+    dates: list[pd.Timestamp]  # the period-end date of each value column of the group used
+    offset: int  # how many value columns come before that group
+    quarterly: bool  # True: the "three months" group; False: the only group is year-to-date (six or nine months, or the year)
+
+
+def income_columns(rows: list[list[str]]) -> Columns | None:
+    """The value columns of the three-months group of an income statement table; without one, of its only group if that is year-to-date
+    (Sea's second- and third-quarter releases have six- and nine-months statements only).
 
     Forms of the header: groups with their date ("Three Months Ended September 30,"), groups and in the next row their dates, groups and in the next
     row one date per column ("Jul 4," "Jul 3," ...), or one full date per column ("Dec 31, 2014"); the years are in a row of their own or in the full dates.
@@ -106,9 +144,10 @@ def income_columns(rows: list[list[str]]) -> tuple[int, list[pd.Timestamp]] | No
         if not kinds:
             kinds = [(m.group("kind") or "year").lower() for c in cells if (m := KIND_RE.match(c))]
             group_days = []
-        if not kinds or "three" not in kinds:
+        if not kinds or ("three" not in kinds and len(kinds) != 1):
             continue
-        three = kinds.index("three")
+        three = kinds.index("three") if "three" in kinds else 0
+        quarterly = kinds[three] == "three"
         for j in range(i, min(i + 4, len(rows))):
             cells_j = [header_cell(c) for c in rows[j]]
             years = years_in(cells_j)
@@ -116,7 +155,7 @@ def income_columns(rows: list[list[str]]) -> tuple[int, list[pd.Timestamp]] | No
             per_group = None
             if len(dates) >= 2 and len(dates) % len(kinds) == 0:  # one full date per column
                 n = len(dates) // len(kinds)
-                return j + 1, dates[three * n : (three + 1) * n]
+                return Columns(j + 1, dates[three * n : (three + 1) * n], three * n, quarterly)
             if len(years) >= 2 and len(years) % len(kinds) == 0:
                 n = len(years) // len(kinds)
                 days = group_days or days_in([header_cell(c) for r in rows[i + 1 : j + 1] for c in r])  # the day of each group, or of each column
@@ -126,38 +165,52 @@ def income_columns(rows: list[list[str]]) -> tuple[int, list[pd.Timestamp]] | No
                     per_group = days[three * n : (three + 1) * n]
                 if per_group is None:
                     continue
-                return j + 1, [pd.Timestamp(year=y, month=month, day=day) for y, (month, day) in zip(years[three * n : (three + 1) * n], per_group)]
+                return Columns(j + 1, [pd.Timestamp(year=y, month=month, day=day) for y, (month, day) in zip(years[three * n : (three + 1) * n], per_group)], three * n, quarterly)
     return None
 
 
-def parse_income(rows: list[list[str]], scale: float | None) -> tuple[pd.Period, dict[str, list[float]]] | None:
+def parse_income(rows: list[list[str]], scale: float | None, share_scale: float | None = None) -> tuple[pd.Period, dict[str, list[float]], bool] | None:
+    """(period, values, quarterly): this period, the same period last year (and the previous quarter if the table has it) of each row."""
     header = income_columns(rows)
     if header is None or scale is None:
         return None
-    first, columns = header
+    first, columns, offset, quarterly = header
+    note_column = any(c.lower() in ("note", "notes") for r in rows[:first] for c in r)  # a column of note numbers before the values (Sea 2017)
     found: dict[str, list[float]] = {}
     section = ""
-    for row in rows[first:]:
+    shares_unit = share_scale if share_scale is not None else scale
+    for k, row in enumerate(rows[first:], first):
         label = NOTE_SUFFIX_RE.sub("", row[0])
         low = label.lower()
         nums = numbers(row)
+        below = rows[k + 1] if k + 1 < len(rows) else []
+        if nums and SHARES_SECTION_RE.match(low) and len(below) == 1 and BASIC_ROW_RE.match(below[0]):
+            label = low = "basic"  # the numbers sit on the heading row, "Basic and diluted" on the next (Sea 2021-2022)
+            section = "shares"
         if not nums:
-            if "per share" in low and "weighted" not in low:
-                section = "eps"
-            elif re.match(r"weighted[- ]average", low):
+            if SHARES_SECTION_RE.match(low):
                 section = "shares"
+                if m := SHARES_UNIT_RE.search(low):
+                    shares_unit = 0.001 if m.group(1) == "thousands" else 1.0
+            elif "per share" in low:
+                section = "eps"
             continue
-        if len(nums) < len(columns):
+        if note_column and len(row) > 1 and re.fullmatch(r"\d{1,2}", row[1]):
+            nums = nums[1:]
+        if len(nums) < offset + len(columns):
             continue
-        mine = nums[: len(columns)]
+        mine = nums[offset : offset + len(columns)]
         if REVENUE_RE.match(label):
             found.setdefault("revenue", mine)
-        elif PROFIT_RE.match(label):
-            found.setdefault("profit", mine)
-        elif BASIC_EPS_RE.match(label) or (section == "eps" and low == "basic"):
+        elif m := PROFIT_RE.match(label):
+            found.setdefault("profit_owners" if m.group("owners") else "profit", mine)
+        elif BASIC_EPS_RE.match(label) or (section == "eps" and BASIC_ROW_RE.match(low)):
             found.setdefault("eps", mine)
-        elif BASIC_SHARES_RE.match(label) or (section == "shares" and low == "basic"):
-            found.setdefault("wa_shares", mine)
+        elif BASIC_SHARES_RE.match(label) or (section == "shares" and BASIC_ROW_RE.match(low)):
+            found.setdefault("wa_shares", [v * shares_unit for v in mine])
+    owners = found.pop("profit_owners", None)
+    if owners is not None and ("profit" not in found or any(re.search(r"non-?controlling", r[0], re.I) for r in rows[first:])):
+        found["profit"] = owners  # with non-controlling interests (Sea): the row attributable to the company's shareholders, not the total net income
     if not {"revenue", "profit", "eps", "wa_shares"} <= found.keys():
         return None
     periods = [quarter_of(d) for d in columns]
@@ -168,8 +221,8 @@ def parse_income(rows: list[list[str]], scale: float | None) -> tuple[pd.Period,
     values = {}
     for key, nums in found.items():
         picked = [nums[c] for c in order]
-        values[key] = [v * scale for v in picked] if key in ("revenue", "profit", "wa_shares") else picked
-    return period, values
+        values[key] = [v * scale for v in picked] if key in ("revenue", "profit") else picked
+    return period, values, quarterly
 
 
 def balance_dates(rows: list[list[str]]) -> list[pd.Timestamp] | None:
@@ -182,6 +235,8 @@ def balance_dates(rows: list[list[str]]) -> list[pd.Timestamp] | None:
         days, years = days_in([header_cell(c) for c in r]), years_in(below)
         if len(days) >= 2 and len(days) == len(years):
             return [pd.Timestamp(year=y, month=m, day=d) for (m, d), y in zip(days, years)]
+        if len(days) == 1 and len(years) == 2 and len(r) == 1:  # one day over both years: "As of December 31," then "2021" "2022"
+            return [pd.Timestamp(year=y, month=days[0][0], day=days[0][1]) for y in years]
     return None
 
 
@@ -190,7 +245,9 @@ def parse_balance(rows: list[list[str]], scale: float | None) -> tuple[pd.Period
     if scale is None:
         return None
     dates = balance_dates(rows)
-    row = next((r for r in rows if EQUITY_RE.match(NOTE_SUFFIX_RE.sub("", r[0])) and len(numbers(r)) >= 2), None)  # older releases: "Stockholders' Equity" (the heading has no numbers)
+    with_numbers = [r for r in rows if len(numbers(r)) >= 2]  # older releases: "Stockholders' Equity" (the heading has no numbers)
+    row = next((r for r in with_numbers if OWNERS_EQUITY_RE.match(NOTE_SUFFIX_RE.sub("", r[0])) and not EQUITY_RE.match(NOTE_SUFFIX_RE.sub("", r[0]))), None)
+    row = row or next((r for r in with_numbers if EQUITY_RE.match(NOTE_SUFFIX_RE.sub("", r[0]))), None)  # the company's own shareholders first, then the total
     if not dates or row is None:
         return None
     nums = numbers(row)[: len(dates)]
@@ -263,14 +320,14 @@ def parse_us_release(html: bytes) -> Parsed:
     from bs4 import BeautifulSoup
 
     soup = BeautifulSoup(html, "lxml")
-    income: list[tuple[pd.Period, dict[str, list[float]], str]] = []
+    income: list[tuple[pd.Period, dict[str, list[float]], bool, str]] = []
     balance: list[tuple[pd.Period, list[float]]] = []
     for table in soup.find_all("table"):
         rows = table_rows(table)
         if not rows:
             continue
         scale = unit_scale(table, rows)
-        if (found := parse_income(rows, scale)) is not None:
+        if (found := parse_income(rows, scale, shares_scale(table, rows, scale))) is not None:
             income.append((*found, currency_of(rows)))
         if (found := parse_balance(rows, scale)) is not None:
             balance.append(found)
@@ -281,8 +338,10 @@ def parse_us_release(html: bytes) -> Parsed:
         raise ValueError("Not found: the income statement (revenue, net income, basic EPS and basic shares for three months)")
     if not balance:
         raise ValueError("Not found: the balance sheet (total stockholders' equity)")
-    (period, values, currency), *more = income
-    for p, other, _ in more:
+    if any(quarterly for _, _, quarterly, _ in income):
+        income = [x for x in income if x[2]]  # the three-months statements; year-to-date ones only when there are none
+    (period, values, quarterly, currency), *more = income
+    for p, other, _, _ in more:
         if p == period and any(not close(a, b, key) for key, vals in other.items() for a, b in zip(vals, values[key])):
             raise ValueError(f"The income statements in this release disagree: {values} and {other}")
         if p == period and len(next(iter(other.values()))) > len(next(iter(values.values()))):
@@ -290,4 +349,4 @@ def parse_us_release(html: bytes) -> Parsed:
     equity_period, equity = balance[0]
     if equity_period != period:
         raise ValueError(f"The balance sheet is for {equity_period}, the income statement for {period}")
-    return Parsed(currency, {**values, "equity": equity}, period)
+    return Parsed(currency, {**values, "equity": equity}, period, quarterly)

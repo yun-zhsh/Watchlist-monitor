@@ -116,3 +116,37 @@ def test_share_counts_are_multiplied_by_splits():
                      {"eps": [85435.0], "wa_shares": [135.92]})
     adjusted = adjust_for_splits([a], pd.Series([50.0], index=[pd.Timestamp("2018-05-04")]))[0]
     assert adjusted.values["eps"] == [1708.7] and adjusted.values["wa_shares"] == pytest.approx([6796.0])
+
+
+def test_year_to_date_shares_are_turned_into_quarter_shares():
+    """Sea's second- and third-quarter releases only disclose the six- and nine-month weighted average shares:
+    Q2 = (six months x 181 days - Q1 x 90 days) / 91 days, Q3 = (nine months x 273 days - six months x 181 days) / 92 days."""
+    def a(period, published, quarterly, shares, basis=""):
+        return Announcement(pd.Period(period, freq="Q"), pd.Timestamp(published), f"u-{period}", "USD", quarterly,
+                            {"eps": [0.5, 0.4], "revenue": [100.0, 90.0], "profit": [50.0, 40.0], "equity": [500.0, 480.0], "wa_shares": shares},
+                            market="US", shares_basis=basis)
+
+    h = build_history(
+        [
+            a("2025Q1", "2025-05-13 16:05", True, [590.0, 570.0]),
+            a("2025Q2", "2025-08-12 16:05", False, [592.0, 572.0], "year to date"),
+            a("2025Q3", "2025-11-12 06:04", False, [594.0, 573.0], "year to date"),
+        ]
+    )
+    q2, q3 = h.ttm_frame().iloc[1], h.ttm_frame().iloc[2]
+    assert q2["shares"] == pytest.approx((592.0 * 181 - 590.0 * 90) / 91, abs=1e-3) and q2["shares_source"] == "derived from the year-to-date figure"
+    assert q3["shares"] == pytest.approx((594.0 * 273 - 592.0 * 181) / 92, abs=1e-3)
+    assert "only discloses the year-to-date weighted average shares 594" in q3["shares_formula"]
+    assert "(594 x 273 days - (2025Q1-Q2 592 x 181 days)) / 92 days" in q3["shares_formula"]
+
+
+def test_a_year_to_date_share_count_does_not_overwrite_a_three_month_one():
+    """Sea 2017Q3 has three-month shares in its own release and the nine-month figure as the prior-year column a year later: not a restatement."""
+    def a(period, published, quarterly, shares, basis=""):
+        return Announcement(pd.Period(period, freq="Q"), pd.Timestamp(published), f"u-{period}", "USD", quarterly,
+                            {"eps": [-0.5, -0.4], "revenue": [100.0, 90.0], "profit": [-50.0, -40.0], "equity": [500.0, 480.0], "wa_shares": shares},
+                            market="US", shares_basis=basis)
+
+    h = build_history([a("2017Q3", "2017-11-22 11:27", True, [177.9, 171.5]), a("2018Q3", "2018-11-21 06:06", False, [337.8, 176.0], "year to date")])
+    observations = h.quarters["wa_shares"][pd.Period("2017Q3")].observations
+    assert [o.value for o in observations] == [177.9]

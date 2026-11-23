@@ -61,7 +61,7 @@ def main(argv: list[str] | None = None) -> int:
 
         for result in report.metrics:
             if result.error:
-                print(f"{stock.name} ({stock.symbol}) {result.metric.label}: {result.error}", file=sys.stderr)
+                print(f"{stock.name} ({stock.symbol}) {stock.metric_label(result.metric)}: {result.error}", file=sys.stderr)
                 failed = True
                 continue
             print(format_text(stock, result.metric, result.valuation))

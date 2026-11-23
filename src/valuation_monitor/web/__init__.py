@@ -64,7 +64,8 @@ def metric_views(report: StockReport, config: Config) -> list[dict]:
     return [
         {
             "key": r.metric.key,
-            "label": r.metric.label,
+            "label": report.stock.metric_label(r.metric),
+            "basis": report.stock.basis(r.metric),
             "error": r.error,
             "windows": {y: window_fields(r, y, len(config.levels)) for y in r.windows},
         }
@@ -119,7 +120,7 @@ def chart_payload(report: StockReport, config: Config) -> dict:
         charts.append(
             {
                 "key": r.metric.key,
-                "label": r.metric.label,
+                "label": report.stock.metric_label(r.metric),
                 "dates": [f"{d:%Y-%m-%d}" for d in window.index],
                 "values": [round(float(v), 2) for v in window],
                 **audit_payload(report, r, window),

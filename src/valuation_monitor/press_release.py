@@ -11,6 +11,8 @@ The tables in the press release are laid out as "header + data rows":
   Revenue is Total net revenues (Alibaba: Revenue), net profit is the row attributable to ordinary shareholders, EPS is basic EPS "per ADS" (RMB),
   or basic EPS per share when the release has no per-ADS figures (Alibaba until the 2019 share subdivision: one ADS was one share);
   the shares per ADS are the per-ADS basic EPS divided by the per-share basic EPS of the same release (JD 2; Alibaba 1 until 2019, then 8),
+  Non-GAAP EPS is the basic Non-GAAP EPS per ADS; only when a release has no basic Non-GAAP EPS is the diluted one taken as stated
+  (Alibaba: "Non-GAAP diluted earnings per ADS", or per share when the release has no per-ADS figures), never derived;
   Non-GAAP EPS is the basic Non-GAAP EPS per ADS; from the balance sheet the equity attributable to the company's shareholders (end of this period, end of last year) is taken.
 Units (thousands or millions) are stated in the note before the table and are all converted to millions.
 When the same value appears in several tables it must agree, otherwise an error is raised; one of them is never silently picked.
@@ -37,6 +39,9 @@ ORDINARY_PROFIT_RE = re.compile(r"attributable to (?:the company's )?ordinary sh
 EQUITY_LABEL_RE = re.compile(r"^total (?!liabilities|shareholders?'?s? equity)\S.* shareholders.? equity", re.I)
 TOTAL_EQUITY_LABEL_RE = re.compile(r"^total shareholders?'?s? equity$", re.I)
 EPS_SECTION_RE = re.compile(r"^(?:\(loss\) )?(?:net|earnings|loss) ", re.I)  # "Net income per ADS:", "Earnings per ADS attributable to ...", "(Loss) Earnings per ADS ..."
+# The diluted Non-GAAP EPS, used only when a release has no basic one (Alibaba publishes only the diluted figure):
+# "Non-GAAP diluted earnings per ADS", "Non-GAAP diluted earnings per share", and before 2019 "Non-GAAP diluted EPS" (per share = per ADS)
+NON_GAAP_DILUTED_RE = re.compile(r"^non-gaap diluted (?:earnings per (?P<unit>ads|share)|eps)\b", re.I)
 YEAR_CELL_RE = re.compile(r"^\d{4}$")
 LABEL_DAY_RE = re.compile(r"\b([A-Z][a-z]+) ?(\d{1,2}),?$")  # the month and day at the end of a group description, e.g. "Three months ended June 30,"
 SPACED_NUMBER_RE = re.compile(r"^\(? ?-?\d[\d, ]*(?:\.[\d ]+)?\)?$")  # a number broken by stray spaces (Alibaba 2015-2016: "2,86 9", "(6, 133", "( 2")
@@ -44,6 +49,7 @@ ADS_RATIO_TOLERANCE = 0.05  # allowed relative distance of (EPS per ADS / EPS pe
 MONTHS = {m: i for i, m in enumerate(
     ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"], 1)}
 AMOUNT_KEYS = ("revenue", "profit", "wa_shares")  # amount rows, converted to millions by the unit of the table
+PER_SHARE_KEYS = ("eps", "non_ifrs_eps", "eps_share", "non_gaap_diluted_ads", "non_gaap_diluted_share")
 TOLERANCE = 0.001  # allowed (relative) difference of the same value in different tables
 
 
@@ -238,6 +244,8 @@ def parse_flow_rows(rows, header: Header, scale: float | None) -> dict[str, tupl
             found["wa_shares"] = leading_columns(header, group, nums)
         elif section and section not in found and section != "wa_shares" and (low == "basic" or (basic and re.match(r"net (income|loss).*per (ads|share)", low))):
             found[section] = columns_by_date(header, group, nums)
+        elif (m := NON_GAAP_DILUTED_RE.match(label)) and (key := "non_gaap_diluted_ads" if (m.group("unit") or "").lower() == "ads" else "non_gaap_diluted_share") not in found:
+            found[key] = columns_by_date(header, group, nums)
         elif re.match(r"total net revenues|revenues?$", low) and "revenue" not in found:
             found["revenue"] = columns_by_date(header, group, nums)
         elif PROFIT_LABEL_RE.match(label) and ("profit" not in found or (ORDINARY_PROFIT_RE.search(label) and not ordinary_profit)):
@@ -298,7 +306,7 @@ def parse_balance_table(rows, header: Header, scale: float | None) -> tuple[pd.P
 
 
 def close(a: float, b: float, key: str) -> bool:
-    return abs(a - b) <= (0.005 if key in ("eps", "non_ifrs_eps", "eps_share") else max(1.0, abs(a) * TOLERANCE))
+    return abs(a - b) <= (0.005 if key in PER_SHARE_KEYS else max(1.0, abs(a) * TOLERANCE))
 
 
 def parse_press_release(html: bytes) -> Parsed:
@@ -342,6 +350,12 @@ def parse_press_release(html: bytes) -> Parsed:
     if len(periods) != 1:
         raise ValueError(f"The rows disagree on the reporting period: {periods}")
     ratio = shares_per_ads(values.get("eps"), values.pop("eps_share", None))
+    diluted_ads, diluted_share = values.pop("non_gaap_diluted_ads", None), values.pop("non_gaap_diluted_share", None)
+    if "non_ifrs_eps" not in values:  # no basic Non-GAAP EPS: the diluted one as stated (per ADS; per share only when one ADS is one share)
+        if diluted_ads is not None:
+            values["non_ifrs_eps"] = diluted_ads
+        elif diluted_share is not None and ratio == 1:
+            values["non_ifrs_eps"] = diluted_share
     if "wa_shares" in values:
         values["wa_shares"] = [v / ratio for v in values["wa_shares"]]  # millions of shares -> millions of ADS
     return Parsed("CNY", values, periods.pop())

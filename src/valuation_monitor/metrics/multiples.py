@@ -7,6 +7,7 @@ class PE(PriceMultiple):
     key = "pe"
     label = "PE (TTM)"
     column = "eps_ttm"
+    eps_based = True
 
 
 class NonIfrsPE(PriceMultiple):
@@ -15,6 +16,7 @@ class NonIfrsPE(PriceMultiple):
     key = "pe_non_ifrs"
     label = "PE Non-IFRS (TTM)"
     column = "non_ifrs_eps_ttm"
+    eps_based = True
 
 
 class NonGaapPE(PriceMultiple):
@@ -23,6 +25,7 @@ class NonGaapPE(PriceMultiple):
     key = "pe_non_gaap"
     label = "PE Non-GAAP (TTM)"
     column = "non_ifrs_eps_ttm"
+    eps_based = True
 
 
 class PS(PriceMultiple):

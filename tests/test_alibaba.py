@@ -59,15 +59,30 @@ BALANCE_2025 = table(
 )
 
 
+NON_GAAP_2025 = table(
+    ["", "Three months ended June 30,"],
+    ["", "2024", "2025"],
+    ["", "RMB", "RMB", "US$"],
+    ["", "(in millions, except per share data)"],
+    ["Net income attributable to ordinary shareholders – basic", "24,269", "43,116", "6,019"],
+    ["Non-GAAP net income attributable to ordinary shareholders for computing non-GAAP diluted earnings per share/ADS", "40,265", "35,291", "4,926"],
+    ["Diluted earnings per share (2)(3)", "1.24", "2.25", "0.31"],
+    ["Non-GAAP diluted earnings per share (2)(4)", "2.05", "1.84", "0.26"],
+    ["Diluted earnings per ADS (2)(3)", "9.89", "17.98", "2.51"],
+    ["Non-GAAP diluted earnings per ADS (2)(4)", "16.44", "14.75", "2.06"],
+)
+
+
 def test_years_only_header_per_ads_eps_and_eight_shares_per_ads():
-    p = parse_press_release(release(INCOME_2025, BALANCE_2025))
+    p = parse_press_release(release(INCOME_2025, BALANCE_2025, NON_GAAP_2025))
     assert p.period == pd.Period("2025Q2")
     assert p.currency == "CNY"
     assert p.values["revenue"] == [247652.0, 243236.0]
     assert p.values["profit"] == [43116.0, 24269.0]  # attributable to ordinary shareholders, not to the company before the accretion
     assert p.values["eps"] == [18.57, 10.04]  # per ADS
     assert p.values["wa_shares"] == [18570 / 8, 19329 / 8]  # millions of shares -> millions of ADS (1 ADS = 8 shares)
-    assert "non_ifrs_eps" not in p.values  # Alibaba discloses only a diluted Non-GAAP EPS
+    assert p.values["non_ifrs_eps"] == [14.75, 16.44]  # no basic Non-GAAP EPS is disclosed: the diluted one per ADS, as stated
+    assert "non_ifrs_eps" not in parse_press_release(release(INCOME_2025, BALANCE_2025)).values  # never derived from other figures
     # the comparison balance is the fiscal year end (March 31), not the previous December: only this period's equity is kept;
     # "Total shareholders' equity" is the company's share because "Total equity" follows the noncontrolling interests
     assert p.values["equity"] == [1013672.0]
@@ -86,6 +101,8 @@ def test_before_the_2019_subdivision_the_per_share_eps_is_the_per_ads_eps():
         ["Diluted", "5.27", "11.83", "1.91", "1", "2", "3"],
         ["Weighted average number of share used in calculating net income per ordinary share"],
         ["Basic", "2,198", "2,477", "1", "2"],
+        ["Non-GAAP net income attributable to ordinary shareholders for computing non-GAAP diluted EPS", "6,612", "7,765", "1,253", "1", "2", "3"],
+        ["Non-GAAP diluted EPS (d)", "2.79", "3.68", "0.59", "1", "2", "3"],
     )
     balance = table(
         ["", "As of March 31,", "As of June 30,"],
@@ -102,6 +119,7 @@ def test_before_the_2019_subdivision_the_per_share_eps_is_the_per_ads_eps():
     assert p.values["profit"] == [30843.0, 12344.0]  # "30,8 43": a number broken by a stray space
     assert p.values["eps"] == [12.45, 5.62]
     assert p.values["wa_shares"] == [2477.0, 2198.0]  # one ADS was one share
+    assert p.values["non_ifrs_eps"] == [3.68, 2.79]  # the diluted Non-GAAP EPS per share is per ADS here
     assert p.values["equity"] == [182874.0]
 
 
@@ -136,6 +154,34 @@ def test_loss_earnings_per_ads_label_and_december_comparison_keeps_both_balances
     assert p.values["profit"] == [27706.0, -20561.0]
     assert p.values["wa_shares"] == [20335 / 8, 21164 / 8]
     assert p.values["equity"] == [1010590.0, 975954.0]
+
+
+def test_a_basic_non_gaap_eps_wins_over_a_diluted_one():
+    """The rule: basic whenever it is disclosed (JD), diluted only when it is not (Alibaba)."""
+    income = table(
+        ["", "For the three months ended"],
+        ["", "June 30, 2025", "June 30, 2026", "June 30, 2026"],
+        ["", "RMB", "RMB", "US$"],
+        ["", "(In millions, except per share data)"],
+        ["Total net revenues", "356,660", "380,000", "53,000"],
+        ["Net income attributable to ordinary shareholders", "6,180", "7,000", "1,000"],
+        ["Net income per ADS:"],
+        ["Basic", "4.18", "4.80", "0.67"],
+        ["Non-GAAP net income per ADS:"],
+        ["Basic", "5.10", "5.50", "0.77"],
+        ["Diluted", "5.00", "5.40", "0.75"],
+        ["Non-GAAP diluted earnings per ADS", "5.00", "5.40", "0.75"],
+    )
+    balance = table(
+        ["", "As of"],
+        ["", "December 31, 2025", "June 30, 2026", "June 30, 2026"],
+        ["", "RMB", "RMB", "US$"],
+        ["", "(In millions)"],
+        ["Total liabilities", "1", "2", "3"],
+        ["Total shareholders' equity", "250,000", "260,000", "36,000"],
+    )
+    p = parse_press_release(release(income, balance))
+    assert p.values["non_ifrs_eps"] == [5.50, 5.10]
 
 
 def test_spaced_numbers():
@@ -182,7 +228,7 @@ def test_every_saved_release_parses_and_profit_over_eps_matches_the_ads():
     for e in index():
         p = parsed(e["file"])
         periods.append(p.period)
-        assert {"revenue", "profit", "eps", "wa_shares", "equity"} <= p.values.keys(), e["file"]
+        assert {"revenue", "profit", "eps", "wa_shares", "equity", "non_ifrs_eps"} <= p.values.keys(), e["file"]  # every release has the diluted Non-GAAP EPS
         for profit, eps, ads in zip(p.values["profit"], p.values["eps"], p.values["wa_shares"]):
             assert abs(profit / eps / ads - 1) < 0.005, (e["file"], profit, eps, ads)  # basic EPS and the disclosed shares are on the same ADS basis
     assert periods == sorted(periods)
@@ -207,7 +253,22 @@ def test_prior_year_eps_matches_the_earlier_release():
 def test_values_of_selected_quarters():
     p = by_period("2015Q2")  # per-share figures (1 ADS = 1 share), numbers broken by stray spaces in the original
     assert p.values["profit"][0] == 30843.0 and p.values["eps"][0] == 12.45 and p.values["wa_shares"][0] == 2477.0
+    assert p.values["non_ifrs_eps"] == [3.68, 3.05]  # "Non-GAAP diluted EPS" (per share = per ADS)
     p = by_period("2019Q3")  # after the 1-to-8 subdivision: per ADS, shares / 8
     assert p.values["eps"] == [27.9, 7.75] and p.values["wa_shares"] == [2600.0, 20669 / 8]
+    assert p.values["non_ifrs_eps"] == [13.1, 9.6]  # "Non-GAAP diluted earnings per ADS"
     p = by_period("2025Q1")  # the Hong Kong-style annual results announcement
     assert p.values["revenue"] == [236454.0, 221874.0] and p.values["eps"] == [5.36, 1.32] and p.values["equity"] == [1009858.0]
+    assert p.values["non_ifrs_eps"] == [12.52, 10.14]
+
+
+@saved
+def test_prior_year_non_gaap_eps_matches_the_earlier_release():
+    own = {parsed(e["file"]).period: parsed(e["file"]).values["non_ifrs_eps"][0] for e in index()}
+    differs = []
+    for e in index():
+        p = parsed(e["file"])
+        earlier = own.get(p.period - 4)
+        if earlier is not None and abs(p.values["non_ifrs_eps"][1] - earlier) > 0.011:
+            differs.append(str(p.period - 4))
+    assert differs == ["2015Q3", "2015Q4", "2016Q1", "2016Q2"]  # fiscal 2017 releases: comparative figures updated to the new presentation

@@ -55,9 +55,9 @@ TTM_COLUMNS = {
     "profit_latest": "Latest net profit attributable to owners (millions)",
     "eps_latest": "Latest basic EPS",
     "eps_ttm": "TTM EPS = sum of the periods' basic EPS",
-    "eps_ttm_formula": "TTM EPS formula (* = obtained by subtracting cumulative figures)",
-    "non_ifrs_eps_ttm": "TTM Non-IFRS/Non-GAAP EPS = sum of the periods",
-    "non_ifrs_eps_ttm_formula": "TTM Non-IFRS/Non-GAAP EPS formula",
+    "eps_ttm_formula": "TTM basic EPS formula (* = obtained by subtracting cumulative figures)",
+    "non_ifrs_eps_ttm": "TTM Non-IFRS/Non-GAAP basic EPS = sum of the periods",
+    "non_ifrs_eps_ttm_formula": "TTM Non-IFRS/Non-GAAP basic EPS formula",
     "revenue_ttm_formula": "TTM revenue formula",
     "shares_formula": "Shares formula",
     "revenue_per_share_ttm": "Revenue per share (TTM) = TTM revenue / shares (reporting currency)",
@@ -72,9 +72,29 @@ for _k in range(1, 5):  # the periods covered by the TTM (oldest to newest) and 
     TTM_COLUMNS |= {
         f"period_{_k}": f"TTM period {_k}",
         f"eps_{_k}": f"Period {_k}: basic EPS",
-        f"non_ifrs_eps_{_k}": f"Period {_k}: Non-IFRS/Non-GAAP EPS",
+        f"non_ifrs_eps_{_k}": f"Period {_k}: Non-IFRS/Non-GAAP basic EPS",
         f"revenue_{_k}": f"Period {_k}: revenue (millions)",
     }
+
+EPS_METRICS = {"eps": ("pe",), "non_ifrs_eps": ("pe_non_gaap", "pe_non_ifrs")}  # EPS series -> the PE metrics based on it
+
+
+def columns_for(stock, columns: dict[str, str]) -> dict[str, str]:
+    """The column names for one stock: an EPS series whose PE is on diluted EPS (Alibaba's Non-GAAP EPS) says "diluted" instead of "basic"."""
+    from valuation_monitor.metrics import METRICS
+
+    out = dict(columns)
+    for series, metric_keys in EPS_METRICS.items():
+        if any(stock.basis(METRICS[k]) == "diluted" for k in metric_keys if k in stock.metrics):
+            for key, name in columns.items():
+                if key == series or key.startswith(f"{series}_"):
+                    out[key] = name.replace("Basic EPS", "Diluted EPS").replace("basic EPS", "diluted EPS")
+    return out
+
+
+def stock_of(monitor: Monitor, symbol: str):
+    return next(s for s in monitor.config.stocks if s.symbol == symbol)
+
 
 # file name in the URL -> file name saved on download (without the stock symbol)
 FILES = {
@@ -110,10 +130,10 @@ def build(monitor: Monitor, symbol: str, name: str, report=None) -> bytes:
         return to_csv_bytes(df.rename(columns=PRICE_COLUMNS))
     if name == "eps.csv":
         df = drop_empty_series(monitor.earnings.periods(symbol))
-        return to_csv_bytes(df.rename(columns=PERIOD_COLUMNS))
+        return to_csv_bytes(df.rename(columns=columns_for(stock_of(monitor, symbol), PERIOD_COLUMNS)))
     if name == "ttm.csv":
         df = monitor.earnings.ttm(symbol).dropna(axis=1, how="all")
-        return to_csv_bytes(df.rename(columns=TTM_COLUMNS))
+        return to_csv_bytes(df.rename(columns=columns_for(stock_of(monitor, symbol), TTM_COLUMNS)))
     if name == "valuation.csv":
         return to_csv_bytes(valuation_frame(monitor, symbol, report))
     if name == "raw.zip":
@@ -155,7 +175,7 @@ def valuation_frame(monitor: Monitor, symbol: str, report) -> pd.DataFrame:
         rec = d["record"]
         known = rec.notna()
         idx = rec[known].astype(int)
-        label = r.metric.label
+        label = report.stock.metric_label(r.metric)
         out[f"{label} | Earnings record (period)"] = pd.Series(
             [earnings.ttm_detail[i]["period_label"] for i in idx], index=idx.index
         ).reindex(d.index).to_numpy() if earnings and earnings.ttm_detail else None

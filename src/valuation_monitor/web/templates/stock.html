@@ -70,7 +70,7 @@
     {% else %}
     <li>Historical prices: the closing price on each trading day (from Yahoo Finance, adjusted for stock splits).</li>
     {% endif %}
-    <li>Historical earnings: for each period (quarter or half year), the revenue, net profit attributable to owners, basic EPS and equity at period end extracted from the original earnings filings ({{ report.stock.filing_source }}), with the first publication time, effective trading day, number of confirming filings and the link to the original filing.</li>
+    <li>Historical earnings: for each period (quarter or half year), the revenue, net profit attributable to owners, basic EPS and equity at period end extracted from the original earnings filings ({{ report.stock.filing_source }}), with the first publication time, effective trading day, number of confirming filings and the link to the original filing.{% for m in views if m.basis == "diluted" %} {{ m.label }} is based on diluted EPS, because the company discloses no basic figure.{% endfor %}</li>
     <li>Per-share metrics: the TTM EPS, revenue per share, book value per share and share count used for valuation after each filing, with the values of every period the TTM covers and the formula of each step (e.g. TTM EPS = period 1 + period 2 + period 3 + period 4), so each can be checked.</li>
     <li>Daily valuation detail: the calculation of every metric on every trading day: ratio = close / (per-share value x FX rate), and which period of earnings was used that day. Hovering over a day in a trend chart shows the same formula.</li>
     <li>All raw data: the raw prices, FX rates, parsed filings and the filing index of every source.</li>

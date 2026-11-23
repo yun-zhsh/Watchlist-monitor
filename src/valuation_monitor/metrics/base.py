@@ -9,7 +9,8 @@ from valuation_monitor.data import StockData
 
 class Metric(ABC):
     key: str  # name used in the config file, e.g. "pe"
-    label: str  # display name, e.g. "PE (TTM)"
+    label: str  # display name, e.g. "PE (TTM)"; a PE is shown with its EPS basis in front ("Basic PE (TTM)", see StockConfig.metric_label)
+    eps_based: bool = False  # whether the metric is a price / EPS ratio, whose EPS is basic or diluted
 
     @abstractmethod
     def compute(self, data: StockData) -> pd.Series:

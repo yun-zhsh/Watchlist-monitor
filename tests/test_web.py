@@ -19,7 +19,7 @@ def test_index_lists_stocks(client):
     assert "Tencent Holdings" in html and "0700.HK" in html
     assert "/stock/0700.HK/" in html
     assert "Update data" in html
-    assert "PE (TTM)" in html and "percentile" in html
+    assert "Basic PE (TTM)" in html and "percentile" in html
 
 
 def test_stock_page_has_charts_and_downloads(client):
@@ -146,13 +146,13 @@ def test_valuation_download_shows_how_each_ratio_is_calculated(client):
     raw = client.get("/stock/0700.HK/download/valuation.csv").data.decode("utf-8-sig")
     df = pd.read_csv(io.StringIO(raw))
     close = "Close (price currency)"
-    converted = "PE (TTM) | Per-share value (price currency) = per-share value x FX rate"
-    ratio = "PE (TTM) | Ratio = close / per-share value (price currency)"
+    converted = "Basic PE (TTM) | Per-share value (price currency) = per-share value x FX rate"
+    ratio = "Basic PE (TTM) | Ratio = close / per-share value (price currency)"
     ok = df[ratio].notna()
     assert ok.any()
     assert ((df.loc[ok, close] / df.loc[ok, converted]) - df.loc[ok, ratio]).abs().max() < 1e-9
-    assert (df["PE (TTM) | Per-share value (reporting currency)"] * df["FX rate (1 unit of reporting currency = ? price currency)"] - df[converted]).abs().max() < 1e-9
-    assert df.loc[ok, "PE (TTM) | Earnings record (period)"].iloc[-1] == "2024Q2"
+    assert (df["Basic PE (TTM) | Per-share value (reporting currency)"] * df["FX rate (1 unit of reporting currency = ? price currency)"] - df[converted]).abs().max() < 1e-9
+    assert df.loc[ok, "Basic PE (TTM) | Earnings record (period)"].iloc[-1] == "2024Q2"
 
 
 def test_ttm_download_shows_the_components_and_formulas(client):
@@ -163,8 +163,8 @@ def test_ttm_download_shows_the_components_and_formulas(client):
     parts = [row[f"Period {k}: basic EPS"] for k in range(1, 5)]
     eps_ttm = "TTM EPS = sum of the periods' basic EPS"
     assert row[eps_ttm] == pytest.approx(sum(parts))
-    assert row["TTM EPS formula (* = obtained by subtracting cumulative figures)"].endswith(f"= {row[eps_ttm]:g}")
-    assert "2023Q3" in row["TTM EPS formula (* = obtained by subtracting cumulative figures)"]
+    assert row["TTM basic EPS formula (* = obtained by subtracting cumulative figures)"].endswith(f"= {row[eps_ttm]:g}")
+    assert "2023Q3" in row["TTM basic EPS formula (* = obtained by subtracting cumulative figures)"]
 
 
 def test_chart_payload_carries_the_calculation_for_the_tooltip(client):

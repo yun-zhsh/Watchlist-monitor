@@ -245,3 +245,83 @@ def test_the_ifrs_mode_keeps_the_statements_6k_and_skips_the_press_release(tmp_p
     assert found[0].content == IFRS_STATEMENTS and found[0].published == pd.Timestamp("2026-11-16 16:14:19")
     index = json.loads((tmp_path / "XP" / "index.json").read_text(encoding="utf-8"))
     assert [e["results"] for e in index] == [False, True]  # the press release 6-K is recorded as checked, not as results
+
+
+# ---- EDGAR's CDN answering 404 "Directory listing is Not Available Yet" for a while ----------------------------------------------------------
+
+
+def not_found(url, status=404):
+    import requests
+
+    response = requests.Response()
+    response.status_code = status
+    response.url = url
+    return requests.HTTPError(f"{status} Client Error: for url: {url}", response=response)
+
+
+INDEX_PAGE = b"""<html><body><table class="tableFile" summary="Document Format Files">
+<tr><th>Seq</th><th>Description</th><th>Document</th><th>Type</th><th>Size</th></tr>
+<tr><td>1</td><td>6-K</td><td><a href="/Archives/edgar/data/1549802/000119312526000001/a6k.htm">a6k.htm</a></td><td>6-K</td><td>8000</td></tr>
+<tr><td>2</td><td>EX-99.1</td><td><a href="/Archives/edgar/data/1549802/000119312526000001/ex991.htm">ex991.htm</a></td><td>EX-99.1</td><td>300000</td></tr>
+<tr><td></td><td>Complete submission text file</td><td><a href="/Archives/edgar/data/1549802/000119312526000001/0001193125-26-000001.txt">0001193125-26-000001.txt</a></td><td></td><td>400000</td></tr>
+</table></body></html>"""
+
+
+class FlakyHttp(FakeHttp):
+    """The index.json of the first 6-K answers 404 (the CDN's cached page); its index page and exhibit answer `page_failures` times 404 too."""
+
+    def __init__(self, page_failures=0, status=404):
+        super().__init__()
+        self.page_failures, self.status = page_failures, status
+        self.calls = []
+
+    def get_bytes(self, url, **kwargs):
+        self.calls.append(url.rsplit("/", 2)[-2] + "/" + url.rsplit("/", 1)[-1])
+        if url.endswith("/000119312526000001/index.json"):
+            raise not_found(url, self.status)
+        if url.endswith("/000119312526000001/0001193125-26-000001-index.htm"):
+            if self.page_failures:
+                self.page_failures -= 1
+                raise not_found(url)
+            return INDEX_PAGE
+        return super().get_bytes(url, **kwargs)
+
+
+def test_the_index_page_lists_the_documents_like_index_json():
+    from valuation_monitor.providers.sec import index_page_items
+
+    assert index_page_items(INDEX_PAGE) == [{"name": "0001193125-26-000001.txt", "size": "400000"}, {"name": "a6k.htm", "size": "8000"}, {"name": "ex991.htm", "size": "300000"}]
+
+
+def test_when_index_json_answers_404_the_filing_index_page_is_used(tmp_path):
+    http = FlakyHttp()
+    found = SecProvider(http, tmp_path).results_announcements("JD", 1549802, datetime(2026, 1, 1))
+    assert [f.title for f in found] == ["JD.com Announces Second Quarter 2026 Results"]
+    assert http.calls[:3] == ["000119312526000001/index.json", "000119312526000001/0001193125-26-000001-index.htm", "000119312526000001/ex991.htm"]
+    index = json.loads((tmp_path / "JD" / "index.json").read_text(encoding="utf-8"))
+    assert [(e["accession"], e["results"]) for e in index] == [("0001193125-26-000001", True), ("0001193125-26-000002", False)]
+
+
+def test_a_filing_answering_404_is_tried_again_after_the_others(tmp_path):
+    http = FlakyHttp(page_failures=1)  # the first pass fails, the second pass works
+    found = SecProvider(http, tmp_path).results_announcements("JD", 1549802, datetime(2026, 1, 1))
+    assert [f.title for f in found] == ["JD.com Announces Second Quarter 2026 Results"]
+    listings = [c for c in http.calls if "index" in c]
+    assert [c.split("/")[0][-1] for c in listings] == ["1", "1", "2", "1", "1"]  # the second 6-K is checked before the first one is tried again
+
+
+def test_a_filing_that_stays_404_is_skipped_for_this_run_only_and_the_others_go_on(tmp_path, capsys):
+    assert SecProvider(FlakyHttp(page_failures=2), tmp_path).results_announcements("JD", 1549802, datetime(2026, 1, 1)) == []
+    index = json.loads((tmp_path / "JD" / "index.json").read_text(encoding="utf-8"))
+    assert [e["accession"] for e in index] == ["0001193125-26-000002"]  # the other 6-K was still checked; the skipped one is not recorded
+    assert "skipping the filing 0001193125-26-000001 for this run" in capsys.readouterr().err
+
+    found = SecProvider(FakeHttp(), tmp_path).results_announcements("JD", 1549802, datetime(2026, 1, 1))  # the next run checks it again
+    assert [f.title for f in found] == ["JD.com Announces Second Quarter 2026 Results"]
+
+
+def test_other_http_errors_still_stop_the_update_as_before(tmp_path):
+    import requests
+
+    with pytest.raises(requests.HTTPError):
+        SecProvider(FlakyHttp(status=403), tmp_path).results_announcements("JD", 1549802, datetime(2026, 1, 1))

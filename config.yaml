@@ -68,6 +68,12 @@ stocks:
     market: KR   # earnings come from the English consolidated financial statements (K-IFRS) on the Samsung IR website, every quarter
     filing_format: kifrs_statements   # EPS is the basic EPS of common stock (KRW); the Yahoo price is in KRW too, so no FX rate is needed
     metrics: [pe, ps, pb]
+  - symbol: BABA
+    name: Alibaba Group (ADR)
+    market: US
+    cik: 1577552   # Alibaba Group Holding Limited; fiscal year ends March 31, results every calendar quarter
+    filing_format: press_release   # the price is in USD per ADS (8 ordinary shares since the 2019 subdivision; 1 before); EPS is in RMB per ADS
+    metrics: [pe, ps, pb]   # no pe_non_gaap: Alibaba discloses only a diluted Non-GAAP EPS, while the metric is on basic EPS
   - symbol: JD
     name: JD.com (ADR)
     market: US

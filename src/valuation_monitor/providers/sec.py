@@ -36,6 +36,10 @@ MAX_EXHIBIT_BYTES = 3_000_000
 EXHIBIT_RE = re.compile(r"ex(?:hibit)?[-_ ]?99|press ?release", re.I)
 # Title at the start of the press release, e.g. "JD.com Announces Second Quarter 2026 Results", "... Announces Fourth Quarter and Full Year 2025 Results"
 EXHIBIT_LABEL_RE = re.compile(r"^.*?\bExhibi?t? ?99\.\d\s+", re.I)
+# The Hong Kong-style results announcement that Alibaba files instead of a press release for the March and September quarters (since 2025), after
+# a long Hong Kong Stock Exchange disclaimer: "ANNOUNCEMENT OF THE SEPTEMBER QUARTER 2025 RESULTS AND INTERIM RESULTS FOR THE SIX MONTHS ENDED SEPTEMBER 30, 2025"
+HK_RESULTS_TITLE_RE = re.compile(r"\bANNOUNCEMENT OF THE [A-Z]+ QUARTER \d{4} RESULTS(?: AND [A-Z0-9 ]+? RESULTS(?: FOR THE [A-Z]+ MONTHS ENDED [A-Z]+ \d{1,2}, \d{4})?)?")
+HK_TITLE_SEARCH_CHARS = 4000
 RESULTS_HEADLINE_RE = re.compile(r"\b(?:announces?|reports?)\b.{0,120}?\b(?:results|net income|net sales)\b|\b(?:publishes|announces|reports) its\b.{0,60}?\bresults?\b", re.I)  # ASML's older releases say "today publishes its 2016 second-quarter results"
 
 
@@ -74,6 +78,8 @@ def headline(html: bytes) -> str | None:
     from bs4 import BeautifulSoup
 
     text = " ".join(BeautifulSoup(html[:200_000], "lxml").get_text(" ").split())
+    if m := HK_RESULTS_TITLE_RE.search(text[:HK_TITLE_SEARCH_CHARS]):
+        return m.group(0)
     text = EXHIBIT_LABEL_RE.sub("", text, count=1)[:1500]  # strip labels such as "EX-99.1 Exhibit 99.1" from the file header
     m = RESULTS_HEADLINE_RE.search(text)
     if not m:

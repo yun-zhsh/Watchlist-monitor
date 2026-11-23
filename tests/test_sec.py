@@ -17,6 +17,27 @@ def test_headline():
     assert headline(OTHER_HTML) is None
 
 
+HK_DISCLAIMER = (
+    "Hong Kong Exchanges and Clearing Limited and The Stock Exchange of Hong Kong Limited take no responsibility for the contents "
+    "of this announcement, make no representation as to its accuracy or completeness and expressly disclaim any liability whatsoever. "
+) * 8  # long enough to push the title past the first 1,500 characters, as in Alibaba's September quarter 2025 announcement
+
+
+def hk_announcement(title: str) -> bytes:
+    body = f"<p>EX-99.1 Exhibit 99.1</p><p>{HK_DISCLAIMER}</p><p>Alibaba Group Holding Limited (Stock Code: 9988)</p><p>{title}</p>"
+    body += "<p>The board of directors is pleased to announce that the unaudited consolidated results of the company.</p>"
+    return f"<html><body>{body}</body></html>".encode() + b"<p>x</p>" * 20000
+
+
+def test_headline_of_a_hong_kong_style_results_announcement():
+    interim = "ANNOUNCEMENT OF THE SEPTEMBER QUARTER 2025 RESULTS AND INTERIM RESULTS FOR THE SIX MONTHS ENDED SEPTEMBER 30, 2025"
+    annual = "ANNOUNCEMENT OF THE MARCH QUARTER 2025 RESULTS AND FISCAL YEAR 2025 ANNUAL RESULTS"
+    assert headline(hk_announcement(interim)) == interim
+    assert headline(hk_announcement(annual)) == annual
+    assert headline(hk_announcement("ANNOUNCEMENT OF THE JUNE QUARTER 2026 RESULTS")) == "ANNOUNCEMENT OF THE JUNE QUARTER 2026 RESULTS"
+    assert headline(hk_announcement("VOLUNTARY ANNOUNCEMENT SHARE REPURCHASE UPDATE")) is None  # other announcements are not results
+
+
 def test_acceptance_time_is_converted_to_new_york_time():
     assert to_new_york("2026-08-13T10:05:29.000Z") == pd.Timestamp("2026-08-13 06:05:29")  # daylight saving time
     assert to_new_york("2026-01-13T21:05:29.000Z") == pd.Timestamp("2026-01-13 16:05:29")  # standard time

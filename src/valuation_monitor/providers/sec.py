@@ -23,6 +23,7 @@ from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
+import requests
 
 from valuation_monitor.providers.base import Filing, save_index
 from valuation_monitor.providers.http import HttpClient
@@ -42,6 +43,16 @@ RESULTS_HEADLINE_RE = re.compile(r"\b(?:announces?|reports?)\b.{0,120}?\b(?:resu
 
 class SecUserAgentMissing(RuntimeError):
     pass
+
+
+class ArchiveNotAvailable(RuntimeError):
+    """An EDGAR Archives file answered 404 (see INDEX_PAGE_NAME): the filing is tried again after the others, and if it still fails, on the next run."""
+
+
+# EDGAR's CDN now and then answers a filing's index.json with a 404 page "Directory listing is Not Available Yet" and may keep serving it from
+# its cache for minutes ("surrogate-control: max-age=300, stale-while-revalidate=120"), so retrying a few seconds later gets the same 404, with
+# or without a query string. The filing's own index page ("<accession>-index.htm") lists the same documents with their sizes and is used instead.
+INDEX_PAGE_NAME = "{accession}-index.htm"
 
 
 def make_http_client(cache_dir: str | Path = ".cache", ttl_seconds: int = 12 * 3600, refresh: bool = False) -> HttpClient:
@@ -117,6 +128,22 @@ def ifrs_statements_title(html: bytes) -> str | None:
     return f"{'Interim condensed consolidated' if interim else 'Consolidated'} financial statements at {date.group(1)}"
 
 
+def index_page_items(page: bytes) -> list[dict]:
+    """The documents of the "Document Format Files" table of a filing's index page, as index.json lists them: {"name", "size"}, sorted by name."""
+    from bs4 import BeautifulSoup
+
+    table = BeautifulSoup(page, "lxml").find("table", class_="tableFile")
+    if table is None:
+        raise ValueError("The filing index page has no document table")
+    items = []
+    for tr in table.find_all("tr"):
+        link, cells = tr.find("a"), [" ".join(td.get_text(" ").split()) for td in tr.find_all("td")]
+        if link is None or len(cells) < 5:
+            continue
+        items.append({"name": link["href"].rsplit("/", 1)[-1], "size": cells[4] if cells[4].isdigit() else ""})
+    return sorted(items, key=lambda item: item["name"].lower())  # index.json lists them by name, ignoring case
+
+
 def headline(html: bytes) -> str | None:
     """The title at the start of the press release; None if it is not an earnings press release."""
     from bs4 import BeautifulSoup
@@ -182,25 +209,51 @@ class SecProvider:
 
     def _examine_new(self, symbol, cik, since, folder, index, known, form: str = "6-K", exhibit: str = "release") -> bool:
         added = False
-        for item in self._filing_list(cik, form):
-            if item["accession"] in known or item["published"] < pd.Timestamp(since):
-                continue
-            entry = self._examine(cik, item, folder, exhibit)
-            index.append(entry)
-            known.add(entry["accession"])
-            added = True
-            if entry["results"]:
-                print(f"{symbol}: new results release {entry['published']} {entry['title']}", file=sys.stderr)
+        new = [item for item in self._filing_list(cik, form) if item["accession"] not in known and item["published"] >= pd.Timestamp(since)]
+        for last_try in (False, True):
+            skipped = []
+            for item in new:
+                try:
+                    entry = self._examine(cik, item, folder, exhibit)
+                except ArchiveNotAvailable as e:
+                    if last_try:  # not recorded in the index, so the next run checks this filing again
+                        print(f"{symbol}: skipping the filing {item['accession']} for this run ({e})", file=sys.stderr)
+                    skipped.append(item)
+                    continue
+                index.append(entry)
+                known.add(entry["accession"])
+                added = True
+                if entry["results"]:
+                    print(f"{symbol}: new results release {entry['published']} {entry['title']}", file=sys.stderr)
+            if not skipped:
+                break
+            new = skipped  # the second pass only tries again what answered 404, after all the others
         return added
+
+    def _archive_get(self, url: str, **kwargs) -> bytes:
+        """A file of the EDGAR Archives; a 404 raises ArchiveNotAvailable (the filing is then tried again later), other errors as they are."""
+        try:
+            return self.http.get_bytes(url, **kwargs)
+        except requests.HTTPError as e:
+            if e.response is None or e.response.status_code != 404:
+                raise
+            raise ArchiveNotAvailable(f"404 Not Found for {url}") from e
+
+    def _listing(self, cik: int, accession: str) -> list[dict]:
+        """The documents of a filing ({"name", "size"}), from its index.json, or from its index page when index.json answers 404 (see INDEX_PAGE_NAME)."""
+        folder_name = accession.replace("-", "")
+        try:
+            return json.loads(self._archive_get(ARCHIVE_URL.format(cik=cik, accession=folder_name, name="index.json"), immutable=True))["directory"]["item"]
+        except ArchiveNotAvailable:
+            print(f"{accession}: index.json answered 404; reading the filing index page instead", file=sys.stderr)
+            page = self._archive_get(ARCHIVE_URL.format(cik=cik, accession=folder_name, name=INDEX_PAGE_NAME.format(accession=accession)), immutable=True)
+        return index_page_items(page)
 
     def _examine(self, cik: int, item: dict, folder: Path, exhibit: str = "release") -> dict:
         accession = item["accession"]
         folder_name = accession.replace("-", "")
         entry = {"accession": accession, "published": f"{item['published']:%Y-%m-%dT%H:%M:%S}", "results": False}
-        listing = json.loads(
-            self.http.get_bytes(ARCHIVE_URL.format(cik=cik, accession=folder_name, name="index.json"), immutable=True)
-        )
-        files = listing["directory"]["item"]
+        files = self._listing(cik, accession)
         if exhibit == "us_gaap_statements":
             files = sorted(files, key=lambda f: not FINANCIAL_STATEMENTS_NAME_RE.search(f["name"]))  # the names say it from 2016 on (financialstatements...); before, the exhibits are numbered and are told apart by their content
         for f in files:
@@ -211,7 +264,7 @@ class SecProvider:
             if not MIN_EXHIBIT_BYTES <= size <= (IFRS_MAX_EXHIBIT_BYTES if exhibit == "ifrs_statements" else MAX_EXHIBIT_BYTES):
                 continue
             url = ARCHIVE_URL.format(cik=cik, accession=folder_name, name=name)
-            html = self.http.get_bytes(url, cache=False)
+            html = self._archive_get(url, cache=False)
             if exhibit == "ifrs_statements":
                 title = ifrs_statements_title(html)
             else:

@@ -178,5 +178,38 @@
     "accession": "0000950103-21-008073",
     "published": "2021-05-28T08:02:22",
     "results": false
+  },
+  {
+    "accession": "0000950103-21-008422",
+    "published": "2021-06-04T13:09:20",
+    "results": false
+  },
+  {
+    "accession": "0000950103-21-008669",
+    "published": "2021-06-11T08:00:19",
+    "results": false
+  },
+  {
+    "accession": "0000950103-21-009042",
+    "published": "2021-06-21T10:47:02",
+    "results": false
+  },
+  {
+    "accession": "0000950103-21-009043",
+    "published": "2021-06-21T10:51:28",
+    "results": true,
+    "title": "Interim condensed consolidated financial statements at March 31, 2021",
+    "url": "https://www.sec.gov/Archives/edgar/data/1787425/000095010321009043/dp152752_ex9901.htm",
+    "file": "2021-06-21_dp152752_ex9901.htm"
+  },
+  {
+    "accession": "0000950103-21-009383",
+    "published": "2021-06-25T16:39:19",
+    "results": false
+  },
+  {
+    "accession": "0000950103-21-009423",
+    "published": "2021-06-25T20:23:49",
+    "results": false
   }
 ]

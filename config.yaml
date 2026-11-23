@@ -32,6 +32,8 @@ freshness:
 #   highlights        a financial highlights table on the first page, results every quarter (Tencent)
 #   statements        only consolidated statements, usually results every half year (Sunny Optical)
 #   press_release     earnings press release (Form 6-K) filed with the SEC on EDGAR by US-listed companies, every quarter; needs a cik
+#   ifrs_statements   IFRS consolidated financial statements (HTML) furnished on Form 6-K, interim (IAS 34) every quarter and the audited annual
+#                     statements for the fourth quarter (full year minus nine months); needs a cik and sec_exhibit: ifrs_statements (XP)
 #   kifrs_statements  English consolidated financial statements (K-IFRS) on the Samsung Electronics IR website, every quarter; market KR
 #   cn_report         periodic reports (Q1, half-year, Q3, annual) and annual express reports of A-share companies on CNINFO (Chinese originals); market CN
 # market: HK (HKEXnews; default for symbols ending in .HK), US (SEC EDGAR), KR (the IR website of a Korean company; default for
@@ -67,6 +69,13 @@ stocks:
     name: Samsung Electronics
     market: KR   # earnings come from the English consolidated financial statements (K-IFRS) on the Samsung IR website, every quarter
     filing_format: kifrs_statements   # EPS is the basic EPS of common stock (KRW); the Yahoo price is in KRW too, so no FX rate is needed
+    metrics: [pe, ps, pb]
+  - symbol: XP
+    name: XP Inc.
+    market: US   # NASDAQ; Class A common shares are listed directly (no ADS), a foreign private issuer filing 20-F and 6-K
+    cik: 1787425
+    sec_exhibit: ifrs_statements   # the press release has no basic EPS; the IFRS statements are furnished on 6-K the same day (from 2022 on mostly in a 6-K of their own)
+    filing_format: ifrs_statements   # price in USD per Class A share, earnings in BRL (IFRS): converted with the BRLUSD rate of each day
     metrics: [pe, ps, pb]
   - symbol: JD
     name: JD.com (ADR)

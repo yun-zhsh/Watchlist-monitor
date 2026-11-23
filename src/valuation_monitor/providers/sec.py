@@ -1,7 +1,8 @@
 """SEC EDGAR: search for and download the original quarterly earnings press releases of US-listed (foreign private issuer) companies.
 
 Earnings are furnished on Form 6-K by foreign private issuers (JD, ASML) and on Form 8-K item 2.02 by US companies (Meta, Cognizant);
-either way the press release is exhibit 99.1 (HTML).
+either way the press release is exhibit 99.1 (HTML). Two companies' press releases lack figures, so another exhibit is kept instead:
+ASML's summary US GAAP statements and XP's IFRS consolidated financial statements (see `exhibit` in results_announcements).
 Flow: list the 6-Ks (or the 8-Ks with item 2.02) from the submissions API -> look at the file list of each and pick the press release exhibit of a plausible size ->
 only a title like "... Announces ... Results" or "... Reports ... Results" is an earnings announcement.
 
@@ -69,6 +70,53 @@ def statements_title(html: bytes) -> str | None:
     return "Summary US GAAP financial statements" if US_GAAP_STATEMENTS_RE.search(text) else None
 
 
+# XP: the IFRS statements are furnished in an exhibit (from 2022 on mostly in a 6-K of their own) that starts with the statements' heading
+# ("XP Inc. Interim condensed consolidated financial statements at September 30, 2026"), the auditor's report on them, or the balance sheet itself
+IFRS_START_RE = re.compile(
+    r"(?:Unaudited )?(?:interim condensed )?consolidated (?:financial statements|balance sheets?)\b"
+    r"|Report on review of interim condensed consolidated financial statements\b"
+    r"|PricewaterhouseCoopers\b.{0,200}?Independent auditor.s report\b",
+    re.I,
+)
+IFRS_START_CHARS = 120  # the heading comes first: "Exhibit 99.3 www.pwc.com.br XP Inc. Consolidated ...", "Exhibit 99.2 1 Report on review of ..."
+IFRS_DATE_RE = re.compile(r"\bconsolidated (?:financial statements|balance sheets?)\b,? (?:at|as of|as at|for the years? ended) ([A-Z][a-z]+ \d{1,2}, \d{4})", re.I)
+IFRS_MAX_EXHIBIT_BYTES = 6_000_000  # the audited annual statements with all their notes are 1-3MB
+MIN_NUMBER_CELLS = 100  # statements in HTML tables have thousands of table cells with amounts
+
+
+def has_number_tables(html: bytes) -> bool:
+    """Whether the statements are HTML tables. XP's first annual statements (December 31, 2019) are page images with a hidden, garbled text
+    layer ("7 , 15 3 , 3 9 6"), which cannot be read reliably: they are not taken (the 2019 figures come from the next year's statements)."""
+    from bs4 import BeautifulSoup
+
+    cells = BeautifulSoup(html, "lxml").find_all("td")
+    return sum(1 for c in cells if re.fullmatch(r"\(?[\d.,]{3,}\)?", c.get_text(strip=True))) >= MIN_NUMBER_CELLS
+
+
+def ifrs_statements_title(html: bytes) -> str | None:
+    """A title such as "Interim condensed consolidated financial statements at September 30, 2026" if the exhibit is a set of IFRS
+    consolidated financial statements; None otherwise.
+
+    The exhibit must start with the statements (their heading, the auditor's report on them, or the balance sheet): a press release
+    ("XP Inc. Reports ...") or a management's discussion ("... should be read in conjunction with our unaudited interim condensed consolidated
+    financial statements as of ...") only refers to them later in the text. The date is that of the first balance sheet or heading.
+    """
+    from bs4 import BeautifulSoup
+
+    text = " ".join(BeautifulSoup(html[:300_000], "lxml").get_text(" ").split())
+    text = EXHIBIT_LABEL_RE.sub("", text, count=1)
+    start = IFRS_START_RE.search(text[: IFRS_START_CHARS + 250])
+    if start is not None and start.start() > IFRS_START_CHARS:
+        start = None
+    date = IFRS_DATE_RE.search(text[:200_000])
+    if start is None or date is None:
+        return None
+    if not has_number_tables(html):
+        return None
+    interim = "interim" in (start.group(0) + date.group(0)).lower()
+    return f"{'Interim condensed consolidated' if interim else 'Consolidated'} financial statements at {date.group(1)}"
+
+
 def headline(html: bytes) -> str | None:
     """The title at the start of the press release; None if it is not an earnings press release."""
     from bs4 import BeautifulSoup
@@ -90,7 +138,8 @@ class SecProvider:
         """All earnings releases published after `since`, in ascending order of publication time.
 
         `form` is the SEC form that carries them: 6-K or 8-K (item 2.02). `exhibit` is what is kept of each: "release", the press release itself, or
-        "us_gaap_statements", the summary US GAAP financial statements exhibit (ASML: its press release has only a few figures, the statements have the rest).
+        "us_gaap_statements", the summary US GAAP financial statements exhibit (ASML: its press release has only a few figures, the statements have the rest),
+        or "ifrs_statements", the IFRS consolidated financial statements (XP: furnished in a 6-K of their own; its press release has no basic EPS).
         """
         folder = self.archive_dir / symbol.upper()
         index_path = folder / "index.json"
@@ -159,11 +208,14 @@ class SecProvider:
             name = f["name"]
             if not (name.lower().endswith((".htm", ".html")) and (EXHIBIT_RE.search(name) or (exhibit == "us_gaap_statements" and FINANCIAL_STATEMENTS_NAME_RE.search(name)))):
                 continue
-            if not MIN_EXHIBIT_BYTES <= size <= MAX_EXHIBIT_BYTES:
+            if not MIN_EXHIBIT_BYTES <= size <= (IFRS_MAX_EXHIBIT_BYTES if exhibit == "ifrs_statements" else MAX_EXHIBIT_BYTES):
                 continue
             url = ARCHIVE_URL.format(cik=cik, accession=folder_name, name=name)
             html = self.http.get_bytes(url, cache=False)
-            title = statements_title(html) if exhibit == "us_gaap_statements" else headline(html)
+            if exhibit == "ifrs_statements":
+                title = ifrs_statements_title(html)
+            else:
+                title = statements_title(html) if exhibit == "us_gaap_statements" else headline(html)
             if title:
                 file = f"{item['published']:%Y-%m-%d}_{name}"
                 folder.mkdir(parents=True, exist_ok=True)

@@ -1,4 +1,5 @@
-"""Condensed US GAAP statements in HTML: the press releases of Meta Platforms and Cognizant (8-K exhibit 99.1) and ASML's summary statements (6-K, in euros)."""
+"""Condensed US GAAP statements in HTML: the press releases of Meta Platforms and Cognizant (8-K exhibit 99.1), of Sea Limited (6-K exhibit 99.1)
+and ASML's summary statements (6-K, in euros)."""
 
 import json
 from pathlib import Path
@@ -188,3 +189,152 @@ def test_asml_newest_statements_are_text_without_tables():
     first_quarter = text.replace(b"Three months ended Six months ended Jun 30, Jun 29, Jun 30, Jun 29,", b"Three months ended Mar 30, Mar 29,").replace(b" 2024 2025 2024 2025 ", b" 2024 2025 ")
     assert parse_us_release(first_quarter.replace(b"4,760.9 5,596.1 8,726.8 11,336.5", b"4,760.9 5,596.1").replace(b"6,242.8 7,691.7 11,532.8 15,433.2", b"6,242.8 7,691.7")
                             .replace(b"1,577.9 2,290.3 2,801.7 4,645.3", b"1,577.9 2,290.3").replace(b"4.01 5.90 7.12 11.90", b"4.01 5.90").replace(b"393.2 388.2 393.3 390.2", b"393.2 388.2")).period == pd.Period("2025Q1")
+
+
+def test_net_income_attributable_to_common_stockholders_is_not_taken_without_non_controlling_interests():
+    """Meta 2014-2018: "Net income attributable to Class A and Class B common stockholders" is net income less the participating securities."""
+    income = META_INCOME.replace(
+        "<tr><td>Earnings per share:</td></tr>",
+        "<tr><td>Less: Net income attributable to participating securities</td><td>5</td><td>3</td><td>20</td><td>15</td></tr>"
+        "<tr><td>Net income attributable to Class A and Class B common stockholders</td><td>9,855</td><td>2,706</td><td>52,461</td><td>37,675</td></tr>"
+        "<tr><td>Earnings per share:</td></tr>",
+    )
+    assert parse_us_release(release(income, META_BALANCE)).values["profit"] == [9860.0, 2709.0]
+
+
+# ---- Sea Limited: 6-K press releases, thousands of US dollars, non-controlling interests ---------------------------------------------
+
+SEA_UNIT = "UNAUDITED INTERIM CONDENSED CONSOLIDATED STATEMENT OF OPERATIONS Amounts expressed in thousands of US dollars (\u201c$\u201d) except for number of shares &amp; per share data"
+SEA_NINE_MONTHS = table(
+    ["For the Nine Months ended September 30,"],
+    ["2025", "2026"],
+    ["$", "$"],
+    ["Revenue"],
+    ["Total revenue", "16,086,601", "23,467,552"],
+    ["Net income", "1,200,017", "1,398,796"],
+    ["Net income attributable to non-controlling interests", "(18,967", "(39,280"],
+    ["Net income attributable to Sea Limited\u2019s ordinary shareholders", "1,181,050", "1,359,516"],
+    ["Earnings per share:"],
+    ["Basic", "1.99", "2.23"],
+    ["Diluted", "1.89", "2.15"],
+    ["Weighted average shares used in earnings per share computation (in thousands):"],
+    ["Basic", "592,592", "610,532"],
+    ["Diluted", "638,092", "633,066"],
+)
+SEA_THREE_MONTH_SUMMARY = table(  # the summary of a third-quarter release: no net income attributable to Sea and no shares
+    ["For the Three Months ended September 30,"],
+    ["2025", "2026", "YOY%"],
+    ["Revenue"],
+    ["5,986,024", "8,582,284", "43.4"],
+    ["Net income", "374,988", "502,458", "34.0"],
+    ["Earnings per share attributable to Sea Limited\u2019s ordinary shareholders:"],
+    ["Basic", "0.63", "0.81", "28.6"],
+)
+SEA_BALANCE = table(
+    ["As of December 31,", "As of September 30,"],
+    ["2025", "2026"],
+    ["Shareholders\u2019 equity"],
+    ["Total Sea Limited shareholders\u2019 equity", "12,526,503", "13,303,994"],
+    ["Non-controlling interests", "121,825", "150,157"],
+    ["Total shareholders\u2019 equity", "12,648,328", "13,454,151"],
+    ["Total liabilities and shareholders\u2019 equity", "29,370,979", "33,201,286"],
+)
+
+
+def test_sea_third_quarter_has_year_to_date_statements_only():
+    p = parse_us_release(release(SEA_THREE_MONTH_SUMMARY + SEA_NINE_MONTHS, SEA_BALANCE, SEA_UNIT))
+    assert p.period == pd.Period("2026Q3") and p.currency == "USD" and not p.quarterly  # nine months: the quarter is derived by subtraction
+    assert p.values["revenue"] == pytest.approx([23467.552, 16086.601]) and p.values["eps"] == [2.23, 1.99]
+    assert p.values["profit"] == pytest.approx([1359.516, 1181.05])  # attributable to Sea's shareholders, not the net income with non-controlling interests
+    assert p.values["wa_shares"] == pytest.approx([610.532, 592.592])  # "(in thousands)" in the label wins over the table note
+    assert p.values["equity"] == pytest.approx([13303.994, 12526.503])  # Sea's shareholders, not the total with non-controlling interests
+
+
+def test_sea_first_quarter_three_month_statements_with_single_shares_and_a_loss():
+    income = table(
+        ["For the Three Months ended March 31,"],
+        ["2019", "2020"],
+        ["$", "$"],
+        ["Total revenue", "351,866", "714,920"],
+        ["Net loss", "(689,609", "(280,791"],
+        ["Net profit attributable to non-controlling interests", "(746", "(722"],
+        ["Net loss attributable to Sea Limited\u2019s ordinary shareholders", "(690,355", "(281,513"],
+        ["Loss per share:"],
+        ["Basic and diluted", "(1.86", "(0.61"],
+        ["Weighted average shares used in loss per share computation:"],
+        ["Basic and diluted", "370,724,164", "462,194,052"],
+    )
+    balance = table(
+        ["As of December 31, 2019", "As of March 31, 2020"],
+        ["Total Sea Limited shareholders\u2019 (deficit) equity", "1,162,424", "920,601"],
+        ["Non-controlling interests", "10,228", "46,374"],
+        ["Total shareholders\u2019 (deficit) equity", "1,172,652", "966,975"],
+    )
+    p = parse_us_release(release(income, balance, SEA_UNIT))
+    assert p.period == pd.Period("2020Q1") and p.quarterly
+    assert p.values["profit"] == pytest.approx([-281.513, -690.355]) and p.values["eps"] == [-0.61, -1.86]
+    assert p.values["wa_shares"] == pytest.approx([462.194052, 370.724164])  # single shares ("except for number of shares") -> millions
+    assert p.values["equity"] == pytest.approx([920.601, 1162.424])
+
+
+def test_sea_2017_note_column_and_shares_on_the_heading_row():
+    income = table(
+        ["For the Three Months ended December 31,", "For the Year ended December 31,"],
+        ["Note", "2016", "2017", "2016", "2017"],
+        ["Total revenue", "2", "88,461", "124,604", "345,670", "414,190"],
+        ["Net loss", "(72,236", "(263,140", "(224,955", "(561,166"],
+        ["Net (gain) loss attributable to non-controlling interests", "(4", "480", "2,088", "681"],
+        ["Net loss attributable to Sea Limited\u2019s ordinary shareholders", "(72,240", "(262,660", "(222,867", "(560,485"],
+        ["Adjusted net loss (1)", "(61,981", "(251,563", "(196,114", "(532,530"],
+        ["Loss per share:"],
+        ["Basic and diluted", "(0.42", "(0.90", "(1.30", "(2.72"],
+        ["Weighted average shares used in loss per share computation:", "171,565,142", "293,324,598", "171,127,788", "205,727,195"],
+        ["Basic and diluted"],
+    )
+    balance = table(
+        ["As of December 31,"],
+        ["2016", "2017"],
+        ["Total Sea Limited shareholders\u2019 deficit", "(125,670", "469,025"],
+        ["Non-controlling interests", "20", "6,106"],
+        ["Total shareholders\u2019 deficit", "(125,650", "475,131"],
+        ["Total liabilities, mezzanine equity and shareholders\u2019 equity", "485,775", "1,988,280"],
+    )
+    p = parse_us_release(release(income, balance, SEA_UNIT))
+    assert p.period == pd.Period("2017Q4") and p.quarterly  # the three-month group, the note number "2" skipped
+    assert p.values["revenue"] == pytest.approx([124.604, 88.461]) and p.values["profit"] == pytest.approx([-262.66, -72.24])
+    assert p.values["wa_shares"] == pytest.approx([293.324598, 171.565142])
+    assert p.values["equity"] == pytest.approx([469.025, -125.67])  # one "As of December 31," over both years
+
+
+SEA = FILINGS / "SE"
+sea_saved = pytest.mark.skipif(not (SEA / "index.json").exists(), reason="no saved Sea filings (the scheduled update saves them)")
+
+
+@sea_saved
+def test_every_saved_sea_release_parses():
+    """Sea: three-month statements in the first and fourth quarters (and 2017Q3), year-to-date ones in the second and third quarters from 2018 on."""
+    parsed = saved("SE")
+    by_period = {p.period: p for p in parsed.values()}
+    periods = sorted(by_period)
+    assert periods[0] == pd.Period("2017Q3") and periods[-1] >= pd.Period("2026Q3")
+    assert periods == list(pd.period_range(periods[0], periods[-1], freq="Q"))
+    for period, p in by_period.items():
+        assert p.currency == "USD"
+        assert p.quarterly == (period.quarter in (1, 4) or period == pd.Period("2017Q3")), period
+        profit, eps, shares = p.values["profit"][0], p.values["eps"][0], p.values["wa_shares"][0]
+        assert abs(profit / shares - eps) <= 0.005 + 1e-9, period  # basic EPS = net profit / shares, rounded to the cent
+    for period, p in by_period.items():  # the prior-year column of the release a year later, on the same basis
+        later = by_period.get(period + 4)
+        if later is None or later.quarterly != p.quarterly:
+            continue
+        for key in ("revenue", "profit", "eps", "wa_shares"):
+            assert later.values[key][1] == pytest.approx(p.values[key][0], abs=0.006 if key == "eps" else 1.0), (period, key)
+
+
+@sea_saved
+def test_sea_known_values():
+    by_period = {p.period: p for p in saved("SE").values()}
+    q = by_period[pd.Period("2026Q3")]
+    assert q.values["revenue"] == pytest.approx([23467.552, 16086.601]) and q.values["equity"] == pytest.approx([13303.994, 12526.503])
+    q = by_period[pd.Period("2018Q4")]
+    assert q.values["equity"][0] == pytest.approx(-243.139)  # negative equity at the end of 2018: PB is blank

@@ -77,6 +77,12 @@ stocks:
     sec_exhibit: ifrs_statements   # the press release has no basic EPS; the IFRS statements are furnished on 6-K the same day (from 2022 on mostly in a 6-K of their own)
     filing_format: ifrs_statements   # price in USD per Class A share, earnings in BRL (IFRS): converted with the BRLUSD rate of each day
     metrics: [pe, ps, pb]
+  - symbol: SE
+    name: Sea Limited (ADR)
+    market: US
+    cik: 1703399   # Sea Limited (Garena until 2017)
+    filing_format: us_press_release   # 6-K press release, USD, US GAAP; 1 ADS = 1 Class A ordinary share, so price and EPS need no ADS ratio
+    metrics: [pe, ps, pb]   # Sea's Non-GAAP measures changed over the years and today are only adjusted EBITDA, with no Non-GAAP EPS
   - symbol: JD
     name: JD.com (ADR)
     market: US

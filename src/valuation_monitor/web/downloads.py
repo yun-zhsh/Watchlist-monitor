@@ -50,7 +50,7 @@ TTM_COLUMNS = {
     "provisional": "Preliminary data (1 = earnings call presentation or express report, replaced when the official report is out)",
     "revenue_ttm": "TTM revenue = sum of the periods' revenue (millions)",
     "shares": "Shares (millions; millions of ADS for ADRs): the weighted average shares disclosed in the filing, implied only if none is disclosed",
-    "shares_source": "Share count source (reported / derived from the full-year figure / implied)",
+    "shares_source": "Share count source (reported / derived from the full-year or year-to-date figure / implied)",
     "shares_implied": "Cross-check: implied shares = latest net profit / latest basic EPS",
     "profit_latest": "Latest net profit attributable to owners (millions)",
     "eps_latest": "Latest basic EPS",

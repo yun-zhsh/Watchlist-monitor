@@ -198,3 +198,151 @@ def test_the_statements_mode_keeps_the_us_gaap_summary_not_the_press_release(tmp
     found = SecProvider(http, tmp_path).results_announcements("ASML", 937966, datetime(2026, 1, 1), "6-K", "us_gaap_statements")
     assert [(f.title, f.url.rsplit("/", 1)[-1]) for f in found] == [("Summary US GAAP financial statements", "financial_statementsxusx.htm")]
     assert found[0].content == STATEMENTS_HTML and found[0].published == pd.Timestamp("2026-10-14 06:01:18")
+
+
+# ---- XP: IFRS consolidated financial statements furnished on 6-K ---------------------------------------------------------------------------
+
+NUMBER_TABLE = "<table>" + "<tr><td>Total revenue and income</td><td>5,157,533</td><td>4,660,687</td></tr>" * 60 + "</table>"
+
+
+def xp_exhibit(start: str, tables: str = NUMBER_TABLE) -> bytes:
+    return f"<html><body><p>EX-99.1 2 dp256944_ex9901.htm EXHIBIT 99.1 Exhibit 99.1</p><p>{start}</p>{tables}</body></html>".encode()
+
+
+IFRS_STATEMENTS = xp_exhibit("XP Inc. Interim condensed consolidated financial statements at September 30, 2026 and report on review")
+
+
+@pytest.mark.parametrize(
+    "start, title",
+    [
+        ("XP Inc. Interim condensed consolidated financial statements at September 30, 2026 and report on review", "Interim condensed consolidated financial statements at September 30, 2026"),
+        ("www.pwc.com.br XP Inc. Consolidated financial statements at December 31, 2021 and independent auditor's report", "Consolidated financial statements at December 31, 2021"),
+        ("XP Inc. XP Inc. Consolidated financial statements at December 31, 2024 and independent auditor's report", "Consolidated financial statements at December 31, 2024"),
+        ("XP Inc. and its subsidiaries Unaudited interim condensed consolidated balance sheets As of March 31, 2021 and December 31, 2020", "Interim condensed consolidated financial statements at March 31, 2021"),
+        ("Index Report on review of interim condensed consolidated financial statements 3 Unaudited interim condensed consolidated balance sheets As of March 31, 2020", "Interim condensed consolidated financial statements at March 31, 2020"),
+    ],
+)
+def test_ifrs_statements_are_known_by_their_heading_the_report_on_them_or_the_balance_sheet(start, title):
+    from valuation_monitor.providers.sec import ifrs_statements_title
+
+    assert ifrs_statements_title(xp_exhibit(start)) == title
+
+
+def test_a_press_release_a_discussion_or_page_images_are_not_ifrs_statements():
+    from valuation_monitor.providers.sec import ifrs_statements_title
+
+    assert ifrs_statements_title(xp_exhibit("XP Inc. Reports Third Quarter 2026 Results São Paulo, Brazil, November 16, 2026 – XP Inc. reported today " + "x " * 60 + "interim condensed consolidated financial statements at September 30, 2026")) is None
+    assert ifrs_statements_title(xp_exhibit("Management's Discussion and Analysis of Financial Condition and Results of Operations The following discussion of our financial condition and results of operations should be read in conjunction with our unaudited interim condensed consolidated financial statements as of March 31, 2020")) is None
+    # the 2019 annual statements are page images with a garbled hidden text layer and no table of amounts
+    assert ifrs_statements_title(xp_exhibit("XP Inc. – Consolidated financial statements for the years ended December 31, 2019, 2018 and 2017 with Audit Report", "<p>Total revenue and income 5 , 12 7 , 8 0 8</p>")) is None
+
+
+class FakeIfrsHttp:
+    def __init__(self):
+        self.requests = []
+
+    def get_json(self, url, params=None):
+        return {"filings": {"recent": {"form": ["6-K", "6-K"], "accessionNumber": ["0000950103-26-017561", "0000950103-26-017562"],
+                                       "acceptanceDateTime": ["2026-11-16T21:13:00.000Z", "2026-11-16T21:14:19.000Z"]}, "files": []}}
+
+    def get_bytes(self, url, **kwargs):
+        self.requests.append(url)
+        if url.endswith("000095010326017561/index.json"):  # the press release and the presentation
+            return listing(("dp256943_6k-er.htm", 11_990), ("dp256943_ex9901.htm", 248_957), ("dp256943_ex9902.htm", 29_011))
+        if url.endswith("000095010326017562/index.json"):  # the statements, in a 6-K of their own, larger than a press release may be
+            return listing(("dp256944_6k-fs.htm", 11_221), ("dp256944_ex9901.htm", 4_498_362))
+        if url.endswith("dp256943_ex9901.htm"):
+            return xp_exhibit("XP Inc. Reports Third Quarter 2026 Results São Paulo, Brazil, November 16, 2026")
+        if url.endswith("dp256943_ex9902.htm"):
+            return xp_exhibit("3Q26 Earnings Presentation", "")
+        if url.endswith("dp256944_ex9901.htm"):
+            return IFRS_STATEMENTS
+        raise AssertionError(f"unexpected request: {url}")
+
+
+def test_the_ifrs_mode_keeps_the_statements_6k_and_skips_the_press_release(tmp_path):
+    found = SecProvider(FakeIfrsHttp(), tmp_path).results_announcements("XP", 1787425, datetime(2026, 1, 1), "6-K", "ifrs_statements")
+    assert [(f.title, f.url.rsplit("/", 1)[-1]) for f in found] == [("Interim condensed consolidated financial statements at September 30, 2026", "dp256944_ex9901.htm")]
+    assert found[0].content == IFRS_STATEMENTS and found[0].published == pd.Timestamp("2026-11-16 16:14:19")
+    index = json.loads((tmp_path / "XP" / "index.json").read_text(encoding="utf-8"))
+    assert [e["results"] for e in index] == [False, True]  # the press release 6-K is recorded as checked, not as results
+
+
+# ---- EDGAR's CDN answering 404 "Directory listing is Not Available Yet" for a while ----------------------------------------------------------
+
+
+def not_found(url, status=404):
+    import requests
+
+    response = requests.Response()
+    response.status_code = status
+    response.url = url
+    return requests.HTTPError(f"{status} Client Error: for url: {url}", response=response)
+
+
+INDEX_PAGE = b"""<html><body><table class="tableFile" summary="Document Format Files">
+<tr><th>Seq</th><th>Description</th><th>Document</th><th>Type</th><th>Size</th></tr>
+<tr><td>1</td><td>6-K</td><td><a href="/Archives/edgar/data/1549802/000119312526000001/a6k.htm">a6k.htm</a></td><td>6-K</td><td>8000</td></tr>
+<tr><td>2</td><td>EX-99.1</td><td><a href="/Archives/edgar/data/1549802/000119312526000001/ex991.htm">ex991.htm</a></td><td>EX-99.1</td><td>300000</td></tr>
+<tr><td></td><td>Complete submission text file</td><td><a href="/Archives/edgar/data/1549802/000119312526000001/0001193125-26-000001.txt">0001193125-26-000001.txt</a></td><td></td><td>400000</td></tr>
+</table></body></html>"""
+
+
+class FlakyHttp(FakeHttp):
+    """The index.json of the first 6-K answers 404 (the CDN's cached page); its index page and exhibit answer `page_failures` times 404 too."""
+
+    def __init__(self, page_failures=0, status=404):
+        super().__init__()
+        self.page_failures, self.status = page_failures, status
+        self.calls = []
+
+    def get_bytes(self, url, **kwargs):
+        self.calls.append(url.rsplit("/", 2)[-2] + "/" + url.rsplit("/", 1)[-1])
+        if url.endswith("/000119312526000001/index.json"):
+            raise not_found(url, self.status)
+        if url.endswith("/000119312526000001/0001193125-26-000001-index.htm"):
+            if self.page_failures:
+                self.page_failures -= 1
+                raise not_found(url)
+            return INDEX_PAGE
+        return super().get_bytes(url, **kwargs)
+
+
+def test_the_index_page_lists_the_documents_like_index_json():
+    from valuation_monitor.providers.sec import index_page_items
+
+    assert index_page_items(INDEX_PAGE) == [{"name": "0001193125-26-000001.txt", "size": "400000"}, {"name": "a6k.htm", "size": "8000"}, {"name": "ex991.htm", "size": "300000"}]
+
+
+def test_when_index_json_answers_404_the_filing_index_page_is_used(tmp_path):
+    http = FlakyHttp()
+    found = SecProvider(http, tmp_path).results_announcements("JD", 1549802, datetime(2026, 1, 1))
+    assert [f.title for f in found] == ["JD.com Announces Second Quarter 2026 Results"]
+    assert http.calls[:3] == ["000119312526000001/index.json", "000119312526000001/0001193125-26-000001-index.htm", "000119312526000001/ex991.htm"]
+    index = json.loads((tmp_path / "JD" / "index.json").read_text(encoding="utf-8"))
+    assert [(e["accession"], e["results"]) for e in index] == [("0001193125-26-000001", True), ("0001193125-26-000002", False)]
+
+
+def test_a_filing_answering_404_is_tried_again_after_the_others(tmp_path):
+    http = FlakyHttp(page_failures=1)  # the first pass fails, the second pass works
+    found = SecProvider(http, tmp_path).results_announcements("JD", 1549802, datetime(2026, 1, 1))
+    assert [f.title for f in found] == ["JD.com Announces Second Quarter 2026 Results"]
+    listings = [c for c in http.calls if "index" in c]
+    assert [c.split("/")[0][-1] for c in listings] == ["1", "1", "2", "1", "1"]  # the second 6-K is checked before the first one is tried again
+
+
+def test_a_filing_that_stays_404_is_skipped_for_this_run_only_and_the_others_go_on(tmp_path, capsys):
+    assert SecProvider(FlakyHttp(page_failures=2), tmp_path).results_announcements("JD", 1549802, datetime(2026, 1, 1)) == []
+    index = json.loads((tmp_path / "JD" / "index.json").read_text(encoding="utf-8"))
+    assert [e["accession"] for e in index] == ["0001193125-26-000002"]  # the other 6-K was still checked; the skipped one is not recorded
+    assert "skipping the filing 0001193125-26-000001 for this run" in capsys.readouterr().err
+
+    found = SecProvider(FakeHttp(), tmp_path).results_announcements("JD", 1549802, datetime(2026, 1, 1))  # the next run checks it again
+    assert [f.title for f in found] == ["JD.com Announces Second Quarter 2026 Results"]
+
+
+def test_other_http_errors_still_stop_the_update_as_before(tmp_path):
+    import requests
+
+    with pytest.raises(requests.HTTPError):
+        SecProvider(FlakyHttp(status=403), tmp_path).results_announcements("JD", 1549802, datetime(2026, 1, 1))

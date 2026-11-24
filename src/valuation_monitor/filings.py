@@ -13,8 +13,9 @@ equity attributable to owners (millions), shares disclosed in the filing (millio
     - Consolidated income statement: revenue, net profit attributable to owners, basic EPS (unit "RMB cents"), each with two numbers:
       this period to date, same period last year to date; amounts are in thousands and converted to millions when read.
     - Balance sheet: same as above. EPS note: weighted average shares.
-  press_release (JD, Alibaba; HTML) is in press_release.py; kifrs_statements (Samsung, PDF) in kifrs.py;
-  cn_report (Hikvision, Glodon, PDF) in cn_report.py. These three parse functions return the common Parsed (see parsed.py).
+  press_release (JD, Alibaba; HTML) is in press_release.py; us_press_release and us_gaap_statements (Meta, Cognizant, ASML) in us_release.py;
+  ifrs_statements (XP, HTML) in ifrs.py; kifrs_statements (Samsung, PDF) in kifrs.py;
+  cn_report (Hikvision, Glodon, PDF) in cn_report.py. These parse functions return the common Parsed (see parsed.py).
 
 A company may publish results every quarter (4 periods a year) or only interim and annual (2 periods a year; the second half is obtained as full year minus first half).
 The number of periods is inferred from the existing filings, and the TTM is the sum of the periods in the last year (4 quarters or 2 half years).
@@ -22,7 +23,7 @@ The number of periods is inferred from the existing filings, and the TTM is the 
 The same value appears in several filings (this period, the next period's sequential comparison, next year's year-over-year comparison, the balance sheet's end of last year),
 and the program compares them one by one; on disagreement the first published value is used and a notice is given.
 
-Shares: the number disclosed in the filing is used (the basic EPS weighted average shares; period-end total shares for A-shares); where Q4 only discloses the full year it is derived by day-weighting;
+Shares: the number disclosed in the filing is used (the basic EPS weighted average shares; period-end total shares for A-shares); where Q4 only discloses the full year (Sea's Q2 and Q3 only the year to date) it is derived by day-weighting;
 only if none is disclosed is it implied as "net profit attributable to owners / basic EPS" of the period. The data available after each filing and how it is calculated are in _ttm_row and audit.py.
 """
 
@@ -38,6 +39,7 @@ from pypdf import PdfReader
 from valuation_monitor.market_calendar import HK, Market, effective_trading_day, get_market
 from valuation_monitor.cn_report import parse_cn_express, parse_cn_report
 from valuation_monitor.audit import Component, num, shares_formula, split_notes, sum_formula
+from valuation_monitor.ifrs import parse_ifrs_statements
 from valuation_monitor.kifrs import parse_kifrs, parse_kifrs_deck
 from valuation_monitor.press_release import parse_press_release
 from valuation_monitor.us_release import parse_us_release
@@ -97,7 +99,7 @@ SERIES_LABELS = {
     "equity": "Equity attributable to owners",
     "wa_shares": "Weighted average shares",
 }
-PARSER_VERSIONS = {"highlights": 5, "statements": 3, "press_release": 4, "us_press_release": 1, "us_gaap_statements": 1, "kifrs_statements": 4, "cn_report": 8}  # add 1 when the parsing rules change; saved parse results are then re-parsed automatically
+PARSER_VERSIONS = {"highlights": 5, "statements": 3, "press_release": 4, "us_press_release": 2, "us_gaap_statements": 2, "ifrs_statements": 1, "kifrs_statements": 4, "cn_report": 8}  # add 1 when the parsing rules change; saved parse results are then re-parsed automatically
 PER_SHARE_TOLERANCE = 0.005  # allowed difference of the same value between filings: per-share data (rounding, subtraction of cumulative figures)
 PER_SHARE_RELATIVE_TOLERANCE = 5e-4
 AMOUNT_TOLERANCE = 0.001  # amounts: relative difference
@@ -144,7 +146,7 @@ class Announcement:
     values: dict[str, list[float]]  # series -> values of the row (equity: end of this period, end of last year)
     market: str = "HK"  # listing market, decides the closing time
     provisional: bool = False  # preliminary data, replaced when the official report is out
-    shares_basis: str = ""  # period the disclosed weighted average shares refer to: empty means this period, "full year" means the full-year figure is disclosed (Q4)
+    shares_basis: str = ""  # period the disclosed weighted average shares refer to: empty means this period, "full year" means the full-year figure is disclosed (Q4), "year to date" the six or nine months (Sea)
     shares_label: str = "basic EPS weighted average shares"  # what kind of share count the filing discloses (A-share companies disclose the period-end total shares)
     note: str = ""  # explanation of the publication time etc.
     per_share_factors: tuple[float, float] = (1.0, 1.0)  # set by adjust_for_splits: what per-share figures were divided by (this and the previous period; prior year)
@@ -328,7 +330,7 @@ def parse_statements(pages: Pages) -> tuple[str, dict[str, list[float]]]:
 
 
 FORMATS = {"highlights": parse_highlights, "statements": parse_statements}  # HKEX PDF announcements
-FILING_FORMATS = {*FORMATS, "press_release", "us_press_release", "us_gaap_statements", "kifrs_statements", "cn_report"}  # plus US HTML press releases (6-K of JD; 8-K of US companies), Samsung English financial statements and A-share reports
+FILING_FORMATS = {*FORMATS, "press_release", "us_press_release", "us_gaap_statements", "ifrs_statements", "kifrs_statements", "cn_report"}  # plus US HTML press releases (6-K of JD; 8-K of US companies), IFRS statements (6-K of XP), Samsung English financial statements and A-share reports
 
 
 def parse_announcement(filing: Filing, fmt: str = "highlights", market: Market = HK) -> Announcement:
@@ -339,16 +341,18 @@ def parse_announcement(filing: Filing, fmt: str = "highlights", market: Market =
             parsed.period, filing.published, filing.url, parsed.currency, parsed.quarterly, parsed.values, market.key,
             filing.provisional, "", PERIOD_END_SHARES, filing.note,
         )
-    if fmt in ("press_release", "us_press_release", "us_gaap_statements", "kifrs_statements"):  # the parse result carries its own reporting period and whether it is a single quarter
+    if fmt in ("press_release", "us_press_release", "us_gaap_statements", "ifrs_statements", "kifrs_statements"):  # the parse result carries its own reporting period and whether it is a single quarter
         if fmt == "press_release":
             parsed = parse_press_release(filing.content)
         elif fmt in ("us_press_release", "us_gaap_statements"):
             parsed = parse_us_release(filing.content)
+        elif fmt == "ifrs_statements":
+            parsed = parse_ifrs_statements(filing.content)
         elif filing.provisional:
             parsed = parse_kifrs_deck(filing.title, filing.content, filing.attachments["previous_bs"])
         else:
             parsed = parse_kifrs(filing.title, filing.content, filing.attachments["bs"], filing.attachments.get("note"))
-        basis = "full year" if parsed.period.quarter == 4 and not parsed.quarterly else ""
+        basis = "" if parsed.quarterly else "full year" if parsed.period.quarter == 4 else YEAR_TO_DATE  # Sea's second- and third-quarter releases: six and nine months
         return Announcement(
             parsed.period, filing.published, filing.url, parsed.currency, parsed.quarterly, parsed.values, market.key,
             filing.provisional, basis,
@@ -373,6 +377,7 @@ def parse_announcement(filing: Filing, fmt: str = "highlights", market: Market =
 
 
 PERIOD_END_SHARES = "period-end total shares"
+YEAR_TO_DATE = "year to date"  # shares basis of a year-to-date filing before the fourth quarter
 PRIOR_BASIS_TOLERANCE = 0.05  # relative: a prior-year EPS vs the earlier filing's figure for that period (both rounded the same way)
 CURRENT_BASIS_TOLERANCE = 0.15  # relative: net profit / EPS vs the filing's share count (period-end shares differ from the weighted average)
 
@@ -527,7 +532,7 @@ class EarningsHistory:
     announcements: list[Announcement]
     periods_per_year: int = 4  # earnings periods published per year: 4 (quarterly), 2 (half-yearly), 1 (annual)
     ttm_detail: list[dict] = field(default_factory=list)  # row by row matching ttm: how each item was calculated (see audit.py)
-    shares_basis: dict[pd.Period, str] = field(default_factory=dict)  # period the disclosed weighted average shares of each period refer to (empty = this period, "full year")
+    shares_basis: dict[pd.Period, str] = field(default_factory=dict)  # period the disclosed weighted average shares of each period refer to (empty = this period, "full year", "year to date")
 
     @property
     def step(self) -> int:
@@ -597,7 +602,7 @@ class EarningsHistory:
         extra["non_ifrs_eps_ttm_formula"] = [sum_formula(r["non_ifrs_eps"], r["non_ifrs_eps_ttm"]) for r in self.ttm_detail]
         extra["revenue_ttm_formula"] = [sum_formula(r["revenue"], r["revenue_ttm"]) for r in self.ttm_detail]
         extra["shares_formula"] = [shares_formula(r) for r in self.ttm_detail]
-        extra["shares_source"] = [{"reported": "reported", "derived": "derived from the full-year figure", "implied": "implied (profit / EPS)"}[r["shares_source"]] for r in self.ttm_detail]
+        extra["shares_source"] = [_shares_source_label(r) for r in self.ttm_detail]
         extra["shares_implied"] = [r["shares_implied"] for r in self.ttm_detail]
         extra["revenue_per_share_formula"] = [
             _division(r["revenue_ttm"], r["shares"], r["revenue_per_share_ttm"]) for r in self.ttm_detail
@@ -663,6 +668,8 @@ def build_history(parsed: list[Announcement], splits: pd.Series | None = None) -
                     record(series, period, value, a, derived=False)
             elif series in SHARE_COUNTS:  # shares disclosed in the filing: the value of that period itself, cannot be obtained by subtracting cumulative figures
                 for period, value in zip([a.period, a.period - 4, a.period - 1], vals):
+                    if a.shares_basis == YEAR_TO_DATE and shares_basis.get(period, YEAR_TO_DATE) != YEAR_TO_DATE:
+                        continue  # a year-to-date average is not comparable with the three-month figure an earlier filing gave for the period (Sea 2017Q3)
                     record(series, period, value, a, derived=False)
                     shares_basis.setdefault(period, a.shares_basis)
             elif a.is_quarterly_table:
@@ -723,7 +730,7 @@ def _ttm_row(
         if parts:
             shares, source = parts["shares"], "derived"
             for x in parts["parts"]:
-                x["period"] = period_label(x["period"], per_year)
+                x["period"] = f"{x['period'].year}Q1-Q{x['period'].quarter}" if x.get("year_to_date") else period_label(x["period"], per_year)
         else:
             shares, source, basis = implied, "implied", ""  # the earlier periods have no disclosed shares either: fall back to implied
     revenue_ttm = total(revenue)
@@ -776,15 +783,35 @@ def _days(p: pd.Period, step: int) -> int:
 def _fiscal_year_parts(
     p: pd.Period, full_year: float, shares: dict[pd.Period, QuarterValue], basis: dict[pd.Period, str], step: int
 ) -> dict | None:
-    """Full-year weighted average shares -> weighted average shares of this period (the last period of the year). Needs the shares disclosed for the earlier periods of the year (on this period's own basis)."""
-    earlier = _earlier_periods(p, step)
-    if not earlier or any(e not in shares or basis.get(e, "") for e in earlier):
+    """Full-year (or year-to-date) weighted average shares -> weighted average shares of this period (the last period they cover).
+
+    Needs the shares disclosed for the earlier periods of the year: each on its own, or the latest of them as a year-to-date figure that covers the rest
+    (Sea's third quarter: nine months x 273 days - six months x 181 days)."""
+    earlier = sorted(_earlier_periods(p, step))
+    if not earlier:
         return None
-    year_days = (pd.Timestamp(year=p.year, month=12, day=31) - pd.Timestamp(year=p.year, month=1, day=1)).days + 1
-    parts = [{"period": e, "shares": shares[e].value, "days": _days(e, step)} for e in sorted(earlier)]
+    ytd = [e for e in earlier if e in shares and basis.get(e, "") == YEAR_TO_DATE]
+    if ytd:  # the latest year-to-date figure covers the periods up to it
+        earlier = [e for e in earlier if e > ytd[-1]]
+        first = {"period": ytd[-1], "shares": shares[ytd[-1]].value, "days": _ytd_days(ytd[-1]), "year_to_date": True}
+    if any(e not in shares or basis.get(e, "") for e in earlier):
+        return None
+    year_days = (pd.Timestamp(year=p.year, month=12, day=31) - pd.Timestamp(year=p.year, month=1, day=1)).days + 1 if p.quarter == 4 else _ytd_days(p)
+    parts = ([first] if ytd else []) + [{"period": e, "shares": shares[e].value, "days": _days(e, step)} for e in earlier]
     days = _days(p, step)
     value = (full_year * year_days - sum(x["shares"] * x["days"] for x in parts)) / days
-    return {"shares": value, "full_year": full_year, "year_days": year_days, "days": days, "parts": parts}
+    return {"shares": value, "full_year": full_year, "year_days": year_days, "days": days, "parts": parts, **({"basis": YEAR_TO_DATE} if basis.get(p) == YEAR_TO_DATE else {})}
+
+
+def _shares_source_label(detail: dict) -> str:
+    if detail["shares_source"] == "derived" and (detail.get("shares_parts") or {}).get("basis") == YEAR_TO_DATE:
+        return "derived from the year-to-date figure"
+    return {"reported": "reported", "derived": "derived from the full-year figure", "implied": "implied (profit / EPS)"}[detail["shares_source"]]
+
+
+def _ytd_days(p: pd.Period) -> int:
+    """Days from the start of the year to the end of quarter p."""
+    return (p.end_time.normalize() - pd.Timestamp(year=p.year, month=1, day=1)).days + 1
 
 
 def _earlier_periods(p: pd.Period, step: int) -> list[pd.Period]:

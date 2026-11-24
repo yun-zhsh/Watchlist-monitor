@@ -52,13 +52,14 @@ def shares_formula(rec: dict) -> str:
     parts = rec.get("shares_parts")
     if rec.get("shares_source") == "derived" and parts:
         earlier = " + ".join(f"{x['period']} {num(x['shares'])} x {x['days']} days" for x in parts["parts"])
+        what = "full-year" if parts.get("basis", "full year") == "full year" else "year-to-date"
         return (
-            f"The filing only discloses the full-year weighted average shares {num(parts['full_year'])}, so {rec['period_label']} is derived: "
+            f"The filing only discloses the {what} weighted average shares {num(parts['full_year'])}, so {rec['period_label']} is derived: "
             f"({num(parts['full_year'])} x {parts['year_days']} days - ({earlier})) / {parts['days']} days = {num(rec['shares'])} "
             f"({SHARES_UNIT}){check}"
         )
     if rec.get("shares_source") == "reported":
-        basis = "; the filing discloses the full-year figure" if rec.get("shares_basis") else ""
+        basis = f"; the filing discloses the {rec['shares_basis']} figure" if rec.get("shares_basis") else ""
         label = rec.get("shares_label", "basic EPS weighted average shares")
         return f"{rec['period_label']} {label} disclosed in the filing: {num(rec['shares'])} ({SHARES_UNIT}{basis}){check}"
     if implied is None:

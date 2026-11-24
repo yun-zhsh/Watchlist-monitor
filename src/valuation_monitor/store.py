@@ -236,10 +236,12 @@ class EarningsStore:
         trading_days: pd.DatetimeIndex | None = None,
         fmt: str = "highlights",
         market: Market = HK,
+        non_gaap: str | None = None,
     ) -> EarningsHistory:
         """Parse the filings and compute EPS. Already parsed filings read the saved result; only new filings are parsed.
 
-        trading_days is used to list in the saved detail the trading day each value actually starts to be used; fmt is the layout of the filings.
+        trading_days is used to list in the saved detail the trading day each value actually starts to be used; fmt is the layout of the filings;
+        non_gaap is the EPS basis of the stock's Non-GAAP PE (None without one), passed to the parser.
         """
         version = PARSER_VERSIONS[fmt]
         saved = {}
@@ -247,11 +249,13 @@ class EarningsStore:
         if df is not None:
             df = df[df["parser_version"].astype(int) == version]
             saved = {a.url: a for a in announcements_from_frame(df, market)}
+            if non_gaap == "diluted" and fmt == "us_press_release" and not any("non_ifrs_eps" in a.values for a in saved.values()):
+                saved = {}  # parsed before the stock had a Non-GAAP PE: parse again to read it
 
         parsed = []
         for f in filings:
             try:
-                parsed.append(saved.get(f.url) or parse_announcement(f, fmt, market))
+                parsed.append(saved.get(f.url) or parse_announcement(f, fmt, market, non_gaap))
             except Exception as e:
                 if not f.provisional:
                     raise

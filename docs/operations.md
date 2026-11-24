@@ -7,7 +7,7 @@ what is in place and what is not.
 
 Every pull request runs the tests on Python 3.10 and 3.12 and builds the container image (`.github/workflows/ci.yml`). After a code
 change, the publishing workflow (`pages.yml`) runs the same tests first and publishes nothing if they fail. The scheduled data
-updates skip the tests, because the code has not changed since it last passed. `tests/test_workflows.py` guards that wiring.
+updates skip the tests, because the code has not changed since it last passed. So does a manual run on `main` with the "data_only" input ticked. `tests/test_workflows.py` guards that wiring.
 
 ## 2. Data freshness (in place)
 

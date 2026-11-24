@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -39,6 +40,7 @@ class StockConfig:
     sec_form: str = "6-K"  # the SEC form that carries the earnings press release: 6-K (foreign private issuers, e.g. JD, ASML) or 8-K item 2.02 (US companies, e.g. Meta)
     eps_basis: dict[str, str] = field(default_factory=dict)  # PE metric -> "diluted" where the company discloses no basic EPS (Alibaba: pe_non_gaap); others are basic
     sec_release_non_gaap: bool = False  # also read the earnings press release for its adjusted EPS, next to the statements (XP; see release_eps.py)
+    non_gaap_changes: tuple[str, ...] = ()  # days (YYYY-MM-DD) the company changed the definition of its Non-GAAP EPS (Cognizant: 2019-02-06; see build_history)
 
     def basis(self, metric) -> str | None:
         """The EPS basis of a PE metric ("basic" or "diluted"); None for a metric not based on EPS (PS, PB)."""
@@ -138,6 +140,12 @@ def parse_config(raw: dict) -> Config:
         sec_release_non_gaap = bool(s.get("sec_release_non_gaap", False))
         if sec_release_non_gaap and sec_exhibit != "ifrs_statements":
             raise ValueError(f"{symbol}: sec_release_non_gaap reads the press release next to the IFRS statements (sec_exhibit: ifrs_statements), got {sec_exhibit}")
+        non_gaap_changes = tuple(str(d) for d in s.get("non_gaap_changes") or ())
+        for day in non_gaap_changes:
+            if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", day):
+                raise ValueError(f"{symbol}: non_gaap_changes are days written YYYY-MM-DD, got {day}")
+        if non_gaap_changes and "pe_non_gaap" not in metrics:
+            raise ValueError(f"{symbol}: non_gaap_changes is for a stock with pe_non_gaap")
         eps_basis = {str(k).lower(): str(v).lower() for k, v in (s.get("eps_basis") or {}).items()}
         for key, basis in eps_basis.items():
             if key not in metrics or not METRICS[key].eps_based:
@@ -156,6 +164,7 @@ def parse_config(raw: dict) -> Config:
                 sec_exhibit=sec_exhibit,
                 eps_basis={k: v for k, v in eps_basis.items() if v != "basic"},
                 sec_release_non_gaap=sec_release_non_gaap,
+                non_gaap_changes=non_gaap_changes,
             )
         )
     if not stocks:

@@ -114,6 +114,12 @@ def test_provider_works_offline_from_the_archive(tmp_path):
         ("Cognizant Reports Fourth Quarter and Full Year 2025 Results", "Cognizant Reports Fourth Quarter and Full Year 2025 Results"),
         ("ASML reports EUR 2.6 billion sales at 43.0% gross margin in Q2 Stronger Logic compensates for Memory weakness VELDHOVEN, July 17, 2019 - today ASML Holding N.V. (ASML) publishes its 2019 second-quarter results.", None),
         ("Notice of Annual General Meeting", None),
+        (
+            "Amphenol News Release www.amphenol.com SECOND QUARTER 2017 RECORD RESULTS AND INCREASE IN DIVIDEND REPORTED BY AMPHENOL CORPORATION Wallingford, Connecticut.",
+            "Amphenol News Release www.amphenol.com SECOND QUARTER 2017 RECORD RESULTS AND INCREASE IN DIVIDEND REPORTED BY AMPHENOL CORPORATION",
+        ),
+        ("Amphenol News Release www.amphenol.com AMPHENOL REPORTS RECORD THIRD QUARTER 2026 RESULTS", "Amphenol News Release www.amphenol.com AMPHENOL REPORTS RECORD THIRD QUARTER 2026 RESULTS"),
+        ("Amphenol News Release CHANGES TO THE BOARD REPORTED BY AMPHENOL CORPORATION", None),  # the passive form counts only with a quarter's results
     ],
 )
 def test_headline_for_other_companies(text, expected):
@@ -346,3 +352,48 @@ def test_other_http_errors_still_stop_the_update_as_before(tmp_path):
 
     with pytest.raises(requests.HTTPError):
         SecProvider(FlakyHttp(status=403), tmp_path).results_announcements("JD", 1549802, datetime(2026, 1, 1))
+
+
+DT_SUBMISSIONS = {
+    "filings": {
+        "recent": {
+            "form": ["8-K", "8-K"],
+            "items": ["2.02,9.01", "2.02,9.01"],
+            "accessionNumber": ["0001773383-20-000118", "0001773383-21-000008"],
+            "acceptanceDateTime": ["2020-10-28T10:35:02.000Z", "2021-02-03T11:35:35.000Z"],
+        },
+        "files": [],
+    }
+}
+DT_RELEASE = b"<html><body><p>Exhibit 99.1</p><h1>Dynatrace Reports Second Quarter of Fiscal Year 2021 Financial Results</h1>" + b"<p>x</p>" * 20000 + b"</body></html>"
+DT_RELEASE_2 = DT_RELEASE.replace(b"Second", b"Third")
+
+
+class FakeDynatraceHttp:
+    def __init__(self):
+        self.requests = []
+
+    def get_json(self, url, params=None):
+        return DT_SUBMISSIONS
+
+    def get_bytes(self, url, **kwargs):
+        self.requests.append(url)
+        if url.endswith("/000177338320000118/index.json"):  # Dynatrace's October 2020 8-K: the exhibit name has no "ex99"
+            return listing(("form8k-fy21q2.htm", 40_136), ("fy21q2-earningsrelease.htm", 676_528), ("g668054g46h821.jpg", 23_593))
+        if url.endswith("/000177338321000008/index.json"):  # the usual name is tried before an "earnings release" name
+            return listing(("form8k-fy21q3.htm", 40_000), ("fy21q3-earningsrelease-slides.htm", 600_000), ("fy21q3-earningsreleaseex991.htm", 600_000))
+        if url.endswith("/fy21q2-earningsrelease.htm"):
+            return DT_RELEASE
+        if url.endswith("/fy21q3-earningsreleaseex991.htm"):
+            return DT_RELEASE_2
+        raise AssertionError(f"unexpected request: {url}")
+
+
+def test_an_exhibit_named_earnings_release_is_found_after_the_usual_names(tmp_path):
+    http = FakeDynatraceHttp()
+    found = SecProvider(http, tmp_path).results_announcements("DT", 1773383, datetime(2020, 1, 1), "8-K")
+    assert [f.title for f in found] == [
+        "Dynatrace Reports Second Quarter of Fiscal Year 2021 Financial Results",
+        "Dynatrace Reports Third Quarter of Fiscal Year 2021 Financial Results",
+    ]
+    assert not any(url.endswith("-slides.htm") for url in http.requests)  # the ex99 exhibit was found first, the other name never opened

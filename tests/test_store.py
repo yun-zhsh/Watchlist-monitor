@@ -9,7 +9,16 @@ from valuation_monitor.providers.base import Filing
 from valuation_monitor.providers.yahoo import PriceHistory
 from valuation_monitor.store import EarningsStore, PriceStore
 
-TODAY = pd.Timestamp.now(tz="Asia/Hong_Kong").tz_localize(None).normalize()
+from valuation_monitor import store as store_module
+
+# One instant for the whole module: a test that runs across midnight in Hong Kong would otherwise see "today" move under it
+NOW = pd.Timestamp.now(tz="UTC")
+TODAY = NOW.tz_convert("Asia/Hong_Kong").tz_localize(None).normalize()
+
+
+@pytest.fixture(autouse=True)
+def frozen_today(monkeypatch):
+    monkeypatch.setattr(store_module, "local_today", lambda timezone: NOW.tz_convert(timezone).tz_localize(None).normalize())
 
 
 def days_ago(n):
@@ -146,7 +155,7 @@ def test_us_stock_uses_yahoo_only_and_is_not_split_adjusted_again(tmp_path):
 def test_earnings_store_parses_each_filing_once(tmp_path, monkeypatch):
     calls = []
 
-    def fake_parse(filing, fmt, market):
+    def fake_parse(filing, fmt, market, non_gaap=None):
         calls.append(filing.url)
         return Announcement(
             period=pd.Period("2026Q2", freq="Q"),

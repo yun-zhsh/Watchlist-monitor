@@ -1,6 +1,6 @@
 """SEC EDGAR: search for and download the original quarterly earnings press releases of US-listed (foreign private issuer) companies.
 
-Earnings are furnished on Form 6-K by foreign private issuers (JD, ASML) and on Form 8-K item 2.02 by US companies (Meta, Cognizant);
+Earnings are furnished on Form 6-K by foreign private issuers (JD, ASML) and on Form 8-K item 2.02 by US companies (Meta, Cognizant, Dynatrace);
 either way the press release is exhibit 99.1 (HTML). Two companies' press releases lack figures, so another exhibit is kept instead:
 ASML's summary US GAAP statements and XP's IFRS consolidated financial statements (see `exhibit` in results_announcements). SAP's exhibit is its
 quarterly results document, recognized by its statements rather than by a headline.
@@ -37,13 +37,21 @@ REQUEST_INTERVAL = 0.2  # seconds; the official limit is 10 requests per second
 MIN_EXHIBIT_BYTES = 20_000
 MAX_EXHIBIT_BYTES = 3_000_000
 EXHIBIT_RE = re.compile(r"ex(?:hibit)?[-_ ]?99|press ?release", re.I)
+# tried only after the names above found nothing: two Dynatrace 8-Ks name the exhibit fy21q2-earningsrelease.htm and fy20q1-earningsreleaseexhi.htm
+FALLBACK_EXHIBIT_RE = re.compile(r"earnings[-_ ]?release", re.I)
 # Title at the start of the press release, e.g. "JD.com Announces Second Quarter 2026 Results", "... Announces Fourth Quarter and Full Year 2025 Results"
 EXHIBIT_LABEL_RE = re.compile(r"^.*?\bExhibi?t? ?99\.\d\s+", re.I)
 # The Hong Kong-style results announcement that Alibaba files instead of a press release for the March and September quarters (since 2025), after
 # a long Hong Kong Stock Exchange disclaimer: "ANNOUNCEMENT OF THE SEPTEMBER QUARTER 2025 RESULTS AND INTERIM RESULTS FOR THE SIX MONTHS ENDED SEPTEMBER 30, 2025"
 HK_RESULTS_TITLE_RE = re.compile(r"\bANNOUNCEMENT OF THE [A-Z]+ QUARTER \d{4} RESULTS(?: AND [A-Z0-9 ]+? RESULTS(?: FOR THE [A-Z]+ MONTHS ENDED [A-Z]+ \d{1,2}, \d{4})?)?")
 HK_TITLE_SEARCH_CHARS = 4000
-RESULTS_HEADLINE_RE = re.compile(r"\b(?:announces?|reports?)\b.{0,120}?\b(?:results|net income|net sales)\b|\b(?:publishes|announces|reports) its\b.{0,60}?\bresults?\b", re.I)  # ASML's older releases say "today publishes its 2016 second-quarter results"
+# ASML's older releases say "today publishes its 2016 second-quarter results"; Amphenol's until 2020 "SECOND QUARTER 2017 RECORD RESULTS AND INCREASE
+# IN DIVIDEND REPORTED BY AMPHENOL CORPORATION" (the passive form, with the quarter first)
+RESULTS_HEADLINE_RE = re.compile(
+    r"\b(?:announces?|reports?)\b.{0,120}?\b(?:results|net income|net sales)\b|\b(?:publishes|announces|reports) its\b.{0,60}?\bresults?\b"
+    r"|\b(?:first|second|third|fourth) quarter\b.{0,80}?\bresults\b.{0,60}?\breported by \S+(?: corporation\b)?",
+    re.I,
+)
 
 
 class SecUserAgentMissing(RuntimeError):
@@ -281,10 +289,13 @@ class SecProvider:
         files = self._listing(cik, accession)
         if exhibit == "us_gaap_statements":
             files = sorted(files, key=lambda f: not FINANCIAL_STATEMENTS_NAME_RE.search(f["name"]))  # the names say it from 2016 on (financialstatements...); before, the exhibits are numbered and are told apart by their content
-        for f in files:
+        named = [f for f in files if EXHIBIT_RE.search(f["name"]) or (exhibit == "us_gaap_statements" and FINANCIAL_STATEMENTS_NAME_RE.search(f["name"]))]
+        if exhibit == "release":
+            named += [f for f in files if FALLBACK_EXHIBIT_RE.search(f["name"]) and f not in named]  # after all the usual names, so they are tried first as before
+        for f in named:
             size = int(f["size"] or 0)
             name = f["name"]
-            if not (name.lower().endswith((".htm", ".html")) and (EXHIBIT_RE.search(name) or (exhibit == "us_gaap_statements" and FINANCIAL_STATEMENTS_NAME_RE.search(name)))):
+            if not name.lower().endswith((".htm", ".html")):
                 continue
             if not MIN_EXHIBIT_BYTES <= size <= (IFRS_MAX_EXHIBIT_BYTES if exhibit == "ifrs_statements" else MAX_EXHIBIT_BYTES):
                 continue

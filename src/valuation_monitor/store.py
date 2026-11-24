@@ -48,6 +48,11 @@ BAR_DECIMALS = {"open": 3, "high": 3, "low": 3, "close": 3, "volume": 0}
 YAHOO_DECIMALS = {"open": 4, "high": 4, "low": 4, "close": 4, "adjclose": 4, "volume": 0}
 
 
+
+def local_today(timezone: str) -> pd.Timestamp:
+    """Today's date in the market's time zone (tz-naive). Only days before it are complete and saved; tests freeze it."""
+    return pd.Timestamp.now(tz=timezone).tz_localize(None).normalize()
+
 class PriceStore:
     """Raw data of each source is saved separately, then the final closing price is decided:
 
@@ -130,7 +135,7 @@ class PriceStore:
         splits = pd.Series(splits, dtype=float).sort_index()
 
         final = consolidate(tencent, yahoo)
-        today = pd.Timestamp.now(tz=market.timezone).tz_localize(None).normalize()
+        today = local_today(market.timezone)
         saved = final[final.index < today]
         if not self.db.readonly:  # a read-only database (the MCP server) only reads what the update job saved
             self.db.write_series("prices_final", {"symbol": symbol}, saved[FINAL_COLUMNS], prune=True)
@@ -178,7 +183,7 @@ class PriceStore:
         meta = self.db.read_meta(scope)
         rewrite = False  # True when the saved rows are replaced as a whole
         start = pd.Timestamp(start).normalize()
-        today = pd.Timestamp.now(tz=timezone).tz_localize(None).normalize()
+        today = local_today(timezone)
 
         # fetched_from records the earliest date already downloaded; only earlier parts (e.g. a larger lookback) need to be fetched
         fetched_from = pd.Timestamp(meta["fetched_from"]) if "fetched_from" in meta and not stored.empty else None
@@ -236,10 +241,12 @@ class EarningsStore:
         trading_days: pd.DatetimeIndex | None = None,
         fmt: str = "highlights",
         market: Market = HK,
+        non_gaap: str | None = None,
     ) -> EarningsHistory:
         """Parse the filings and compute EPS. Already parsed filings read the saved result; only new filings are parsed.
 
-        trading_days is used to list in the saved detail the trading day each value actually starts to be used; fmt is the layout of the filings.
+        trading_days is used to list in the saved detail the trading day each value actually starts to be used; fmt is the layout of the filings;
+        non_gaap is the EPS basis of the stock's Non-GAAP PE (None without one), passed to the parser.
         """
         version = PARSER_VERSIONS[fmt]
         saved = {}
@@ -247,11 +254,13 @@ class EarningsStore:
         if df is not None:
             df = df[df["parser_version"].astype(int) == version]
             saved = {a.url: a for a in announcements_from_frame(df, market)}
+            if non_gaap is not None and fmt == "us_press_release" and not any("non_ifrs_eps" in a.values for a in saved.values()):
+                saved = {}  # parsed before the stock had a Non-GAAP PE: parse again to read it
 
         parsed = []
         for f in filings:
             try:
-                parsed.append(saved.get(f.url) or parse_announcement(f, fmt, market))
+                parsed.append(saved.get(f.url) or parse_announcement(f, fmt, market, non_gaap))
             except Exception as e:
                 if not f.provisional:
                     raise

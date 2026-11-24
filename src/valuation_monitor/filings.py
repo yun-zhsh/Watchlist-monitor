@@ -13,7 +13,7 @@ equity attributable to owners (millions), shares disclosed in the filing (millio
     - Consolidated income statement: revenue, net profit attributable to owners, basic EPS (unit "RMB cents"), each with two numbers:
       this period to date, same period last year to date; amounts are in thousands and converted to millions when read.
     - Balance sheet: same as above. EPS note: weighted average shares.
-  press_release (JD, Alibaba; HTML) is in press_release.py; us_press_release and us_gaap_statements (Meta, Cognizant, ASML) in us_release.py;
+  press_release (JD, Alibaba; HTML) is in press_release.py; us_press_release and us_gaap_statements (Meta, Cognizant, Dynatrace, Sea, ASML) in us_release.py;
   ifrs_statements (XP, HTML) in ifrs.py; sap_ifrs (SAP, HTML) in sap_ifrs.py; kifrs_statements (Samsung, PDF) in kifrs.py;
   cn_report (Hikvision, Glodon, PDF) in cn_report.py. These parse functions return the common Parsed (see parsed.py).
 
@@ -100,7 +100,7 @@ SERIES_LABELS = {
     "equity": "Equity attributable to owners",
     "wa_shares": "Weighted average shares",
 }
-PARSER_VERSIONS = {"highlights": 5, "statements": 3, "press_release": 4, "us_press_release": 2, "us_gaap_statements": 2, "ifrs_statements": 1, "sap_ifrs": 1, "kifrs_statements": 4, "cn_report": 8}  # add 1 when the parsing rules change; saved parse results are then re-parsed automatically
+PARSER_VERSIONS = {"highlights": 5, "statements": 3, "press_release": 4, "us_press_release": 4, "us_gaap_statements": 4, "ifrs_statements": 1, "sap_ifrs": 1, "kifrs_statements": 4, "cn_report": 8}  # add 1 when the parsing rules change; saved parse results are then re-parsed automatically
 PER_SHARE_TOLERANCE = 0.005  # allowed difference of the same value between filings: per-share data (rounding, subtraction of cumulative figures)
 PER_SHARE_RELATIVE_TOLERANCE = 5e-4
 AMOUNT_TOLERANCE = 0.001  # amounts: relative difference
@@ -334,8 +334,10 @@ FORMATS = {"highlights": parse_highlights, "statements": parse_statements}  # HK
 FILING_FORMATS = {*FORMATS, "press_release", "us_press_release", "us_gaap_statements", "ifrs_statements", "sap_ifrs", "kifrs_statements", "cn_report"}  # plus US HTML press releases (6-K of JD; 8-K of US companies), IFRS statements (6-K of XP and SAP), Samsung English financial statements and A-share reports
 
 
-def parse_announcement(filing: Filing, fmt: str = "highlights", market: Market = HK) -> Announcement:
-    """Parse one earnings filing; values stay as in the filing (amounts converted to millions, EPS to yuan; not adjusted for splits)."""
+def parse_announcement(filing: Filing, fmt: str = "highlights", market: Market = HK, non_gaap: str | None = None) -> Announcement:
+    """Parse one earnings filing; values stay as in the filing (amounts converted to millions, EPS to yuan; not adjusted for splits).
+
+    non_gaap is the EPS basis of the stock's Non-GAAP PE, None without one; only the us_press_release layout uses it (see parse_us_release)."""
     if fmt == "cn_report":  # A-shares: periodic report or express report (preliminary)
         parsed = parse_cn_express(filing.title, filing.content) if "express" in filing.title else parse_cn_report(filing.title, filing.content)
         return Announcement(
@@ -345,7 +347,9 @@ def parse_announcement(filing: Filing, fmt: str = "highlights", market: Market =
     if fmt in ("press_release", "us_press_release", "us_gaap_statements", "ifrs_statements", "sap_ifrs", "kifrs_statements"):  # the parse result carries its own reporting period and whether it is a single quarter
         if fmt == "press_release":
             parsed = parse_press_release(filing.content)
-        elif fmt in ("us_press_release", "us_gaap_statements"):
+        elif fmt == "us_press_release":
+            parsed = parse_us_release(filing.content, non_gaap)
+        elif fmt == "us_gaap_statements":
             parsed = parse_us_release(filing.content)
         elif fmt == "ifrs_statements":
             parsed = parse_ifrs_statements(filing.content)

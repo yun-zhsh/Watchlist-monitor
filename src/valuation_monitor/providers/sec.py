@@ -44,7 +44,13 @@ EXHIBIT_LABEL_RE = re.compile(r"^.*?\bExhibi?t? ?99\.\d\s+", re.I)
 # a long Hong Kong Stock Exchange disclaimer: "ANNOUNCEMENT OF THE SEPTEMBER QUARTER 2025 RESULTS AND INTERIM RESULTS FOR THE SIX MONTHS ENDED SEPTEMBER 30, 2025"
 HK_RESULTS_TITLE_RE = re.compile(r"\bANNOUNCEMENT OF THE [A-Z]+ QUARTER \d{4} RESULTS(?: AND [A-Z0-9 ]+? RESULTS(?: FOR THE [A-Z]+ MONTHS ENDED [A-Z]+ \d{1,2}, \d{4})?)?")
 HK_TITLE_SEARCH_CHARS = 4000
-RESULTS_HEADLINE_RE = re.compile(r"\b(?:announces?|reports?)\b.{0,120}?\b(?:results|net income|net sales)\b|\b(?:publishes|announces|reports) its\b.{0,60}?\bresults?\b", re.I)  # ASML's older releases say "today publishes its 2016 second-quarter results"
+# ASML's older releases say "today publishes its 2016 second-quarter results"; Amphenol's until 2020 "SECOND QUARTER 2017 RECORD RESULTS AND INCREASE
+# IN DIVIDEND REPORTED BY AMPHENOL CORPORATION" (the passive form, with the quarter first)
+RESULTS_HEADLINE_RE = re.compile(
+    r"\b(?:announces?|reports?)\b.{0,120}?\b(?:results|net income|net sales)\b|\b(?:publishes|announces|reports) its\b.{0,60}?\bresults?\b"
+    r"|\b(?:first|second|third|fourth) quarter\b.{0,80}?\bresults\b.{0,60}?\breported by \S+(?: corporation\b)?",
+    re.I,
+)
 
 
 class SecUserAgentMissing(RuntimeError):

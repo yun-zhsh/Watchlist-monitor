@@ -114,6 +114,12 @@ def test_provider_works_offline_from_the_archive(tmp_path):
         ("Cognizant Reports Fourth Quarter and Full Year 2025 Results", "Cognizant Reports Fourth Quarter and Full Year 2025 Results"),
         ("ASML reports EUR 2.6 billion sales at 43.0% gross margin in Q2 Stronger Logic compensates for Memory weakness VELDHOVEN, July 17, 2019 - today ASML Holding N.V. (ASML) publishes its 2019 second-quarter results.", None),
         ("Notice of Annual General Meeting", None),
+        (
+            "Amphenol News Release www.amphenol.com SECOND QUARTER 2017 RECORD RESULTS AND INCREASE IN DIVIDEND REPORTED BY AMPHENOL CORPORATION Wallingford, Connecticut.",
+            "Amphenol News Release www.amphenol.com SECOND QUARTER 2017 RECORD RESULTS AND INCREASE IN DIVIDEND REPORTED BY AMPHENOL CORPORATION",
+        ),
+        ("Amphenol News Release www.amphenol.com AMPHENOL REPORTS RECORD THIRD QUARTER 2026 RESULTS", "Amphenol News Release www.amphenol.com AMPHENOL REPORTS RECORD THIRD QUARTER 2026 RESULTS"),
+        ("Amphenol News Release CHANGES TO THE BOARD REPORTED BY AMPHENOL CORPORATION", None),  # the passive form counts only with a quarter's results
     ],
 )
 def test_headline_for_other_companies(text, expected):

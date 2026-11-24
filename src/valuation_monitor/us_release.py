@@ -1,5 +1,5 @@
 """Extract earnings data from condensed US GAAP income statements and balance sheets in HTML: the earnings press releases of US companies
-(exhibit 99.1 of Form 8-K; Meta Platforms, Cognizant, Dynatrace), the 6-K press releases of Sea Limited, and the US GAAP summary financial statements that ASML
+(exhibit 99.1 of Form 8-K; Meta Platforms, Cognizant, Amphenol, Dynatrace), the 6-K press releases of Sea Limited, and the US GAAP summary financial statements that ASML
 furnishes with each quarterly 6-K (in euros).
 
 The document holds a condensed income statement and a condensed balance sheet as tables:
@@ -13,8 +13,9 @@ The document holds a condensed income statement and a condensed balance sheet as
                      Dynatrace's fiscal year ends March 31); the row "Total stockholders' equity", or the company's own
                      shareholders' equity when there are non-controlling interests ("Total Sea Limited shareholders' equity").
 
-  Non-GAAP EPS       optional: the basic row of a GAAP to Non-GAAP reconciliation with the same kind of header ("Non-GAAP net income per share - basic",
-                     Dynatrace), this period and the same period last year, as published.
+  Non-GAAP EPS       only for a stock with a Non-GAAP PE (parse_us_release's non_gaap): on basic EPS, the basic row of a GAAP to Non-GAAP
+                     reconciliation with the same kind of header ("Non-GAAP net income per share - basic", Dynatrace; optional per release),
+                     this period and the same period last year, as published; on diluted EPS, Amphenol's Adjusted Diluted EPS.
 
 Amounts are converted to millions (the unit is in the table or the line before it), shares are in millions (Sea: single shares when the unit note
 says "except for number of shares", thousands when the label says so), per-share data is as published.
@@ -40,8 +41,16 @@ FULL_DATE_RE = re.compile(r"^(?P<month>[A-Z][a-z]+)\.? (?P<day>\d{1,2}), (?P<yea
 MONTH_NUMBER = {**MONTHS, **{name[:3]: number for name, number in MONTHS.items()}}  # "Sep" as well as "September"
 YEAR_RE = re.compile(r"^(?:19|20)\d\d$")
 REVENUE_RE = re.compile(r"^(?:total )?(?:net )?(?:revenues?|sales)$", re.I)
-PROFIT_RE = re.compile(r"^net (?:\((?:loss|income)\) )?(?:income|loss)(?: \((?:loss|income)\))?(?P<owners> attributable to (?!.*non-?controlling).*)?$", re.I)
-BASIC_EPS_RE = re.compile(r"^basic (?:\((?:loss|losses)\) )?(?:earnings|net income)(?: \((?:loss|losses)\))? per (?:common |ordinary )?share$", re.I)
+# the owners' row, not its per-share rows: "Net income attributable to Amphenol Corporation per common share — Basic" and
+# "Net income attributable to Amphenol Corporation - Basic" are EPS (BASIC_EPS_RE)
+PROFIT_RE = re.compile(r"^net (?:\((?:loss|income)\) )?(?:income|loss)(?: \((?:loss|income)\))?(?P<owners> attributable to (?!.*non-?controlling)(?!.*\bper (?:common |ordinary )?share\b)(?!.* ?[-–—] ?(?:basic|diluted)\b).*)?$", re.I)
+BASIC_EPS_RE = re.compile(
+    r"^basic (?:\((?:loss|losses)\) )?(?:earnings|net income)(?: \((?:loss|losses)\))? per (?:common |ordinary )?share$"
+    # Amphenol: "Net income per common share - Basic" ("Net income (loss) ..." in 2017-2018), "Net income attributable to Amphenol Corporation per common share — Basic", and in 2021-2022
+    # (with discontinued operations) "Net income attributable to Amphenol Corporation - Basic" under a heading "Net income per common share ... — Basic:"
+    r"|^net income(?: \(loss\))?(?: attributable to (?!.*non-?controlling).+?)?(?: per (?:common |ordinary )?share)? ?[-–—] ?basic$",
+    re.I,
+)
 BASIC_SHARES_RE = re.compile(r"^weighted[- ]average (?:number of )?(?:common |ordinary )?shares.*\bbasic\b", re.I)
 # Dynatrace's reconciliation of GAAP to Non-GAAP net income: "Non-GAAP net income per share - basic" (also "Non-GAAP net (loss) income per share - basic");
 # the diluted row and the summary table's "Non-GAAP net income per share" (diluted shares) are not taken
@@ -52,11 +61,13 @@ BASIC_ROW_RE = re.compile(r"^basic(?: and diluted)?$", re.I)  # in a loss year S
 EQUITY_WORDS = r"(?:(?:stockholders|shareholders).?|member.?s) (?:\((?:deficit|equity)\) )?(?:equity|deficit)(?: \((?:deficit|equity)\))?(?: / member.?s? (?:deficit|equity))?$"
 EQUITY_RE = re.compile(rf"^(?:total )?{EQUITY_WORDS}", re.I)
 # the equity of the company's own shareholders, when the total also has non-controlling interests: "Total Sea Limited shareholders' equity (deficit)"
-OWNERS_EQUITY_RE = re.compile(rf"^total (?!liabilities)\S.*? {EQUITY_WORDS}", re.I)
+# or the total attributable to the company, with the non-controlling interests below it: "Total stockholders' equity attributable to Amphenol Corporation"
+OWNERS_EQUITY_RE = re.compile(rf"^total (?!liabilities)\S.*? {EQUITY_WORDS}|^total (?:stockholders|shareholders).? equity attributable to (?!.*non-?controlling)\S.*$", re.I)
 SHARES_UNIT_RE = re.compile(r"\(in (thousands|millions)\)", re.I)  # a unit in the label of the share rows: "computation (in thousands):"
-# "in thousands of US dollars except for number of shares & per share data" (Sea); a unit given for dollars only, "dollars in thousands, except per share
-# amounts", leaves the share counts in single shares too (Dynatrace's first release, September 2019: 237,693,127 shares)
-RAW_SHARES_RE = re.compile(r"except (?:for )?(?:the )?number of shares|\bdollars in (?:thousands|millions)\b", re.I)
+RAW_SHARES_RE = re.compile(r"except (?:for )?(?:the )?number of shares", re.I)  # "in thousands of US dollars except for number of shares & per share data"
+# a unit for dollars only leaves the share counts in single shares: Amphenol until 2015 "(dollars in millions, except per share data)" (later "(dollars and
+# shares in millions, ...)"), Dynatrace's first release (September 2019) "(Unaudited - dollars in thousands, except per share amounts)" with 237,693,127 shares
+DOLLARS_ONLY_RE = re.compile(r"^\(?(?:unaudited\s*[-\u2013\u2014]\s*)?dollars in (?:thousands|millions)\b", re.I)
 PREFIX_RE = re.compile(r"^(?:for the|as of)\s+", re.I)  # Sea: "For the Three Months ended September 30,", "As of December 31,"
 TOLERANCE = 0.001
 NOTE_SUFFIX_RE = re.compile(r"\s+\d(?:,\d)*$")  # footnote numbers after a label: "Diluted net income per ordinary share 4"
@@ -83,10 +94,10 @@ def unit_scale(table, rows: list[list[str]]) -> float | None:
 
 
 def shares_scale(table, rows: list[list[str]], scale: float | None) -> float | None:
-    """Factor converting the share counts of a table to millions: single shares if the table's unit excludes the number of shares (Sea),
-    else the unit of the amounts. A unit in the label of the share rows ("(in thousands):") overrides it, see parse_income."""
+    """Factor converting the share counts of a table to millions: single shares if the table's unit excludes the number of shares (Sea)
+    or names dollars only (Amphenol until 2015: "(dollars in millions, ...)"), else the unit of the amounts. A unit in the label of the share rows ("(in thousands):") overrides it, see parse_income."""
     note = unit_note(table, rows)
-    return 1e-6 if note is not None and RAW_SHARES_RE.search(note) else scale
+    return 1e-6 if note is not None and (RAW_SHARES_RE.search(note) or DOLLARS_ONLY_RE.search(note)) else scale
 
 
 def currency_of(rows: list[list[str]]) -> str:
@@ -353,13 +364,137 @@ def parse_text(html: bytes) -> Parsed | None:
     return Parsed("EUR", values, quarter_of(columns[ordered[0]]))
 
 
-def parse_us_release(html: bytes) -> Parsed:
+# ---- Amphenol's Adjusted Diluted EPS (Non-GAAP), read only when the stock's pe_non_gaap is on diluted EPS (see parse_us_release) ------------------
+
+ADJUSTED_ROW_RE = re.compile(r"^adjusted \(non-gaap\)", re.I)  # "Adjusted (non-GAAP) (1)", "Adjusted (non-GAAP) (ii) (iii)"
+GROUP_HEADING_RE = re.compile(r"^(?P<kind>three|six|nine|twelve) months ended(?: (?P<month>[A-Z][a-z]+) \d{1,2})?[,:]?$", re.I)
+GROUP_TEXT_RE = re.compile(r"\b(?P<kind>three|six|nine|twelve) months ended\b", re.I)
+ORDINALS = {1: "first", 2: "second", 3: "third", 4: "fourth"}
+DOLLARS = r"\$(\d+\.\d\d)"
+
+
+def visible(row: list[str]) -> list[str]:
+    """The cells of a row without the empty ones (zero-width spaces) and lone dollar signs."""
+    return [c for c in row if c.strip("\u200b $")]
+
+
+def reconciliation_columns(rows: list[list[str]]) -> tuple[int, int, int] | None:
+    """(columns per year group, position of "Diluted EPS" in a group, index of the header row) from the header labels of a reconciliation
+    table: a row "Diluted" over a row "EPS" at the same positions, once in each of the two year groups (this year, last year)."""
+    for i in range(1, min(len(rows), 10)):
+        upper, lower = [header_cell(c) for c in visible(rows[i - 1])], [header_cell(c) for c in visible(rows[i])]
+        eps = [k for k, c in enumerate(lower) if c == "EPS"]
+        if len(lower) % 2 or len(eps) != 2 or len(upper) != len(lower):
+            continue
+        n = len(lower) // 2
+        if eps[1] == eps[0] + n and all(upper[k] == "Diluted" for k in eps):
+            return n, eps[0], i
+    return None
+
+
+def reconciliation_years(rows: list[list[str]], until: int) -> list[int]:
+    """The years of the two groups: "2017" "2016", or "September 30, 2016" "September 30, 2015"."""
+    for row in rows[:until]:
+        cells = [header_cell(c) for c in visible(row)]
+        years = years_in(cells) or [d.year for c in cells if (d := full_date(c))]
+        if len(years) == 2:
+            return years
+    return []
+
+
+def table_group(table, rows: list[list[str]]) -> tuple[str, str | None] | None:
+    """The group of the first rows of a reconciliation table ("three", "September"), from a heading in the table or the text just before it."""
+    for row in rows[:4]:
+        cells = visible(row)
+        if len(cells) == 1 and (m := GROUP_HEADING_RE.match(header_cell(cells[0]))):
+            return m.group("kind").lower(), m.group("month")
+    for text in table.find_all_previous(string=True, limit=30):
+        if m := GROUP_TEXT_RE.search(clean(text)):
+            month = re.search(r"months ended ([A-Z][a-z]+) \d{1,2}", clean(text), re.I)
+            return m.group("kind").lower(), month.group(1) if month else None
+    return None
+
+
+def adjusted_eps_from_tables(soup, period: pd.Period) -> list[float] | None:
+    """Adjusted Diluted EPS of this quarter and of the same quarter last year, from the three-months reconciliation table (Q3 2016 on).
+
+    The columns are found by their header labels, not their positions (four per year group until 2017, five with the effective tax rate
+    after). The fourth-quarter release of 2017 has one table with a block per quarter ("Three Months Ended December 31:" ...): the block of
+    this quarter is taken.
+    """
+    month = pd.Timestamp(period.end_time).strftime("%B")
+    found = []
+    for table in soup.find_all("table"):
+        rows = table_rows(table)
+        if not any(ADJUSTED_ROW_RE.match(r[0]) for r in rows):
+            continue
+        columns = reconciliation_columns(rows)
+        if columns is None:
+            continue
+        n, k, header = columns
+        if reconciliation_years(rows, header) != [period.year, period.year - 1]:
+            continue
+        group = table_group(table, rows)
+        for row in rows[header + 1 :]:
+            cells = visible(row)
+            if len(cells) == 1 and (m := GROUP_HEADING_RE.match(header_cell(cells[0]))):
+                group = (m.group("kind").lower(), m.group("month"))
+            if not ADJUSTED_ROW_RE.match(row[0]) or group is None or group[0] != "three" or group[1] not in (None, month):
+                continue
+            nums = numbers(visible(row))
+            if len(nums) != 2 * n:
+                raise ValueError(f"The reconciliation row {row[0]!r} has {len(nums)} numbers for {2 * n} columns")
+            found.append([nums[k], nums[n + k]])
+    if len({tuple(f) for f in found}) > 1:
+        raise ValueError(f"The reconciliation tables in this release disagree on the Adjusted Diluted EPS: {found}")
+    return found[0] if found else None
+
+
+def adjusted_eps_from_text(soup, period: pd.Period) -> list[float] | None:
+    """Adjusted Diluted EPS of this quarter from the first paragraph (the releases until Q2 2016, and Q4 2016, which has a twelve-months table only).
+
+    Taken as stated: "fourth quarter 2014 diluted earnings per share excluding one-time items of $0.63", "first quarter 2016 diluted earnings
+    per share of $0.59 (excluding one-time items)", "third quarter 2016 Adjusted Diluted EPS 1 was $0.73". Without such a figure the quarter had
+    no one-time items and the release gives only its diluted EPS ("first quarter 2015 diluted earnings per share of $0.57 compared to $0.50
+    (excluding one-time items) for the comparable 2014 period"): that figure is the adjusted one, provided the paragraph does not say the
+    quarter included a charge. Anything else is not found (None): nothing is guessed.
+    """
+    text = clean(soup.get_text(" "))
+    start = text.find("reported today")
+    end = text.find("Sales for", start)
+    if start < 0 or end < 0:
+        return None
+    lead = text[start:end]
+    quarter = rf"{ORDINALS[period.quarter]} quarter(?: of)? {period.year}"
+    stated = [
+        rf"{quarter} diluted earnings per share excluding one-time items of {DOLLARS}",
+        rf"{quarter} diluted earnings per share of {DOLLARS} \(excluding one-time items\)",
+        rf"{quarter} adjusted diluted (?:earnings per share|EPS)(?: \d)? was {DOLLARS}",
+    ]
+    for pattern in stated:
+        if m := re.search(pattern, lead, re.I):
+            return [float(m.group(1))]
+    included = rf"(?:for the {quarter}|{quarter}|for the {period.year} quarter) (?:includes|included)\b"
+    plain = rf"(?:{quarter} (?:GAAP )?diluted earnings per share(?: \(EPS\))? of|(?:GAAP )?diluted earnings per share(?: \(EPS\))? for the {quarter} of) {DOLLARS}(?! \(excluding)(?!,? excluding)"
+    if (m := re.search(plain, lead, re.I)) and not re.search(included, lead, re.I):
+        return [float(m.group(1))]
+    return None
+
+
+def adjusted_diluted_eps(soup, period: pd.Period) -> list[float] | None:
+    return adjusted_eps_from_tables(soup, period) or adjusted_eps_from_text(soup, period)
+
+
+def parse_us_release(html: bytes, non_gaap: str | None = None) -> Parsed:
+    """Parse a release. non_gaap is the EPS basis of the stock's Non-GAAP PE (None without one): "diluted" reads the Adjusted Diluted EPS
+    (Amphenol) into non_ifrs_eps, "basic" the "Non-GAAP net income per share - basic" row of the reconciliation (Dynatrace, optional per release);
+    stocks without a Non-GAAP PE get no Non-GAAP figure."""
     from bs4 import BeautifulSoup
 
     soup = BeautifulSoup(html, "lxml")
     income: list[tuple[pd.Period, dict[str, list[float]], bool, str]] = []
     balance: list[tuple[pd.Period, list[float]]] = []
-    non_gaap: list[tuple[pd.Period, list[float], bool]] = []
+    non_gaap_rows: list[tuple[pd.Period, list[float], bool]] = []  # basic Non-GAAP EPS rows (Dynatrace)
     for table in soup.find_all("table"):
         rows = table_rows(table)
         if not rows:
@@ -369,8 +504,8 @@ def parse_us_release(html: bytes) -> Parsed:
             income.append((*found, currency_of(rows)))
         if (found := parse_balance(rows, scale)) is not None:
             balance.append(found)
-        if (found := parse_non_gaap(rows)) is not None:
-            non_gaap.append(found)
+        if non_gaap == "basic" and (found := parse_non_gaap(rows)) is not None:
+            non_gaap_rows.append(found)
     if not income:
         if not soup.find("table") or "Net system sales" in soup.get_text(" "):
             if (parsed := parse_text(html)) is not None:
@@ -389,9 +524,11 @@ def parse_us_release(html: bytes) -> Parsed:
     equity_period, equity = balance[0]
     if equity_period != period:
         raise ValueError(f"The balance sheet is for {equity_period}, the income statement for {period}")
-    extra = {}
-    if found := [eps for p, eps, q in non_gaap if p == period and q == quarterly]:  # optional: only releases that state a basic Non-GAAP EPS
+    values = {**values, "equity": equity}
+    if non_gaap == "diluted" and (adjusted := adjusted_diluted_eps(soup, period)) is not None:
+        values["non_ifrs_eps"] = adjusted
+    elif non_gaap == "basic" and (found := [eps for p, eps, q in non_gaap_rows if p == period and q == quarterly]):  # Dynatrace's reconciliation row
         if any(not close(a, b, "eps") for other in found[1:] for a, b in zip(other, found[0])):
             raise ValueError(f"The basic Non-GAAP EPS in this release disagree: {found}")
-        extra["non_ifrs_eps"] = found[0]
-    return Parsed(currency, {**values, "equity": equity, **extra}, period, quarterly)
+        values["non_ifrs_eps"] = found[0]
+    return Parsed(currency, values, period, quarterly)

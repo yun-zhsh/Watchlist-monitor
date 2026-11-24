@@ -41,7 +41,7 @@ def test_bad_eps_basis_is_refused(metrics, basis, message):
         stock(metrics=metrics, eps_basis=basis)
 
 
-def test_the_real_config_names_alibabas_non_gaap_pe_diluted_and_every_other_pe_basic():
+def test_the_real_config_names_alibabas_and_amphenols_non_gaap_pe_diluted_and_every_other_pe_basic():
     from pathlib import Path
 
     from valuation_monitor.config import load_config
@@ -52,7 +52,8 @@ def test_the_real_config_names_alibabas_non_gaap_pe_diluted_and_every_other_pe_b
     assert labels[("BABA", "pe")] == "Basic PE (TTM)"
     assert labels[("JD", "pe_non_gaap")] == "Basic PE Non-GAAP (TTM)"
     assert labels[("0700.HK", "pe_non_ifrs")] == "Basic PE Non-IFRS (TTM)"
-    assert all(label.startswith("Basic ") for key, label in labels.items() if key != ("BABA", "pe_non_gaap"))
+    assert labels[("APH", "pe_non_gaap")] == "Diluted PE Non-GAAP (TTM)" and labels[("APH", "pe")] == "Basic PE (TTM)"
+    assert all(label.startswith("Basic ") for key, label in labels.items() if key not in {("BABA", "pe_non_gaap"), ("APH", "pe_non_gaap")})
 
 
 # ---- the web pages and downloads -------------------------------------------------------------------------------------------

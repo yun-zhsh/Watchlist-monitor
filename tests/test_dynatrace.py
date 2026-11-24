@@ -60,7 +60,7 @@ SUMMARY = table(  # the financial summary at the top: its Non-GAAP EPS is on dil
 
 
 def test_the_basic_non_gaap_eps_and_only_this_quarters_balance_when_the_year_ends_in_march():
-    p = parse_us_release(release(SUMMARY, INCOME, BALANCE, RECONCILIATION))
+    p = parse_us_release(release(SUMMARY, INCOME, BALANCE, RECONCILIATION), "basic")
     assert p.period == pd.Period("2026Q3") and p.quarterly and p.currency == "USD"
     assert p.values["non_ifrs_eps"] == [0.56, 0.44]  # basic, not the diluted 0.54 of the summary
     assert p.values["equity"] == pytest.approx([2273.691])  # March 31 is not the previous December: it is filed under its own quarter's release
@@ -68,14 +68,21 @@ def test_the_basic_non_gaap_eps_and_only_this_quarters_balance_when_the_year_end
 
 
 def test_a_release_without_a_basic_non_gaap_eps_has_none():
-    p = parse_us_release(release(SUMMARY, INCOME, BALANCE))
+    p = parse_us_release(release(SUMMARY, INCOME, BALANCE), "basic")
     assert "non_ifrs_eps" not in p.values
+
+
+def test_the_basic_non_gaap_eps_is_read_only_for_a_stock_with_a_basic_non_gaap_pe():
+    """Meta, Cognizant and Sea have no Non-GAAP PE (non_gaap None) and Amphenol's is diluted: none of them reads this row."""
+    html = release(SUMMARY, INCOME, BALANCE, RECONCILIATION)
+    assert "non_ifrs_eps" not in parse_us_release(html).values
+    assert "non_ifrs_eps" not in parse_us_release(html, "diluted").values  # Amphenol's Adjusted Diluted EPS is not in this release
 
 
 def test_basic_non_gaap_eps_of_two_tables_must_agree():
     other = RECONCILIATION.replace(">0.56<", ">0.57<")
     with pytest.raises(ValueError, match="Non-GAAP EPS"):
-        parse_us_release(release(INCOME, BALANCE, RECONCILIATION, other))
+        parse_us_release(release(INCOME, BALANCE, RECONCILIATION, other), "basic")
 
 
 def test_the_llc_before_the_ipo_member_deficit_and_single_shares_under_a_dollars_in_thousands_note():
@@ -122,7 +129,7 @@ def test_config_has_both_pes_on_basic_eps():
     assert stock.cik == 1773383 and stock.filing_format == "us_press_release" and stock.name == "Dynatrace"
     assert stock.metrics == ["pe", "pe_non_gaap", "ps", "pb"] and stock.eps_basis == {}
     names = [s.name for s in load_config(ROOT / "config.yaml").stocks]
-    assert names.index("Cognizant Technology Solutions") < names.index("Dynatrace") < names.index("ASML Holding (NY registry shares)")
+    assert names.index("Cognizant Technology Solutions") < names.index("Amphenol") < names.index("Dynatrace") < names.index("ASML Holding (NY registry shares)")
 
 
 saved = pytest.mark.skipif(not (DT / "index.json").exists(), reason="no saved Dynatrace filings (the scheduled update saves them)")
@@ -130,7 +137,7 @@ saved = pytest.mark.skipif(not (DT / "index.json").exists(), reason="no saved Dy
 
 def parsed_releases():
     index = [e for e in json.loads((DT / "index.json").read_text(encoding="utf-8")) if e["results"]]
-    return {p.period: p for p in (parse_us_release((DT / e["file"]).read_bytes()) for e in index)}
+    return {p.period: p for p in (parse_us_release((DT / e["file"]).read_bytes(), "basic") for e in index)}
 
 
 @saved

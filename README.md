@@ -151,7 +151,7 @@ GitHub Actions (`.github/workflows/pages.yml`) runs every 4 hours, i.e. at 9:47,
 1. updates prices and filings, and commits any change back to the `data/` directory of the repository;
 2. exports a static site with the same pages as the local site (without the "Update data" button) and publishes it to GitHub Pages.
 
-A push to `main` also triggers a run. To update immediately, open the repository's Actions page, choose "Update data and publish site" and click "Run workflow".
+A push to `main` also triggers a run. To update immediately, open the repository's Actions page, choose "Update data and publish site" and click "Run workflow". A manual run tests the code first, like a push; tick "data_only" to skip the tests and only update the data, as a scheduled run does (on `main` only). This is for the case where a saved-data test fails just because the data of a newly added stock is still incomplete.
 
 Notes:
 

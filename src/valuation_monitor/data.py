@@ -45,6 +45,8 @@ class DataLoader:
         since = now - pd.DateOffset(years=self.config.max_lookback + 2)
         if stock.market == "US":
             filings = self.sec.results_announcements(stock.symbol, stock.cik, since, stock.sec_form, stock.sec_exhibit)
+            if stock.sec_release_non_gaap:  # the press release as well, for its adjusted EPS (XP)
+                filings += self.sec.results_announcements(stock.symbol, stock.cik, since, stock.sec_form, supplement=True)
         elif stock.market == "KR":
             filings = self.samsung.results_announcements(stock.symbol, since)
         elif stock.market == "CN":

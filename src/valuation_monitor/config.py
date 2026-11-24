@@ -38,6 +38,7 @@ class StockConfig:
     sec_exhibit: str = "release"  # what is parsed: the earnings press release itself, the summary US GAAP financial statements exhibit (ASML) or the IFRS consolidated financial statements (XP)
     sec_form: str = "6-K"  # the SEC form that carries the earnings press release: 6-K (foreign private issuers, e.g. JD, ASML) or 8-K item 2.02 (US companies, e.g. Meta)
     eps_basis: dict[str, str] = field(default_factory=dict)  # PE metric -> "diluted" where the company discloses no basic EPS (Alibaba: pe_non_gaap); others are basic
+    sec_release_non_gaap: bool = False  # also read the earnings press release for its adjusted EPS, next to the statements (XP; see release_eps.py)
 
     def basis(self, metric) -> str | None:
         """The EPS basis of a PE metric ("basic" or "diluted"); None for a metric not based on EPS (PS, PB)."""
@@ -134,6 +135,9 @@ def parse_config(raw: dict) -> Config:
         sec_exhibit = str(s.get("sec_exhibit", "release"))
         if sec_exhibit not in ("release", "us_gaap_statements", "ifrs_statements"):
             raise ValueError(f"{symbol}: sec_exhibit must be release, us_gaap_statements or ifrs_statements, got {sec_exhibit}")
+        sec_release_non_gaap = bool(s.get("sec_release_non_gaap", False))
+        if sec_release_non_gaap and sec_exhibit != "ifrs_statements":
+            raise ValueError(f"{symbol}: sec_release_non_gaap reads the press release next to the IFRS statements (sec_exhibit: ifrs_statements), got {sec_exhibit}")
         eps_basis = {str(k).lower(): str(v).lower() for k, v in (s.get("eps_basis") or {}).items()}
         for key, basis in eps_basis.items():
             if key not in metrics or not METRICS[key].eps_based:
@@ -151,6 +155,7 @@ def parse_config(raw: dict) -> Config:
                 sec_form=sec_form,
                 sec_exhibit=sec_exhibit,
                 eps_basis={k: v for k, v in eps_basis.items() if v != "basic"},
+                sec_release_non_gaap=sec_release_non_gaap,
             )
         )
     if not stocks:

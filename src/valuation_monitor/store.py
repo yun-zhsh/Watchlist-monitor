@@ -19,6 +19,8 @@ import pandas as pd
 from valuation_monitor.db import FINAL_COLUMNS, Database
 from valuation_monitor.filings import (
     PARSER_VERSIONS,
+    SUPPLEMENT_PARSER_VERSION,
+    SUPPLEMENT_TABLE,
     EarningsHistory,
     adjust_for_splits,
     announcements_from_frame,
@@ -245,7 +247,8 @@ class EarningsStore:
         saved = {}
         df = self.db.read_frame("announcements", symbol, text=True)
         if df is not None:
-            df = df[df["parser_version"].astype(int) == version]
+            supplement = df["table"] == SUPPLEMENT_TABLE  # supplementary documents (XP's press release) carry the version of their own parser
+            df = df[df["parser_version"].astype(int) == supplement.map({True: SUPPLEMENT_PARSER_VERSION, False: version})]
             saved = {a.url: a for a in announcements_from_frame(df, market)}
 
         parsed = []

@@ -99,7 +99,7 @@ SERIES_LABELS = {
     "equity": "Equity attributable to owners",
     "wa_shares": "Weighted average shares",
 }
-PARSER_VERSIONS = {"highlights": 5, "statements": 3, "press_release": 4, "us_press_release": 3, "us_gaap_statements": 2, "ifrs_statements": 1, "kifrs_statements": 4, "cn_report": 8}  # add 1 when the parsing rules change; saved parse results are then re-parsed automatically
+PARSER_VERSIONS = {"highlights": 5, "statements": 3, "press_release": 4, "us_press_release": 3, "us_gaap_statements": 3, "ifrs_statements": 1, "kifrs_statements": 4, "cn_report": 8}  # add 1 when the parsing rules change; saved parse results are then re-parsed automatically
 PER_SHARE_TOLERANCE = 0.005  # allowed difference of the same value between filings: per-share data (rounding, subtraction of cumulative figures)
 PER_SHARE_RELATIVE_TOLERANCE = 5e-4
 AMOUNT_TOLERANCE = 0.001  # amounts: relative difference

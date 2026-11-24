@@ -1,0 +1,1811 @@
+[
+  {
+    "accession": "0001104659-15-027871",
+    "published": "2015-04-16T10:02:09",
+    "results": false
+  },
+  {
+    "accession": "0001104659-15-057900",
+    "published": "2015-08-10T07:13:21",
+    "results": false
+  },
+  {
+    "accession": "0001104659-15-058914",
+    "published": "2015-08-12T09:10:42",
+    "results": true,
+    "title": "Alibaba Group Announces June Quarter 2015 Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1577552/000110465915058914/a15-17523_1ex99d1.htm",
+    "file": "2015-08-12_a15-17523_1ex99d1.htm"
+  },
+  {
+    "accession": "0001104659-15-060174",
+    "published": "2015-08-17T06:40:46",
+    "results": false
+  },
+  {
+    "accession": "0001104659-15-060819",
+    "published": "2015-08-19T06:57:40",
+    "results": false
+  },
+  {
+    "accession": "0001104659-15-072968",
+    "published": "2015-10-27T09:44:28",
+    "results": true,
+    "title": "Alibaba Group Announces September Quarter 2015 Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1577552/000110465915072968/a15-21796_1ex99d1.htm",
+    "file": "2015-10-27_a15-21796_1ex99d1.htm"
+  },
+  {
+    "accession": "0001104659-15-076853",
+    "published": "2015-11-09T06:03:10",
+    "results": false
+  },
+  {
+    "accession": "0001104659-15-083050",
+    "published": "2015-12-04T17:01:17",
+    "results": false
+  },
+  {
+    "accession": "0001104659-16-092294",
+    "published": "2016-01-29T06:03:41",
+    "results": true,
+    "title": "Alibaba Group Announces December Quarter 2015 Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1577552/000110465916092294/a16-3084_1ex99d1.htm",
+    "file": "2016-01-29_a16-3084_1ex99d1.htm"
+  },
+  {
+    "accession": "0001104659-16-103882",
+    "published": "2016-03-09T15:35:14",
+    "results": false
+  },
+  {
+    "accession": "0001104659-16-106460",
+    "published": "2016-03-21T06:33:40",
+    "results": false
+  },
+  {
+    "accession": "0001104659-16-109905",
+    "published": "2016-04-05T16:30:50",
+    "results": false
+  },
+  {
+    "accession": "0001104659-16-110885",
+    "published": "2016-04-12T06:20:35",
+    "results": false
+  },
+  {
+    "accession": "0001104659-16-113636",
+    "published": "2016-04-25T06:13:40",
+    "results": false
+  },
+  {
+    "accession": "0001104659-16-118194",
+    "published": "2016-05-05T13:41:24",
+    "results": true,
+    "title": "Alibaba Group Announces March Quarter 2016 and Full Fiscal Year 2016 Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1577552/000110465916118194/a16-10677_1ex99d1.htm",
+    "file": "2016-05-05_a16-10677_1ex99d1.htm"
+  },
+  {
+    "accession": "0001104659-16-138896",
+    "published": "2016-08-11T10:54:07",
+    "results": true,
+    "title": "Alibaba Group Announces June Quarter 2016 Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1577552/000110465916138896/a16-16621_1ex99d1.htm",
+    "file": "2016-08-11_a16-16621_1ex99d1.htm"
+  },
+  {
+    "accession": "0001104659-16-140731",
+    "published": "2016-08-19T16:32:31",
+    "results": false
+  },
+  {
+    "accession": "0001104659-16-140809",
+    "published": "2016-08-22T09:42:10",
+    "results": false
+  },
+  {
+    "accession": "0001104659-16-154041",
+    "published": "2016-11-02T12:47:33",
+    "results": true,
+    "title": "Alibaba Group Announces September Quarter 2016 Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1577552/000110465916154041/a16-20954_1ex99d1.htm",
+    "file": "2016-11-02_a16-20954_1ex99d1.htm"
+  },
+  {
+    "accession": "0001104659-16-162618",
+    "published": "2016-12-16T16:30:24",
+    "results": false
+  },
+  {
+    "accession": "0001104659-17-033787",
+    "published": "2017-05-18T16:30:34",
+    "results": true,
+    "title": "Alibaba Group Announces March Quarter 2017 and Full Fiscal Year 2017 Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1577552/000110465917033787/a17-13821_1ex99d1.htm",
+    "file": "2017-05-18_a17-13821_1ex99d1.htm"
+  },
+  {
+    "accession": "0001104659-17-052468",
+    "published": "2017-08-17T16:30:33",
+    "results": true,
+    "title": "Alibaba Group Announces June Quarter 2017 Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1577552/000110465917052468/a17-20562_1ex99d1.htm",
+    "file": "2017-08-17_a17-20562_1ex99d1.htm"
+  },
+  {
+    "accession": "0001104659-17-056981",
+    "published": "2017-09-13T17:01:50",
+    "results": false
+  },
+  {
+    "accession": "0001104659-17-058730",
+    "published": "2017-09-26T06:06:44",
+    "results": false
+  },
+  {
+    "accession": "0001104659-17-062758",
+    "published": "2017-10-18T16:34:57",
+    "results": false
+  },
+  {
+    "accession": "0001104659-17-065677",
+    "published": "2017-11-02T16:30:33",
+    "results": true,
+    "title": "Alibaba Group Announces September Quarter 2017 Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1577552/000110465917065677/a17-25090_1ex99d1.htm",
+    "file": "2017-11-02_a17-25090_1ex99d1.htm"
+  },
+  {
+    "accession": "0001104659-17-070220",
+    "published": "2017-11-22T16:47:32",
+    "results": false
+  },
+  {
+    "accession": "0001047469-17-007286",
+    "published": "2017-11-24T16:41:52",
+    "results": false
+  },
+  {
+    "accession": "0001047469-17-007296",
+    "published": "2017-11-27T08:14:11",
+    "results": false
+  },
+  {
+    "accession": "0001104659-17-070363",
+    "published": "2017-11-27T08:22:58",
+    "results": false
+  },
+  {
+    "accession": "0001104659-17-071007",
+    "published": "2017-11-29T19:24:15",
+    "results": false
+  },
+  {
+    "accession": "0001104659-17-072000",
+    "published": "2017-12-06T09:06:58",
+    "results": false
+  },
+  {
+    "accession": "0001104659-18-005686",
+    "published": "2018-02-01T06:42:35",
+    "results": false
+  },
+  {
+    "accession": "0001104659-18-005843",
+    "published": "2018-02-01T16:00:40",
+    "results": true,
+    "title": "Alibaba Group Announces December Quarter 2017 Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1577552/000110465918005843/a18-5168_1ex99d1.htm",
+    "file": "2018-02-01_a18-5168_1ex99d1.htm"
+  },
+  {
+    "accession": "0001104659-18-006211",
+    "published": "2018-02-02T16:01:00",
+    "results": false
+  },
+  {
+    "accession": "0001104659-18-011926",
+    "published": "2018-02-26T08:41:00",
+    "results": false
+  },
+  {
+    "accession": "0001104659-18-021637",
+    "published": "2018-04-02T09:00:54",
+    "results": false
+  },
+  {
+    "accession": "0001104659-18-030651",
+    "published": "2018-05-04T16:30:58",
+    "results": true,
+    "title": "Alibaba Group Announces March Quarter 2018 Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1577552/000110465918030651/a18-12785_1ex99d1.htm",
+    "file": "2018-05-04_a18-12785_1ex99d1.htm"
+  },
+  {
+    "accession": "0001104659-18-036123",
+    "published": "2018-05-29T06:16:37",
+    "results": false
+  },
+  {
+    "accession": "0001104659-18-036531",
+    "published": "2018-05-30T06:26:08",
+    "results": false
+  },
+  {
+    "accession": "0001104659-18-045643",
+    "published": "2018-07-18T07:50:01",
+    "results": false
+  },
+  {
+    "accession": "0001104659-18-053369",
+    "published": "2018-08-23T16:29:54",
+    "results": true,
+    "title": "Alibaba Group Announces June Quarter 2018 Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1577552/000110465918053369/a18-21099_1ex99d1.htm",
+    "file": "2018-08-23_a18-21099_1ex99d1.htm"
+  },
+  {
+    "accession": "0001104659-18-055708",
+    "published": "2018-09-07T06:58:04",
+    "results": false
+  },
+  {
+    "accession": "0001104659-18-055896",
+    "published": "2018-09-10T06:34:08",
+    "results": false
+  },
+  {
+    "accession": "0001104659-18-065094",
+    "published": "2018-10-31T16:31:05",
+    "results": false
+  },
+  {
+    "accession": "0001104659-18-065748",
+    "published": "2018-11-02T16:30:44",
+    "results": true,
+    "title": "Alibaba Group Announces September Quarter 2018 Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1577552/000110465918065748/a18-39483_1ex99d1.htm",
+    "file": "2018-11-02_a18-39483_1ex99d1.htm"
+  },
+  {
+    "accession": "0001104659-18-071210",
+    "published": "2018-12-04T09:04:18",
+    "results": false
+  },
+  {
+    "accession": "0001104659-18-075203",
+    "published": "2018-12-31T06:02:48",
+    "results": false
+  },
+  {
+    "accession": "0001104659-19-004478",
+    "published": "2019-01-30T16:30:55",
+    "results": true,
+    "title": "Alibaba Group Announces December Quarter 2018 Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1577552/000110465919004478/a19-3718_1ex99d1.htm",
+    "file": "2019-01-30_a19-3718_1ex99d1.htm"
+  },
+  {
+    "accession": "0001104659-19-024217",
+    "published": "2019-04-29T06:07:21",
+    "results": false
+  },
+  {
+    "accession": "0001104659-19-029738",
+    "published": "2019-05-15T16:30:32",
+    "results": true,
+    "title": "Alibaba Group Announces March Quarter and Full Fiscal Year 2019 Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1577552/000110465919029738/a19-10031_1ex99d1.htm",
+    "file": "2019-05-15_a19-10031_1ex99d1.htm"
+  },
+  {
+    "accession": "0001104659-19-035956",
+    "published": "2019-06-17T16:31:50",
+    "results": false
+  },
+  {
+    "accession": "0001104659-19-040358",
+    "published": "2019-07-15T16:32:08",
+    "results": false
+  },
+  {
+    "accession": "0001104659-19-042446",
+    "published": "2019-07-30T06:03:02",
+    "results": false
+  },
+  {
+    "accession": "0001104659-19-046150",
+    "published": "2019-08-15T16:30:27",
+    "results": true,
+    "title": "Alibaba Group Announces June Quarter 2019 Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1577552/000110465919046150/a19-17229_1ex99d1.htm",
+    "file": "2019-08-15_a19-17229_1ex99d1.htm"
+  },
+  {
+    "accession": "0001104659-19-048991",
+    "published": "2019-09-06T06:31:38",
+    "results": false
+  },
+  {
+    "accession": "0001104659-19-049759",
+    "published": "2019-09-11T16:30:41",
+    "results": false
+  },
+  {
+    "accession": "0001104659-19-051206",
+    "published": "2019-09-24T16:31:15",
+    "results": false
+  },
+  {
+    "accession": "0001104659-19-059003",
+    "published": "2019-11-01T16:31:20",
+    "results": true,
+    "title": "Alibaba Group Announces September Quarter 2019 Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1577552/000110465919059003/a19-21664_1ex99d1.htm",
+    "file": "2019-11-01_a19-21664_1ex99d1.htm"
+  },
+  {
+    "accession": "0001104659-19-061731",
+    "published": "2019-11-08T16:30:55",
+    "results": false
+  },
+  {
+    "accession": "0001047469-19-006258",
+    "published": "2019-11-13T06:22:41",
+    "results": false
+  },
+  {
+    "accession": "0001047469-19-006269",
+    "published": "2019-11-13T07:28:51",
+    "results": false
+  },
+  {
+    "accession": "0001104659-19-064490",
+    "published": "2019-11-15T06:02:36",
+    "results": false
+  },
+  {
+    "accession": "0001047469-19-006433",
+    "published": "2019-11-20T16:16:01",
+    "results": false
+  },
+  {
+    "accession": "0001104659-19-068453",
+    "published": "2019-11-29T06:06:24",
+    "results": false
+  },
+  {
+    "accession": "0001104659-19-069221",
+    "published": "2019-12-03T08:00:22",
+    "results": false
+  },
+  {
+    "accession": "0001104659-19-074597",
+    "published": "2019-12-20T06:05:34",
+    "results": false
+  },
+  {
+    "accession": "0001104659-20-006055",
+    "published": "2020-01-23T06:40:05",
+    "results": false
+  },
+  {
+    "accession": "0001104659-20-020231",
+    "published": "2020-02-13T16:30:24",
+    "results": true,
+    "title": "Alibaba Group Announces December Quarter 2019 Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1577552/000110465920020231/a20-7896_1ex99d1.htm",
+    "file": "2020-02-13_a20-7896_1ex99d1.htm"
+  },
+  {
+    "accession": "0001104659-20-059072",
+    "published": "2020-05-11T06:35:42",
+    "results": false
+  },
+  {
+    "accession": "0001104659-20-065398",
+    "published": "2020-05-22T16:31:09",
+    "results": true,
+    "title": "Alibaba Group Announces March Quarter and Full Fiscal Year 2020 Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1577552/000110465920065398/a20-20766_1ex99d1.htm",
+    "file": "2020-05-22_a20-20766_1ex99d1.htm"
+  },
+  {
+    "accession": "0001104659-20-076602",
+    "published": "2020-06-25T06:30:45",
+    "results": false
+  },
+  {
+    "accession": "0001104659-20-082881",
+    "published": "2020-07-13T06:10:25",
+    "results": false
+  },
+  {
+    "accession": "0001104659-20-083110",
+    "published": "2020-07-13T16:30:36",
+    "results": false
+  },
+  {
+    "accession": "0001104659-20-091677",
+    "published": "2020-08-07T06:09:42",
+    "results": false
+  },
+  {
+    "accession": "0001104659-20-097260",
+    "published": "2020-08-20T16:30:56",
+    "results": true,
+    "title": "Alibaba Group Announces June Quarter 2020 Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1577552/000110465920097260/a20-29076_1ex99d1.htm",
+    "file": "2020-08-20_a20-29076_1ex99d1.htm"
+  },
+  {
+    "accession": "0001104659-20-098130",
+    "published": "2020-08-25T06:04:37",
+    "results": false
+  },
+  {
+    "accession": "0001104659-20-098136",
+    "published": "2020-08-25T06:06:52",
+    "results": false
+  },
+  {
+    "accession": "0001104659-20-098141",
+    "published": "2020-08-25T06:10:53",
+    "results": false
+  },
+  {
+    "accession": "0001104659-20-110253",
+    "published": "2020-09-30T10:55:53",
+    "results": false
+  },
+  {
+    "accession": "0001104659-20-115828",
+    "published": "2020-10-19T07:44:41",
+    "results": false
+  },
+  {
+    "accession": "0001104659-20-116815",
+    "published": "2020-10-21T17:00:28",
+    "results": false
+  },
+  {
+    "accession": "0001104659-20-116934",
+    "published": "2020-10-22T06:08:51",
+    "results": false
+  },
+  {
+    "accession": "0001104659-20-117978",
+    "published": "2020-10-26T07:27:19",
+    "results": false
+  },
+  {
+    "accession": "0001104659-20-120757",
+    "published": "2020-11-03T09:18:28",
+    "results": false
+  },
+  {
+    "accession": "0001104659-20-121812",
+    "published": "2020-11-05T16:19:22",
+    "results": true,
+    "title": "Alibaba Group Announces September Quarter 2020 Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1577552/000110465920121812/a20-35108_1ex99d1.htm",
+    "file": "2020-11-05_a20-35108_1ex99d1.htm"
+  },
+  {
+    "accession": "0001104659-20-137127",
+    "published": "2020-12-18T06:54:30",
+    "results": false
+  },
+  {
+    "accession": "0001104659-20-139366",
+    "published": "2020-12-28T06:08:28",
+    "results": false
+  },
+  {
+    "accession": "0001104659-21-005585",
+    "published": "2021-01-20T06:03:21",
+    "results": false
+  },
+  {
+    "accession": "0001104659-21-010910",
+    "published": "2021-02-02T16:08:25",
+    "results": false
+  },
+  {
+    "accession": "0001104659-21-010913",
+    "published": "2021-02-02T16:11:10",
+    "results": false
+  },
+  {
+    "accession": "0001104659-21-010975",
+    "published": "2021-02-02T16:53:35",
+    "results": false
+  },
+  {
+    "accession": "0001104659-21-011014",
+    "published": "2021-02-02T17:20:46",
+    "results": false
+  },
+  {
+    "accession": "0001104659-21-011016",
+    "published": "2021-02-02T17:21:23",
+    "results": true,
+    "title": "Alibaba Group Announces December Quarter 2020 Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1577552/000110465921011016/a21-1839_6ex99d1.htm",
+    "file": "2021-02-02_a21-1839_6ex99d1.htm"
+  },
+  {
+    "accession": "0001104659-21-012378",
+    "published": "2021-02-04T18:45:32",
+    "results": false
+  },
+  {
+    "accession": "0001104659-21-012476",
+    "published": "2021-02-04T21:47:03",
+    "results": false
+  },
+  {
+    "accession": "0001104659-21-016660",
+    "published": "2021-02-09T16:06:51",
+    "results": false
+  },
+  {
+    "accession": "0001104659-21-019786",
+    "published": "2021-02-10T16:06:38",
+    "results": false
+  },
+  {
+    "accession": "0001104659-21-049093",
+    "published": "2021-04-12T07:00:58",
+    "results": false
+  },
+  {
+    "accession": "0001104659-21-049222",
+    "published": "2021-04-12T11:12:29",
+    "results": false
+  },
+  {
+    "accession": "0001104659-21-058057",
+    "published": "2021-04-30T06:15:41",
+    "results": false
+  },
+  {
+    "accession": "0001104659-21-065916",
+    "published": "2021-05-13T16:02:54",
+    "results": true,
+    "title": "Exhibit 99.1 Alibaba Group Announces March Quarter and Full Fiscal Year 2021 Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1577552/000110465921065916/tm2116252d1_ex99-1.htm",
+    "file": "2021-05-13_tm2116252d1_ex99-1.htm"
+  },
+  {
+    "accession": "0001104659-21-093230",
+    "published": "2021-07-19T06:30:55",
+    "results": false
+  },
+  {
+    "accession": "0001104659-21-094104",
+    "published": "2021-07-20T20:09:29",
+    "results": false
+  },
+  {
+    "accession": "0001104659-21-096324",
+    "published": "2021-07-27T16:47:23",
+    "results": false
+  },
+  {
+    "accession": "0001104659-21-099438",
+    "published": "2021-08-03T16:04:26",
+    "results": true,
+    "title": "Exhibit 99.1 Alibaba Group Announces June Quarter 2021 Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1577552/000110465921099438/tm2123939d1_ex99-1.htm",
+    "file": "2021-08-03_tm2123939d1_ex99-1.htm"
+  },
+  {
+    "accession": "0001104659-21-103093",
+    "published": "2021-08-11T06:02:56",
+    "results": false
+  },
+  {
+    "accession": "0001104659-21-116782",
+    "published": "2021-09-17T12:18:58",
+    "results": false
+  },
+  {
+    "accession": "0001104659-21-134673",
+    "published": "2021-11-05T06:06:32",
+    "results": false
+  },
+  {
+    "accession": "0001104659-21-141204",
+    "published": "2021-11-18T16:15:13",
+    "results": true,
+    "title": "Exhibit 99.1 Alibaba Group Announces September Quarter 2021 Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1577552/000110465921141204/tm2133400d1_ex99-1.htm",
+    "file": "2021-11-18_tm2133400d1_ex99-1.htm"
+  },
+  {
+    "accession": "0001104659-21-146494",
+    "published": "2021-12-06T06:01:14",
+    "results": false
+  },
+  {
+    "accession": "0001104659-21-148335",
+    "published": "2021-12-10T06:29:23",
+    "results": false
+  },
+  {
+    "accession": "0001104659-22-019698",
+    "published": "2022-02-11T06:03:01",
+    "results": false
+  },
+  {
+    "accession": "0001104659-22-026569",
+    "published": "2022-02-24T16:01:10",
+    "results": true,
+    "title": "Exhibit 99.1 Alibaba Group Announces December Quarter 2021 Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1577552/000110465922026569/tm227577d1_ex99-1.htm",
+    "file": "2022-02-24_tm227577d1_ex99-1.htm"
+  },
+  {
+    "accession": "0001104659-22-036278",
+    "published": "2022-03-22T06:11:56",
+    "results": false
+  },
+  {
+    "accession": "0001104659-22-059786",
+    "published": "2022-05-13T06:22:16",
+    "results": false
+  },
+  {
+    "accession": "0001104659-22-065269",
+    "published": "2022-05-26T16:15:16",
+    "results": true,
+    "title": "Exhibit 99.1 Alibaba Group Announces March Quarter and Full Fiscal Year 2022 Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1577552/000110465922065269/tm2217018d1_ex99-1.htm",
+    "file": "2022-05-26_tm2217018d1_ex99-1.htm"
+  },
+  {
+    "accession": "0001104659-22-081007",
+    "published": "2022-07-20T07:50:05",
+    "results": false
+  },
+  {
+    "accession": "0001104659-22-081715",
+    "published": "2022-07-22T06:04:24",
+    "results": false
+  },
+  {
+    "accession": "0001104659-22-082563",
+    "published": "2022-07-26T06:01:34",
+    "results": false
+  },
+  {
+    "accession": "0001104659-22-082632",
+    "published": "2022-07-26T08:16:21",
+    "results": false
+  },
+  {
+    "accession": "0001104659-22-084395",
+    "published": "2022-08-01T06:03:05",
+    "results": false
+  },
+  {
+    "accession": "0001104659-22-085820",
+    "published": "2022-08-04T06:05:17",
+    "results": false
+  },
+  {
+    "accession": "0001104659-22-086110",
+    "published": "2022-08-04T16:01:55",
+    "results": true,
+    "title": "Exhibit 99.1 Alibaba Group Announces June Quarter 2022 Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1577552/000110465922086110/tm2222585d1_ex99-1.htm",
+    "file": "2022-08-04_tm2222585d1_ex99-1.htm"
+  },
+  {
+    "accession": "0001104659-22-086970",
+    "published": "2022-08-08T09:12:16",
+    "results": false
+  },
+  {
+    "accession": "0001104659-22-086971",
+    "published": "2022-08-08T09:13:30",
+    "results": false
+  },
+  {
+    "accession": "0001104659-22-088267",
+    "published": "2022-08-10T06:25:33",
+    "results": false
+  },
+  {
+    "accession": "0001104659-22-104370",
+    "published": "2022-09-30T08:59:02",
+    "results": false
+  },
+  {
+    "accession": "0001104659-22-119743",
+    "published": "2022-11-17T08:12:41",
+    "results": false
+  },
+  {
+    "accession": "0001104659-22-119745",
+    "published": "2022-11-17T08:14:21",
+    "results": false
+  },
+  {
+    "accession": "0001104659-22-121919",
+    "published": "2022-11-25T06:07:46",
+    "results": false
+  },
+  {
+    "accession": "0001104659-22-124694",
+    "published": "2022-12-06T06:02:27",
+    "results": false
+  },
+  {
+    "accession": "0001104659-23-001961",
+    "published": "2023-01-09T06:01:57",
+    "results": false
+  },
+  {
+    "accession": "0001104659-23-014605",
+    "published": "2023-02-08T17:07:32",
+    "results": false
+  },
+  {
+    "accession": "0001104659-23-024761",
+    "published": "2023-02-23T16:07:36",
+    "results": false
+  },
+  {
+    "accession": "0001104659-23-037408",
+    "published": "2023-03-28T08:02:20",
+    "results": false
+  },
+  {
+    "accession": "0001104659-23-056303",
+    "published": "2023-05-05T07:16:27",
+    "results": false
+  },
+  {
+    "accession": "0001104659-23-062243",
+    "published": "2023-05-18T16:01:15",
+    "results": true,
+    "title": "Exhibit 99.1 Alibaba Group Announces March Quarter and Full Fiscal Year 2023 Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1577552/000110465923062243/tm2316208d1_ex99-1.htm",
+    "file": "2023-05-18_tm2316208d1_ex99-1.htm"
+  },
+  {
+    "accession": "0001104659-23-062246",
+    "published": "2023-05-18T16:01:57",
+    "results": false
+  },
+  {
+    "accession": "0001104659-23-069655",
+    "published": "2023-06-09T07:52:21",
+    "results": false
+  },
+  {
+    "accession": "0001104659-23-072478",
+    "published": "2023-06-20T06:07:59",
+    "results": false
+  },
+  {
+    "accession": "0001104659-23-079258",
+    "published": "2023-07-10T06:02:16",
+    "results": false
+  },
+  {
+    "accession": "0001193125-23-190974",
+    "published": "2023-07-21T08:44:21",
+    "results": false
+  },
+  {
+    "accession": "0001104659-23-083188",
+    "published": "2023-07-24T06:38:58",
+    "results": false
+  },
+  {
+    "accession": "0001104659-23-084976",
+    "published": "2023-07-28T06:11:23",
+    "results": false
+  },
+  {
+    "accession": "0001104659-23-086019",
+    "published": "2023-08-01T06:14:24",
+    "results": false
+  },
+  {
+    "accession": "0001104659-23-089768",
+    "published": "2023-08-10T16:00:18",
+    "results": true,
+    "title": "Exhibit 99.1 Alibaba Group Announces June Quarter 2023 Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1577552/000110465923089768/tm2323406d1_ex99-1.htm",
+    "file": "2023-08-10_tm2323406d1_ex99-1.htm"
+  },
+  {
+    "accession": "0001104659-23-092264",
+    "published": "2023-08-16T08:32:46",
+    "results": false
+  },
+  {
+    "accession": "0001104659-23-099414",
+    "published": "2023-09-11T06:02:38",
+    "results": false
+  },
+  {
+    "accession": "0001104659-23-103638",
+    "published": "2023-09-26T06:01:30",
+    "results": false
+  },
+  {
+    "accession": "0001104659-23-104568",
+    "published": "2023-09-28T08:55:55",
+    "results": false
+  },
+  {
+    "accession": "0001104659-23-113964",
+    "published": "2023-11-03T06:02:27",
+    "results": false
+  },
+  {
+    "accession": "0001104659-23-119081",
+    "published": "2023-11-16T16:00:15",
+    "results": true,
+    "title": "Exhibit 99.1 Alibaba Group Announces September Quarter 2023 Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1577552/000110465923119081/tm2330915d1_ex99-1.htm",
+    "file": "2023-11-16_tm2330915d1_ex99-1.htm"
+  },
+  {
+    "accession": "0001104659-23-119088",
+    "published": "2023-11-16T16:02:19",
+    "results": false
+  },
+  {
+    "accession": "0001104659-23-123758",
+    "published": "2023-12-06T06:02:28",
+    "results": false
+  },
+  {
+    "accession": "0001104659-23-127472",
+    "published": "2023-12-20T06:03:15",
+    "results": false
+  },
+  {
+    "accession": "0001104659-23-128427",
+    "published": "2023-12-22T06:04:28",
+    "results": false
+  },
+  {
+    "accession": "0001104659-24-000045",
+    "published": "2024-01-02T06:11:25",
+    "results": false
+  },
+  {
+    "accession": "0001104659-24-006408",
+    "published": "2024-01-25T06:04:02",
+    "results": false
+  },
+  {
+    "accession": "0001104659-24-011604",
+    "published": "2024-02-07T16:05:02",
+    "results": true,
+    "title": "Exhibit 99.1 Alibaba Group Announces December Quarter 2023 Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1577552/000110465924011604/tm245446d1_ex99-1.htm",
+    "file": "2024-02-07_tm245446d1_ex99-1.htm"
+  },
+  {
+    "accession": "0001104659-24-038666",
+    "published": "2024-03-26T06:39:35",
+    "results": false
+  },
+  {
+    "accession": "0001104659-24-042245",
+    "published": "2024-04-02T08:02:54",
+    "results": false
+  },
+  {
+    "accession": "0001104659-24-054387",
+    "published": "2024-04-30T06:14:15",
+    "results": false
+  },
+  {
+    "accession": "0001104659-24-061145",
+    "published": "2024-05-14T16:04:57",
+    "results": true,
+    "title": "Exhibit 99.1 Alibaba Group Announces March Quarter 2024 and Fiscal Year 2024 Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1577552/000110465924061145/tm2414429d1_ex99-1.htm",
+    "file": "2024-05-14_tm2414429d1_ex99-1.htm"
+  },
+  {
+    "accession": "0001193125-24-145548",
+    "published": "2024-05-23T09:56:55",
+    "results": false
+  },
+  {
+    "accession": "0001193125-24-145954",
+    "published": "2024-05-23T16:04:58",
+    "results": false
+  },
+  {
+    "accession": "0001193125-24-146219",
+    "published": "2024-05-23T20:22:58",
+    "results": false
+  },
+  {
+    "accession": "0001193125-24-149515",
+    "published": "2024-05-29T20:54:56",
+    "results": false
+  },
+  {
+    "accession": "0001104659-24-066829",
+    "published": "2024-05-31T06:02:36",
+    "results": false
+  },
+  {
+    "accession": "0001104659-24-071494",
+    "published": "2024-06-14T06:45:59",
+    "results": false
+  },
+  {
+    "accession": "0001104659-24-077061",
+    "published": "2024-07-02T06:38:07",
+    "results": false
+  },
+  {
+    "accession": "0001104659-24-077941",
+    "published": "2024-07-05T07:01:14",
+    "results": false
+  },
+  {
+    "accession": "0001104659-24-085053",
+    "published": "2024-08-02T06:04:29",
+    "results": false
+  },
+  {
+    "accession": "0001104659-24-090102",
+    "published": "2024-08-15T16:01:28",
+    "results": true,
+    "title": "Exhibit 99.1 Alibaba Group Announces June Quarter 2024 Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1577552/000110465924090102/tm2421791d1_ex99-1.htm",
+    "file": "2024-08-15_tm2421791d1_ex99-1.htm"
+  },
+  {
+    "accession": "0001104659-24-090104",
+    "published": "2024-08-15T16:02:59",
+    "results": false
+  },
+  {
+    "accession": "0001104659-24-092027",
+    "published": "2024-08-22T16:48:20",
+    "results": false
+  },
+  {
+    "accession": "0001104659-24-092213",
+    "published": "2024-08-23T07:07:41",
+    "results": false
+  },
+  {
+    "accession": "0001104659-24-093618",
+    "published": "2024-08-28T06:03:19",
+    "results": false
+  },
+  {
+    "accession": "0001104659-24-095577",
+    "published": "2024-08-30T16:01:20",
+    "results": false
+  },
+  {
+    "accession": "0001104659-24-097357",
+    "published": "2024-09-05T16:01:03",
+    "results": false
+  },
+  {
+    "accession": "0001104659-24-097729",
+    "published": "2024-09-06T16:00:22",
+    "results": false
+  },
+  {
+    "accession": "0001104659-24-097992",
+    "published": "2024-09-09T08:43:13",
+    "results": false
+  },
+  {
+    "accession": "0001104659-24-099750",
+    "published": "2024-09-13T16:01:58",
+    "results": false
+  },
+  {
+    "accession": "0001104659-24-101684",
+    "published": "2024-09-20T16:00:48",
+    "results": false
+  },
+  {
+    "accession": "0001104659-24-103702",
+    "published": "2024-09-27T16:01:22",
+    "results": false
+  },
+  {
+    "accession": "0001104659-24-105192",
+    "published": "2024-10-02T06:30:28",
+    "results": false
+  },
+  {
+    "accession": "0001104659-24-106255",
+    "published": "2024-10-04T16:02:58",
+    "results": false
+  },
+  {
+    "accession": "0001104659-24-109845",
+    "published": "2024-10-18T16:00:38",
+    "results": false
+  },
+  {
+    "accession": "0001104659-24-111458",
+    "published": "2024-10-25T16:00:29",
+    "results": false
+  },
+  {
+    "accession": "0001104659-24-111535",
+    "published": "2024-10-25T17:15:48",
+    "results": false
+  },
+  {
+    "accession": "0001104659-24-113237",
+    "published": "2024-11-01T06:53:30",
+    "results": false
+  },
+  {
+    "accession": "0001104659-24-113472",
+    "published": "2024-11-01T16:01:17",
+    "results": false
+  },
+  {
+    "accession": "0001104659-24-114774",
+    "published": "2024-11-06T16:01:08",
+    "results": false
+  },
+  {
+    "accession": "0001104659-24-115841",
+    "published": "2024-11-08T16:01:12",
+    "results": false
+  },
+  {
+    "accession": "0001104659-24-119688",
+    "published": "2024-11-15T16:01:12",
+    "results": true,
+    "title": "Exhibit 99.1 Alibaba Group Announces September Quarter 2024 Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1577552/000110465924119688/tm2428590d1_ex99-1.htm",
+    "file": "2024-11-15_tm2428590d1_ex99-1.htm"
+  },
+  {
+    "accession": "0001104659-24-119689",
+    "published": "2024-11-15T16:01:21",
+    "results": false
+  },
+  {
+    "accession": "0001104659-24-119899",
+    "published": "2024-11-18T06:19:55",
+    "results": false
+  },
+  {
+    "accession": "0001104659-24-119900",
+    "published": "2024-11-18T06:21:12",
+    "results": false
+  },
+  {
+    "accession": "0001104659-24-120794",
+    "published": "2024-11-20T06:07:10",
+    "results": false
+  },
+  {
+    "accession": "0001104659-24-121012",
+    "published": "2024-11-20T16:01:16",
+    "results": false
+  },
+  {
+    "accession": "0001104659-24-121272",
+    "published": "2024-11-21T06:16:56",
+    "results": false
+  },
+  {
+    "accession": "0001104659-24-122083",
+    "published": "2024-11-22T16:01:58",
+    "results": false
+  },
+  {
+    "accession": "0001104659-24-123849",
+    "published": "2024-11-29T06:02:34",
+    "results": false
+  },
+  {
+    "accession": "0001104659-24-124073",
+    "published": "2024-11-29T16:01:20",
+    "results": false
+  },
+  {
+    "accession": "0001104659-24-124075",
+    "published": "2024-11-29T16:03:44",
+    "results": false
+  },
+  {
+    "accession": "0001104659-24-125894",
+    "published": "2024-12-05T16:03:34",
+    "results": false
+  },
+  {
+    "accession": "0001104659-24-126288",
+    "published": "2024-12-06T16:00:49",
+    "results": false
+  },
+  {
+    "accession": "0001104659-24-128410",
+    "published": "2024-12-13T16:01:07",
+    "results": false
+  },
+  {
+    "accession": "0001104659-24-129119",
+    "published": "2024-12-17T06:02:23",
+    "results": false
+  },
+  {
+    "accession": "0001104659-24-130798",
+    "published": "2024-12-20T16:02:45",
+    "results": false
+  },
+  {
+    "accession": "0001104659-24-132128",
+    "published": "2024-12-27T16:03:29",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-000039",
+    "published": "2025-01-02T06:02:27",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-000055",
+    "published": "2025-01-02T06:03:35",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-000776",
+    "published": "2025-01-03T16:03:19",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-001655",
+    "published": "2025-01-07T16:00:14",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-002518",
+    "published": "2025-01-10T16:00:22",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-004455",
+    "published": "2025-01-17T16:01:34",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-005972",
+    "published": "2025-01-24T16:00:17",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-008086",
+    "published": "2025-01-31T16:00:11",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-009639",
+    "published": "2025-02-05T16:01:15",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-009861",
+    "published": "2025-02-06T06:14:55",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-010520",
+    "published": "2025-02-07T16:01:14",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-015648",
+    "published": "2025-02-20T16:01:15",
+    "results": true,
+    "title": "Exhibit 99.1 Alibaba Group Announces December Quarter 2024 Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1577552/000110465925015648/tm257183d1_ex99-1.htm",
+    "file": "2025-02-20_tm257183d1_ex99-1.htm"
+  },
+  {
+    "accession": "0001104659-25-016348",
+    "published": "2025-02-24T06:51:22",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-016921",
+    "published": "2025-02-25T16:01:25",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-019112",
+    "published": "2025-02-28T16:01:26",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-020870",
+    "published": "2025-03-05T16:02:00",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-021724",
+    "published": "2025-03-07T16:03:13",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-023933",
+    "published": "2025-03-14T16:00:48",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-026637",
+    "published": "2025-03-21T16:03:42",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-029349",
+    "published": "2025-03-28T16:01:16",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-030874",
+    "published": "2025-04-02T06:30:13",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-032179",
+    "published": "2025-04-04T16:01:20",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-032612",
+    "published": "2025-04-07T16:02:12",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-034206",
+    "published": "2025-04-11T16:07:44",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-036336",
+    "published": "2025-04-18T16:00:38",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-039398",
+    "published": "2025-04-25T16:00:53",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-041669",
+    "published": "2025-04-30T06:05:52",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-044099",
+    "published": "2025-05-02T16:03:15",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-046384",
+    "published": "2025-05-09T06:01:52",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-046706",
+    "published": "2025-05-09T16:01:28",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-049400",
+    "published": "2025-05-15T16:04:38",
+    "results": true,
+    "title": "ANNOUNCEMENT OF THE MARCH QUARTER 2025 RESULTS AND FISCAL YEAR 2025 ANNUAL RESULTS",
+    "url": "https://www.sec.gov/Archives/edgar/data/1577552/000110465925049400/tm2515233d1_ex99-1.htm",
+    "file": "2025-05-15_tm2515233d1_ex99-1.htm"
+  },
+  {
+    "accession": "0001104659-25-049429",
+    "published": "2025-05-15T16:08:09",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-049994",
+    "published": "2025-05-16T16:01:34",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-052444",
+    "published": "2025-05-23T16:16:08",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-052631",
+    "published": "2025-05-27T06:08:08",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-053851",
+    "published": "2025-05-29T06:47:56",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-054850",
+    "published": "2025-05-30T16:01:26",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-056819",
+    "published": "2025-06-05T16:01:25",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-057299",
+    "published": "2025-06-06T16:01:45",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-058717",
+    "published": "2025-06-12T06:41:25",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-059333",
+    "published": "2025-06-13T16:00:47",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-059841",
+    "published": "2025-06-16T16:02:21",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-061144",
+    "published": "2025-06-20T16:01:29",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-062815",
+    "published": "2025-06-26T08:16:23",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-063602",
+    "published": "2025-06-27T16:01:01",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-065017",
+    "published": "2025-07-02T07:18:13",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-065561",
+    "published": "2025-07-03T07:07:23",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-065774",
+    "published": "2025-07-03T16:03:11",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-066083",
+    "published": "2025-07-07T16:07:20",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-066086",
+    "published": "2025-07-07T16:09:02",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-066586",
+    "published": "2025-07-09T07:38:32",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-067393",
+    "published": "2025-07-11T16:01:20",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-069014",
+    "published": "2025-07-18T16:02:15",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-069480",
+    "published": "2025-07-22T07:08:11",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-070817",
+    "published": "2025-07-25T16:01:09",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-073102",
+    "published": "2025-08-01T16:01:15",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-074564",
+    "published": "2025-08-06T10:10:10",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-074701",
+    "published": "2025-08-06T16:02:28",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-075693",
+    "published": "2025-08-08T16:08:31",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-079229",
+    "published": "2025-08-15T16:05:34",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-079385",
+    "published": "2025-08-18T06:02:18",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-081052",
+    "published": "2025-08-21T06:06:45",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-081868",
+    "published": "2025-08-22T16:03:25",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-085638",
+    "published": "2025-08-29T16:03:00",
+    "results": true,
+    "title": "Exhibit 99.1 Alibaba Group Announces June Quarter 2025 Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1577552/000110465925085638/tm2524743d1_ex99-1.htm",
+    "file": "2025-08-29_tm2524743d1_ex99-1.htm"
+  },
+  {
+    "accession": "0001104659-25-085652",
+    "published": "2025-08-29T16:06:27",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-087455",
+    "published": "2025-09-04T16:00:21",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-087458",
+    "published": "2025-09-04T16:02:02",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-087790",
+    "published": "2025-09-05T16:03:15",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-089282",
+    "published": "2025-09-11T08:56:28",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-090549",
+    "published": "2025-09-17T06:03:38",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-093332",
+    "published": "2025-09-25T16:02:21",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-095828",
+    "published": "2025-10-02T06:12:06",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-097908",
+    "published": "2025-10-08T16:01:41",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-098045",
+    "published": "2025-10-09T06:02:54",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-104922",
+    "published": "2025-10-31T16:03:14",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-107713",
+    "published": "2025-11-06T16:01:40",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-109516",
+    "published": "2025-11-12T06:03:32",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-115949",
+    "published": "2025-11-25T16:02:03",
+    "results": true,
+    "title": "ANNOUNCEMENT OF THE SEPTEMBER QUARTER 2025 RESULTS AND INTERIM RESULTS FOR THE SIX MONTHS ENDED SEPTEMBER 30, 2025",
+    "url": "https://www.sec.gov/Archives/edgar/data/1577552/000110465925115949/tm2532163d1_ex99-1.htm",
+    "file": "2025-11-25_tm2532163d1_ex99-1.htm"
+  },
+  {
+    "accession": "0001104659-25-117318",
+    "published": "2025-12-01T16:11:27",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-118253",
+    "published": "2025-12-04T06:16:30",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-118451",
+    "published": "2025-12-04T16:02:00",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-124386",
+    "published": "2025-12-29T06:05:17",
+    "results": false
+  },
+  {
+    "accession": "0001104659-26-001743",
+    "published": "2026-01-07T16:01:07",
+    "results": false
+  },
+  {
+    "accession": "0001104659-26-010299",
+    "published": "2026-02-04T16:01:17",
+    "results": false
+  },
+  {
+    "accession": "0001104659-26-022827",
+    "published": "2026-03-03T16:03:15",
+    "results": false
+  },
+  {
+    "accession": "0001104659-26-024354",
+    "published": "2026-03-06T06:15:10",
+    "results": false
+  },
+  {
+    "accession": "0001104659-26-032060",
+    "published": "2026-03-19T16:05:04",
+    "results": true,
+    "title": "Exhibit 99.1 Alibaba Group Announces December Quarter 2025 Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1577552/000110465926032060/tm269353d1_ex99-1.htm",
+    "file": "2026-03-19_tm269353d1_ex99-1.htm"
+  },
+  {
+    "accession": "0001104659-26-032947",
+    "published": "2026-03-23T06:27:23",
+    "results": false
+  },
+  {
+    "accession": "0001104659-26-040881",
+    "published": "2026-04-08T16:00:53",
+    "results": false
+  },
+  {
+    "accession": "0001104659-26-048546",
+    "published": "2026-04-24T16:02:53",
+    "results": false
+  },
+  {
+    "accession": "0001104659-26-049424",
+    "published": "2026-04-27T16:03:25",
+    "results": false
+  },
+  {
+    "accession": "0001104659-26-050679",
+    "published": "2026-04-29T06:05:12",
+    "results": false
+  },
+  {
+    "accession": "0001104659-26-056231",
+    "published": "2026-05-06T16:01:51",
+    "results": false
+  },
+  {
+    "accession": "0001104659-26-060224",
+    "published": "2026-05-13T16:04:05",
+    "results": true,
+    "title": "ANNOUNCEMENT OF THE MARCH QUARTER 2026 RESULTS AND FISCAL YEAR 2026 ANNUAL RESULTS",
+    "url": "https://www.sec.gov/Archives/edgar/data/1577552/000110465926060224/tm2614494d1_ex99-1.htm",
+    "file": "2026-05-13_tm2614494d1_ex99-1.htm"
+  },
+  {
+    "accession": "0001104659-26-060229",
+    "published": "2026-05-13T16:05:15",
+    "results": false
+  },
+  {
+    "accession": "0001104659-26-065716",
+    "published": "2026-05-22T16:11:39",
+    "results": false
+  },
+  {
+    "accession": "0001104659-26-067190",
+    "published": "2026-05-28T06:23:42",
+    "results": false
+  },
+  {
+    "accession": "0001104659-26-068512",
+    "published": "2026-06-01T06:27:39",
+    "results": false
+  },
+  {
+    "accession": "0001104659-26-070103",
+    "published": "2026-06-03T16:07:51",
+    "results": false
+  },
+  {
+    "accession": "0001104659-26-071542",
+    "published": "2026-06-09T06:03:23",
+    "results": false
+  },
+  {
+    "accession": "0001193125-26-274928",
+    "published": "2026-06-18T06:42:06",
+    "results": false
+  },
+  {
+    "accession": "0001104659-26-075717",
+    "published": "2026-06-18T16:03:06",
+    "results": false
+  },
+  {
+    "accession": "0001104659-26-078252",
+    "published": "2026-06-26T16:06:22",
+    "results": false
+  },
+  {
+    "accession": "0001104659-26-080528",
+    "published": "2026-07-06T06:07:22",
+    "results": false
+  },
+  {
+    "accession": "0001104659-26-081265",
+    "published": "2026-07-07T16:01:01",
+    "results": false
+  },
+  {
+    "accession": "0001104659-26-082647",
+    "published": "2026-07-10T16:01:31",
+    "results": false
+  },
+  {
+    "accession": "0001104659-26-085556",
+    "published": "2026-07-22T06:09:42",
+    "results": false
+  },
+  {
+    "accession": "0001193125-26-336936",
+    "published": "2026-08-06T08:53:35",
+    "results": false
+  },
+  {
+    "accession": "0001104659-26-091990",
+    "published": "2026-08-06T16:06:18",
+    "results": false
+  },
+  {
+    "accession": "0001104659-26-092284",
+    "published": "2026-08-07T06:03:29",
+    "results": false
+  },
+  {
+    "accession": "0001104659-26-096226",
+    "published": "2026-08-14T06:02:25",
+    "results": false
+  },
+  {
+    "accession": "0001104659-26-099220",
+    "published": "2026-08-20T16:05:09",
+    "results": true,
+    "title": "Exhibit 99.1 Alibaba Group Announces June Quarter 2026 Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1577552/000110465926099220/tm2623667d1_ex99-1.htm",
+    "file": "2026-08-20_tm2623667d1_ex99-1.htm"
+  },
+  {
+    "accession": "0001193125-26-361715",
+    "published": "2026-08-24T06:05:32",
+    "results": false
+  },
+  {
+    "accession": "0001104659-26-099873",
+    "published": "2026-08-24T06:24:15",
+    "results": false
+  },
+  {
+    "accession": "0001104659-26-101020",
+    "published": "2026-08-26T06:18:09",
+    "results": false
+  },
+  {
+    "accession": "0001193125-26-365894",
+    "published": "2026-08-26T07:25:53",
+    "results": false
+  },
+  {
+    "accession": "0001104659-26-105208",
+    "published": "2026-09-04T06:35:44",
+    "results": false
+  },
+  {
+    "accession": "0001104659-26-109625",
+    "published": "2026-09-22T16:01:30",
+    "results": false
+  },
+  {
+    "accession": "0001104659-26-111915",
+    "published": "2026-09-29T16:01:16",
+    "results": false
+  },
+  {
+    "accession": "0001104659-26-114191",
+    "published": "2026-10-07T06:52:08",
+    "results": false
+  },
+  {
+    "accession": "0001104659-26-122960",
+    "published": "2026-11-05T06:06:02",
+    "results": false
+  },
+  {
+    "accession": "0001104659-26-123545",
+    "published": "2026-11-06T06:01:17",
+    "results": false
+  },
+  {
+    "accession": "0001104659-26-124859",
+    "published": "2026-11-10T08:58:20",
+    "results": false
+  },
+  {
+    "accession": "0001104659-26-130115",
+    "published": "2026-11-19T16:00:35",
+    "results": true,
+    "title": "ANNOUNCEMENT OF THE SEPTEMBER QUARTER 2026 RESULTS AND INTERIM RESULTS FOR THE SIX MONTHS ENDED SEPTEMBER 30, 2026",
+    "url": "https://www.sec.gov/Archives/edgar/data/1577552/000110465926130115/tm2630263d1_ex99-1.htm",
+    "file": "2026-11-19_tm2630263d1_ex99-1.htm"
+  },
+  {
+    "accession": "0001104659-26-130757",
+    "published": "2026-11-23T06:01:37",
+    "results": false
+  }
+]

@@ -25,13 +25,24 @@ def test_tests_run_on_pull_requests_and_can_be_called_by_the_publish_workflow():
 def test_nothing_is_published_after_a_code_change_unless_the_tests_pass():
     pages = load("pages.yml")
     tests, build = pages["jobs"]["tests"], pages["jobs"]["build"]
-    assert tests["uses"] == "./.github/workflows/ci.yml" and tests["if"] == "github.event_name != 'schedule'"  # scheduled runs reuse code that passed
+    assert tests["uses"] == "./.github/workflows/ci.yml"
+    assert tests["if"] == (  # scheduled runs and data-only manual runs on main reuse code that passed
+        "github.event_name != 'schedule' && !(github.event_name == 'workflow_dispatch' && inputs.data_only && github.ref == 'refs/heads/main')"
+    )
     assert build["needs"] == "tests"
     condition = build["if"]
     assert "needs.tests.result == 'success'" in condition and "needs.tests.result == 'skipped'" in condition  # not "always run"
     deploy = pages["jobs"]["deploy"]
     assert deploy["needs"] == "build"
     assert deploy["if"] == "${{ !cancelled() && needs.build.result == 'success' }}"  # published only after a good build
+
+
+def test_a_manual_run_tests_the_code_unless_data_only_is_ticked():
+    pages = load("pages.yml")
+    data_only = triggers(pages)["workflow_dispatch"]["inputs"]["data_only"]
+    assert data_only["type"] == "boolean" and data_only["default"] is False  # a plain "Run workflow" still runs the tests
+    condition = pages["jobs"]["tests"]["if"]
+    assert "inputs.data_only" in condition and "github.ref == 'refs/heads/main'" in condition  # never skipped on another branch
 
 
 def upstream(jobs, name):

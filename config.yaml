@@ -73,6 +73,13 @@ stocks:
     filing_format: us_press_release   # USD, US GAAP, basic EPS; 2-for-1 splits in 2014, 2021, 2024 and 2026 (the releases restate prior years; see the README)
     metrics: [pe, pe_non_gaap, ps, pb]   # PE on basic EPS; Amphenol discloses no basic Non-GAAP EPS, so its PE Non-GAAP uses the disclosed Adjusted Diluted EPS
     eps_basis: { pe_non_gaap: diluted }   # shown as "Diluted PE Non-GAAP (TTM)"; read from the reconciliation table (Q3 2016 on) or the first paragraph of the release
+  - symbol: DT
+    name: Dynatrace
+    market: US
+    cik: 1773383   # Dynatrace, Inc. (Dynatrace Holdings LLC until the August 2019 IPO); fiscal year ends March 31, results every calendar quarter
+    sec_form: 8-K
+    filing_format: us_press_release   # USD, US GAAP, basic EPS
+    metrics: [pe, pe_non_gaap, ps, pb]   # the GAAP to Non-GAAP reconciliation in every release states a basic Non-GAAP EPS, so both PEs are basic
   - symbol: ASML
     name: ASML Holding (NY registry shares)
     market: US   # the NASDAQ line; one NY registry share = one ordinary share, so price and EPS need no ADS ratio

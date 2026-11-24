@@ -13,7 +13,7 @@ equity attributable to owners (millions), shares disclosed in the filing (millio
     - Consolidated income statement: revenue, net profit attributable to owners, basic EPS (unit "RMB cents"), each with two numbers:
       this period to date, same period last year to date; amounts are in thousands and converted to millions when read.
     - Balance sheet: same as above. EPS note: weighted average shares.
-  press_release (JD, Alibaba; HTML) is in press_release.py; us_press_release and us_gaap_statements (Meta, Cognizant, ASML) in us_release.py;
+  press_release (JD, Alibaba; HTML) is in press_release.py; us_press_release and us_gaap_statements (Meta, Cognizant, Dynatrace, Sea, ASML) in us_release.py;
   ifrs_statements (XP, HTML) in ifrs.py; kifrs_statements (Samsung, PDF) in kifrs.py;
   cn_report (Hikvision, Glodon, PDF) in cn_report.py. These parse functions return the common Parsed (see parsed.py).
 
@@ -100,7 +100,7 @@ SERIES_LABELS = {
     "equity": "Equity attributable to owners",
     "wa_shares": "Weighted average shares",
 }
-PARSER_VERSIONS = {"highlights": 5, "statements": 3, "press_release": 4, "us_press_release": 4, "us_gaap_statements": 3, "ifrs_statements": 1, "kifrs_statements": 4, "cn_report": 8}  # add 1 when the parsing rules change; saved parse results are then re-parsed automatically
+PARSER_VERSIONS = {"highlights": 5, "statements": 3, "press_release": 4, "us_press_release": 5, "us_gaap_statements": 4, "ifrs_statements": 1, "kifrs_statements": 4, "cn_report": 8}  # add 1 when the parsing rules change; saved parse results are then re-parsed automatically
 SUPPLEMENT_FORMAT = "adjusted_eps_release"  # the layout of a supplementary document (XP's press release, see release_eps.py); its parse results carry their own version
 SUPPLEMENT_PARSER_VERSION = 1  # add 1 when the rules of release_eps.py change
 SUPPLEMENT_TABLE = "supplement"  # the "table" of a supplementary document's parse result in the stored announcements

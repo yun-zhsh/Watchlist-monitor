@@ -53,7 +53,8 @@ class DataLoader:
             filings = self.cninfo.results_announcements(stock.symbol, since)
         else:
             filings = self.hkex.results_announcements(stock.symbol, since)
-        earnings = self.earnings.load(stock.symbol, filings, prices.splits, prices.close.index, stock.filing_format, market)
+        non_gaap = stock.eps_basis.get("pe_non_gaap", "basic") if "pe_non_gaap" in stock.metrics else None  # which Non-GAAP EPS the parser reads, if any
+        earnings = self.earnings.load(stock.symbol, filings, prices.splits, prices.close.index, stock.filing_format, market, non_gaap)
 
         if earnings.currency == prices.currency:
             fx = pd.Series(1.0, index=prices.close.index)

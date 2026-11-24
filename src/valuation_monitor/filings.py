@@ -100,7 +100,7 @@ SERIES_LABELS = {
     "equity": "Equity attributable to owners",
     "wa_shares": "Weighted average shares",
 }
-PARSER_VERSIONS = {"highlights": 5, "statements": 3, "press_release": 4, "us_press_release": 2, "us_gaap_statements": 2, "ifrs_statements": 1, "kifrs_statements": 4, "cn_report": 8}  # add 1 when the parsing rules change; saved parse results are then re-parsed automatically
+PARSER_VERSIONS = {"highlights": 5, "statements": 3, "press_release": 4, "us_press_release": 3, "us_gaap_statements": 3, "ifrs_statements": 1, "kifrs_statements": 4, "cn_report": 8}  # add 1 when the parsing rules change; saved parse results are then re-parsed automatically
 SUPPLEMENT_FORMAT = "adjusted_eps_release"  # the layout of a supplementary document (XP's press release, see release_eps.py); its parse results carry their own version
 SUPPLEMENT_PARSER_VERSION = 1  # add 1 when the rules of release_eps.py change
 SUPPLEMENT_TABLE = "supplement"  # the "table" of a supplementary document's parse result in the stored announcements
@@ -338,8 +338,10 @@ FORMATS = {"highlights": parse_highlights, "statements": parse_statements}  # HK
 FILING_FORMATS = {*FORMATS, "press_release", "us_press_release", "us_gaap_statements", "ifrs_statements", "kifrs_statements", "cn_report"}  # plus US HTML press releases (6-K of JD; 8-K of US companies), IFRS statements (6-K of XP), Samsung English financial statements and A-share reports
 
 
-def parse_announcement(filing: Filing, fmt: str = "highlights", market: Market = HK) -> Announcement:
-    """Parse one earnings filing; values stay as in the filing (amounts converted to millions, EPS to yuan; not adjusted for splits)."""
+def parse_announcement(filing: Filing, fmt: str = "highlights", market: Market = HK, non_gaap: str | None = None) -> Announcement:
+    """Parse one earnings filing; values stay as in the filing (amounts converted to millions, EPS to yuan; not adjusted for splits).
+
+    non_gaap is the EPS basis of the stock's Non-GAAP PE, None without one; only the us_press_release layout uses it (see parse_us_release)."""
     if filing.supplement:  # a supplementary document whatever the layout of the main filings: only its Non-GAAP EPS is read
         parsed = parse_adjusted_eps_release(filing.content)
         return Announcement(parsed.period, filing.published, filing.url, parsed.currency, True, parsed.values, market.key, note=filing.note, supplement=True)
@@ -352,7 +354,9 @@ def parse_announcement(filing: Filing, fmt: str = "highlights", market: Market =
     if fmt in ("press_release", "us_press_release", "us_gaap_statements", "ifrs_statements", "kifrs_statements"):  # the parse result carries its own reporting period and whether it is a single quarter
         if fmt == "press_release":
             parsed = parse_press_release(filing.content)
-        elif fmt in ("us_press_release", "us_gaap_statements"):
+        elif fmt == "us_press_release":
+            parsed = parse_us_release(filing.content, non_gaap)
+        elif fmt == "us_gaap_statements":
             parsed = parse_us_release(filing.content)
         elif fmt == "ifrs_statements":
             parsed = parse_ifrs_statements(filing.content)

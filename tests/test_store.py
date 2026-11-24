@@ -146,7 +146,7 @@ def test_us_stock_uses_yahoo_only_and_is_not_split_adjusted_again(tmp_path):
 def test_earnings_store_parses_each_filing_once(tmp_path, monkeypatch):
     calls = []
 
-    def fake_parse(filing, fmt, market):
+    def fake_parse(filing, fmt, market, non_gaap=None):
         calls.append(filing.url)
         return Announcement(
             period=pd.Period("2026Q2", freq="Q"),

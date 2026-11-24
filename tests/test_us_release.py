@@ -1,4 +1,4 @@
-"""Condensed US GAAP statements in HTML: the press releases of Meta Platforms and Cognizant (8-K exhibit 99.1), of Sea Limited (6-K exhibit 99.1)
+"""Condensed US GAAP statements in HTML: the press releases of Meta Platforms, Cognizant and Amphenol (8-K exhibit 99.1), of Sea Limited (6-K exhibit 99.1)
 and ASML's summary statements (6-K, in euros)."""
 
 import json
@@ -338,3 +338,220 @@ def test_sea_known_values():
     assert q.values["revenue"] == pytest.approx([23467.552, 16086.601]) and q.values["equity"] == pytest.approx([13303.994, 12526.503])
     q = by_period[pd.Period("2018Q4")]
     assert q.values["equity"][0] == pytest.approx(-243.139)  # negative equity at the end of 2018: PB is blank
+
+
+# ---- Amphenol: 8-K press releases with an "attributable to Amphenol Corporation" layout ---------------------------------------------------
+
+AMPHENOL_UNIT = "(dollars and shares in millions, except per share data)"
+AMPHENOL_INCOME = table(
+    ["Three Months Ended", "Nine Months Ended"],
+    ["September 30,", "September 30,"],
+    ["2026", "2025", "2026", "2025"],
+    ["Net sales", "10,229.7", "6,194.4", "26,607.9", "16,655.7"],
+    ["Net income", "2,054.7", "1,255.1", "4,782.2", "3,100.1"],
+    ["Less: Net income attributable to noncontrolling interests", "(20.4)", "(9.4)", "(45.7)", "(25.3)"],
+    ["Net income attributable to Amphenol Corporation", "2,034.3", "1,245.7", "4,736.5", "3,074.8"],
+    ["Net income attributable to Amphenol Corporation per common share \u2014 Basic", "0.82", "0.51", "1.92", "1.26"],
+    ["Weighted average common shares outstanding \u2014 Basic", "2,467.2", "2,443.7", "2,462.0", "2,431.3"],
+    ["Net income attributable to Amphenol Corporation per common share \u2014 Diluted (3)", "0.79", "0.49", "1.84", "1.21"],
+    ["Weighted average common shares outstanding \u2014 Diluted", "2,582.9", "2,565.5", "2,580.2", "2,547.6"],
+)
+AMPHENOL_BALANCE = table(
+    ["September 30,", "December 31,"],
+    ["2026", "2025"],
+    ["Total Liabilities", "29,750.3", "22,727.2"],
+    ["Equity:"],
+    ["Total stockholders' equity attributable to Amphenol Corporation", "17,123.6", "13,413.1"],
+    ["Noncontrolling interests", "138.9", "87.3"],
+    ["Total Equity", "17,262.5", "13,500.4"],
+)
+
+
+def test_amphenol_layout_takes_the_rows_attributable_to_amphenol():
+    p = parse_us_release(release(AMPHENOL_INCOME, AMPHENOL_BALANCE, AMPHENOL_UNIT))
+    assert p.period == pd.Period("2026Q3") and p.currency == "USD" and p.quarterly
+    assert p.values == {"revenue": [10229.7, 6194.4], "profit": [2034.3, 1245.7], "eps": [0.82, 0.51], "wa_shares": [2467.2, 2443.7], "equity": [17123.6, 13413.1]}
+
+
+AMPHENOL_RECONCILIATION = table(  # the reconciliation table (Q3 2016 on): columns found by their header labels
+    ["Three Months Ended September 30,"],
+    ["2026", "2025"],
+    ["Net Income", "Net Income"],
+    ["attributable to", "Effective", "attributable to", "Effective"],
+    ["Operating", "Operating", "Amphenol", "Tax", "Diluted", "Operating", "Operating", "Amphenol", "Tax", "Diluted"],
+    ["Income (iv)", "Margin (i)", "Corporation", "Rate (i)", "EPS", "Income", "Margin (i)", "Corporation", "Rate (i)", "EPS"],
+    ["Reported (GAAP)", "3,020.8", "29.5", "2,034.3", "27.4", "0.79", "1,702.3", "27.5", "1,245.7", "23.5", "0.49"],
+    ["Acquisition-related expenses", "15.5", "0.2", "14.2", "(0.1)", "0.01", "\u2014", "\u2014", "\u2014", "\u2014", "\u2014"],
+    ["Adjusted (non-GAAP) (v) (vi)", "3,036.3", "29.7", "2,056.3", "27.0", "0.80", "1,702.3", "27.5", "1,188.6", "27.0", "0.46"],
+)
+AMPHENOL_NINE_MONTHS = AMPHENOL_RECONCILIATION.replace("Three Months", "Nine Months").replace("0.80", "2.01").replace("0.46", "1.18")
+
+
+def amphenol_release(*tables, lead=""):
+    return f"<html><body><p>{lead}</p><p>{AMPHENOL_UNIT}</p>{AMPHENOL_INCOME}<p>{AMPHENOL_UNIT}</p>{AMPHENOL_BALANCE}{''.join(tables)}</body></html>".encode()
+
+
+def test_amphenol_adjusted_diluted_eps_is_read_only_for_a_diluted_non_gaap_pe():
+    html = amphenol_release(AMPHENOL_RECONCILIATION, AMPHENOL_NINE_MONTHS)
+    assert "non_ifrs_eps" not in parse_us_release(html).values  # Meta, Cognizant, Sea, ASML: no Non-GAAP figure
+    assert "non_ifrs_eps" not in parse_us_release(html, "basic").values
+    assert parse_us_release(html, "diluted").values["non_ifrs_eps"] == [0.80, 0.46]  # the three months, not the nine
+
+
+def test_amphenol_older_reconciliation_with_four_columns_and_full_dates():
+    older = table(
+        ["Three months ended"],
+        ["September 30, 2026", "September 30, 2025"],
+        ["Net Income", "Net Income"],
+        ["Operating", "Operating", "attributable", "Diluted", "Operating", "Operating", "attributable", "Diluted"],
+        ["Income", "Margin", "to Amphenol", "EPS", "Income", "Margin", "to Amphenol", "EPS"],
+        ["Reported (GAAP)", "326.3", "19.9", "224.3", "0.71", "294.8", "20.2", "204.5", "0.65"],
+        ["Adjusted (non-GAAP) (1)", "332.6", "20.3", "230.1", "0.73", "294.8", "20.2", "204.5", "0.65"],
+    )
+    assert parse_us_release(amphenol_release(older), "diluted").values["non_ifrs_eps"] == [0.73, 0.65]
+
+
+def test_amphenol_quarter_blocks_take_this_quarter():
+    """The fourth-quarter 2017 release: one table with a block per quarter of the year."""
+    blocks = table(
+        ["2026", "2025"],
+        ["Net Income (loss)", "Net Income (loss)"],
+        ["attributable to", "Effective", "attributable to", "Effective"],
+        ["Operating", "Operating", "Amphenol", "Tax", "Diluted", "Operating", "Operating", "Amphenol", "Tax", "Diluted"],
+        ["Income", "Margin", "Corporation", "Rate", "EPS", "Income", "Margin", "Corporation", "Rate", "EPS"],
+        ["Three Months Ended December 31:"],
+        ["Adjusted (non-GAAP) (1) (2)", "399.4", "20.5", "274.3", "26.7", "0.86", "339.1", "20.5", "235.4", "26.5", "0.75"],
+        ["Three Months Ended September 30:"],
+        ["Adjusted (non-GAAP) (2)", "377.9", "20.5", "260.9", "26.5", "0.83", "332.6", "20.3", "230.1", "26.5", "0.73"],
+    )
+    assert parse_us_release(amphenol_release(blocks), "diluted").values["non_ifrs_eps"] == [0.83, 0.73]  # the release is for September 2026
+
+
+@pytest.mark.parametrize(
+    "lead, expected",
+    [
+        ("Amphenol Corporation (NYSE: APH) reported today third quarter 2026 diluted earnings per share excluding one-time items of $0.63 compared to $0.53 for the comparable 2025 period. On an as reported basis, ...", [0.63]),
+        ("Amphenol Corporation (NYSE: APH) reported today third quarter 2026 diluted earnings per share of $0.59 (excluding one-time items) compared to third quarter 2025 results of $0.57. On an as reported basis, ...", [0.59]),
+        # no one-time items in the quarter: its diluted EPS is the adjusted one
+        ("Amphenol Corporation (NYSE: APH) reported today third quarter 2026 diluted earnings per share of $0.57 compared to $0.50 (excluding one-time items) for the comparable 2025 period. Such per share amount for the 2025 period included a charge.", [0.57]),
+        ("Amphenol Corporation (NYSE: APH) reported today record diluted earnings per share (EPS) for the third quarter 2026 of $0.75 compared to $0.63 for the comparable 2025 period.", [0.75]),
+        # a charge in the quarter without the adjusted figure: not found, nothing is guessed
+        ("Amphenol Corporation (NYSE: APH) reported today third quarter 2026 diluted earnings per share of $0.56. Such per share amount for the 2026 quarter includes a charge of $6 million.", None),
+        ("Amphenol Corporation (NYSE: APH) reported today second quarter 2026 diluted earnings per share of $0.56.", None),  # another quarter
+    ],
+)
+def test_amphenol_adjusted_diluted_eps_from_the_first_paragraph(lead, expected):
+    """The releases until Q2 2016 (and Q4 2016, which has a twelve-months table only) state it in the text."""
+    values = parse_us_release(amphenol_release(lead=lead + " Sales for the third quarter of 2026 were $10.2 billion."), "diluted").values
+    assert values.get("non_ifrs_eps") == expected
+
+
+def test_amphenol_discontinued_operations_take_the_totals():
+    """2021-2022: continuing and discontinued operations, the basic EPS rows under a heading."""
+    income = table(
+        ["Three Months Ended", "Six Months Ended"],
+        ["June 30,", "June 30,"],
+        ["2021", "2020", "2021", "2020"],
+        ["Net sales", "2,653.9", "1,987.5", "5,031.0", "3,849.5"],
+        ["Net income from continuing operations", "369.0", "260.5", "700.7", "503.7"],
+        ["Less: Net income from continuing operations attributable to noncontrolling interests", "(1.8)", "(2.8)", "(4.0)", "(3.9)"],
+        ["Net income from continuing operations attributable to Amphenol Corporation", "367.2", "257.7", "696.7", "499.8"],
+        ["Net income from discontinued operations attributable to Amphenol Corporation", "2.6", "\u2014", "2.6", "\u2014"],
+        ["Net income attributable to Amphenol Corporation", "369.8", "257.7", "699.3", "499.8"],
+        ["Net income per common share attributable to Amphenol Corporation \u2014 Basic:"],
+        ["Net income from continuing operations attributable to Amphenol Corporation - Basic", "0.61", "0.43", "1.17", "0.84"],
+        ["Net income attributable to Amphenol Corporation - Basic", "0.62", "0.43", "1.17", "0.84"],
+        ["Weighted average common shares outstanding - Basic", "597.4", "593.3", "597.9", "594.1"],
+        ["Net income attributable to Amphenol Corporation - Diluted (2)", "0.59", "0.42", "1.12", "0.82"],
+    )
+    balance = table(["June 30,", "December 31,"], ["2021", "2020"], ["Total shareholders' equity attributable to Amphenol Corporation", "5,715.5", "5,384.9"], ["Total equity", "5,783.9", "5,451.9"])
+    p = parse_us_release(release(income, balance, AMPHENOL_UNIT))
+    assert p.period == pd.Period("2021Q2")
+    assert p.values == {"revenue": [2653.9, 1987.5], "eps": [0.62, 0.43], "wa_shares": [597.4, 593.3], "profit": [369.8, 257.7], "equity": [5715.5, 5384.9]}
+
+
+def test_amphenol_until_2015_dollars_in_millions_and_single_shares_and_a_loss_label():
+    income = table(
+        ["Three Months Ended", "Twelve Months Ended"],
+        ["December 31,", "December 31,"],
+        ["2014", "2013 (1)", "2014", "2013 (1)"],
+        ["Net sales", "1,426.5", "1,245.7", "5,345.5", "4,614.7"],
+        ["Net income (loss)", "194.8", "168.9", "715.2", "638.7"],
+        ["Less: Net income attributable to noncontrolling interests", "(1.3", "(1.0", "(6.1", "(3.0"],
+        ["Net income (loss) attributable to Amphenol Corporation", "193.5", "167.9", "709.1", "635.7"],
+        ["Net income (loss) per common share - Basic", "0.62", "0.53", "2.26", "2.00"],
+        ["Weighted average common shares outstanding - Basic", "310,030,206", "316,566,252", "313,136,791", "318,185,574"],
+    )
+    balance = table(["December 31,"], ["2014", "2013 (1)"], ["Total shareholders' equity attributable to Amphenol Corporation", "2,907.4", "2,859.5"], ["Total equity", "2,937.9", "2,880.1"])
+    p = parse_us_release(release(income, balance, "(dollars in millions, except per share data)"))
+    assert p.period == pd.Period("2014Q4")
+    assert p.values["eps"] == [0.62, 0.53] and p.values["profit"] == [193.5, 167.9] and p.values["equity"] == [2907.4, 2859.5]
+    assert p.values["wa_shares"] == pytest.approx([310.030206, 316.566252])
+
+
+APH = FILINGS / "APH"
+aph_saved = pytest.mark.skipif(not (APH / "index.json").exists(), reason="no saved Amphenol filings (the scheduled update saves them)")
+
+
+@aph_saved
+def test_every_saved_amphenol_release_parses_on_a_consistent_basis():
+    """Every quarter from 2014Q4; net profit / basic EPS matches the disclosed shares; the prior-year column of the release a year later
+    agrees once both are put on the same split basis (2-for-1 splits on 2021-03-05, 2024-06-12 and 2026-09-03; each release restates
+    the prior year for the splits before it)."""
+    parsed = saved("APH")
+    splits = [pd.Timestamp("2021-03-05"), pd.Timestamp("2024-06-12"), pd.Timestamp("2026-09-03")]
+    factor = {p.period: 2.0 ** sum(published > s for s in splits) for published, p in parsed.items()}  # shares of today per share at publication
+    by_period = {p.period: p for p in parsed.values()}
+    periods = sorted(by_period)
+    assert periods[0] == pd.Period("2014Q4") and periods[-1] >= pd.Period("2026Q3")
+    assert periods == list(pd.period_range(periods[0], periods[-1], freq="Q"))
+    for period, p in by_period.items():
+        assert p.currency == "USD" and p.quarterly
+        profit, eps, shares = p.values["profit"][0], p.values["eps"][0], p.values["wa_shares"][0]
+        assert abs(profit / shares - eps) <= 0.005 + 1e-9, period  # basic EPS = net profit / shares, rounded to the cent
+    for period, p in by_period.items():
+        later = by_period.get(period + 4)
+        if later is None:
+            continue
+        for key in ("revenue", "profit"):
+            assert later.values[key][1] == pytest.approx(p.values[key][0], abs=0.1), (period, key)
+        ratio = factor[later.period] / factor[period]
+        assert later.values["eps"][1] == pytest.approx(p.values["eps"][0] / ratio, abs=0.006), period
+        assert later.values["wa_shares"][1] == pytest.approx(p.values["wa_shares"][0] * ratio, rel=0.001), period
+
+
+@aph_saved
+def test_every_saved_amphenol_release_has_its_adjusted_diluted_eps():
+    """From the reconciliation table from Q3 2016 on (this quarter and the same quarter last year), from the first paragraph before
+    (this quarter only, Q4 2016 too). The prior-year column agrees with the quarter's own figure on the same split basis (within the cent
+    of rounding: 2025Q3 is 0.93 before the 2026 split and 0.46 after), except the 2017 quarters, redefined after the US tax reform."""
+    parsed = saved_aph("diluted")
+    splits = [pd.Timestamp("2021-03-05"), pd.Timestamp("2024-06-12"), pd.Timestamp("2026-09-03")]
+    factor = {p.period: 2.0 ** sum(published > s for s in splits) for published, p in parsed.items()}
+    by_period = {p.period: p for p in parsed.values()}
+    prose = {pd.Period(q) for q in ("2014Q4", "2015Q1", "2015Q2", "2015Q3", "2015Q4", "2016Q1", "2016Q2", "2016Q4")}
+    assert {period for period, p in by_period.items() if len(p.values["non_ifrs_eps"]) == 1} == prose
+    differing = set()
+    for period, p in by_period.items():
+        later = by_period.get(period + 4)
+        if later is None or len(later.values["non_ifrs_eps"]) < 2:
+            continue
+        if abs(later.values["non_ifrs_eps"][1] - p.values["non_ifrs_eps"][0] / (factor[later.period] / factor[period])) > 0.005 + 1e-9:
+            differing.add(str(period))
+    assert differing == {"2017Q1", "2017Q2", "2017Q3"}
+    assert by_period[pd.Period("2017Q2")].values["non_ifrs_eps"] == [0.81, 0.65] and by_period[pd.Period("2018Q2")].values["non_ifrs_eps"] == [0.90, 0.74]
+    assert [by_period[pd.Period(q)].values["non_ifrs_eps"][0] for q in ("2014Q4", "2015Q1", "2016Q1", "2016Q4")] == [0.63, 0.57, 0.59, 0.75]
+
+
+def saved_aph(non_gaap):
+    index = [e for e in json.loads((APH / "index.json").read_text(encoding="utf-8")) if e["results"]]
+    return {pd.Timestamp(e["published"]): parse_us_release((APH / e["file"]).read_bytes(), non_gaap) for e in index}
+
+
+@aph_saved
+def test_amphenol_known_values():
+    by_period = {p.period: p for p in saved("APH").values()}
+    q = by_period[pd.Period("2026Q3")]
+    assert q.values == {"revenue": [10229.7, 6194.4], "profit": [2034.3, 1245.7], "eps": [0.82, 0.51], "wa_shares": [2467.2, 2443.7], "equity": [17123.6, 13413.1]}
+    assert by_period[pd.Period("2017Q4")].values["eps"][0] == -0.34  # the 2017 US tax reform charge
+    assert by_period[pd.Period("2015Q4")].values["wa_shares"][0] == pytest.approx(308.535, abs=0.001)  # single shares, converted

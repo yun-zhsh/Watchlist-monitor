@@ -15,7 +15,7 @@ def format_text(stock: StockConfig, metric: Metric, v: Valuation) -> str:
     bands = "  ".join(f"P{p}={val:.1f}" for p, val in v.bands.items())
     return "\n".join(
         [
-            f"{stock.name} ({stock.symbol})  {metric.label}",
+            f"{stock.name} ({stock.symbol})  {stock.metric_label(metric)}",
             f"  Date        {v.as_of:%Y-%m-%d}",
             f"  Current     {v.current:.2f}",
             f"  Percentile  {v.percentile:.1f}%  ->  {v.level}",
@@ -34,13 +34,13 @@ def plot(stock: StockConfig, metric: Metric, series: pd.Series, v: Valuation, ou
 
     window = series[series.index >= v.window_start]
     fig, ax = plt.subplots(figsize=(11, 5))
-    ax.plot(window.index, window.to_numpy(), color="#2563eb", linewidth=1.2, label=metric.label)
+    ax.plot(window.index, window.to_numpy(), color="#2563eb", linewidth=1.2, label=stock.metric_label(metric))
     styles = {10: ("#16a34a", ":"), 30: ("#16a34a", "--"), 50: ("#6b7280", "-"), 70: ("#dc2626", "--"), 90: ("#dc2626", ":")}
     for p, val in v.bands.items():
         color, ls = styles.get(p, ("#6b7280", "--"))
         ax.axhline(val, color=color, linestyle=ls, linewidth=0.9, label=f"P{p} = {val:.1f}")
     ax.scatter([v.as_of], [v.current], color="#f59e0b", zorder=5, label=f"Now {v.current:.1f} (P{v.percentile:.0f})")
-    ax.set_title(f"{stock.symbol} {metric.label}  {v.window_start:%Y-%m} ~ {v.as_of:%Y-%m-%d}")
+    ax.set_title(f"{stock.symbol} {stock.metric_label(metric)}  {v.window_start:%Y-%m} ~ {v.as_of:%Y-%m-%d}")
     ax.grid(alpha=0.3)
     ax.legend(loc="upper left", fontsize=8)
     fig.tight_layout()

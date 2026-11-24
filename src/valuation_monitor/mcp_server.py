@@ -204,6 +204,14 @@ class ValuationService:
     def _age(self, day: pd.Timestamp) -> int:
         return ((self._today or date.today()) - day.date()).days
 
+    @staticmethod
+    def _metric_info(stock, m) -> dict:
+        """The metric with the name shown for this stock and, for a PE, the EPS it is based on (basic, or diluted when no basic figure is disclosed)."""
+        info: dict[str, Any] = {"key": m.key, "label": stock.metric_label(m)}
+        if m.eps_based:
+            info["eps_basis"] = stock.basis(m)
+        return info
+
     # ---- tools ----------------------------------------------------------------------------------------------------------------
 
     def list_stocks(self) -> dict:
@@ -214,7 +222,8 @@ class ValuationService:
                 "symbol": stock.symbol,
                 "name": stock.name,
                 "market": stock.market,
-                "metrics": {key: METRICS[key].label for key in stock.metrics},
+                "metrics": {key: stock.metric_label(METRICS[key]) for key in stock.metrics},
+                "eps_basis": {key: stock.basis(METRICS[key]) for key in stock.metrics if METRICS[key].eps_based},
             }
             try:
                 loaded = self._load(stock)
@@ -260,7 +269,7 @@ class ValuationService:
         series = seen["ratio"].dropna()
         if series.empty:
             raise RequestError(
-                f"No {m.label} value for {stock.symbol} on or before {_day(cutoff)}: no earnings were published yet by then, or the company had a loss / negative equity. "
+                f"No {stock.metric_label(m)} value for {stock.symbol} on or before {_day(cutoff)}: no earnings were published yet by then, or the company had a loss / negative equity. "
                 f"The first saved price is {_day(detail.index[0])}."
             )
         valuation = evaluate(series, years, self.config.levels)
@@ -296,7 +305,7 @@ class ValuationService:
         return {
             "symbol": stock.symbol,
             "name": stock.name,
-            "metric": {"key": m.key, "label": m.label},
+            "metric": self._metric_info(stock, m),
             "as_of": _day(cutoff),
             "value_day": _day(value_day),
             "value": _float(valuation.current),
@@ -320,7 +329,7 @@ class ValuationService:
                 "at_percentile": {str(p): _float(v) for p, v in valuation.bands.items()},
             },
             "calculation": {
-                "ratio": f"{m.label} = close / (per-share value x FX rate) = "
+                "ratio": f"{stock.metric_label(m)} = close / (per-share value x FX rate) = "
                 f"{num(float(row['close']))} {data.price_currency} / ({num(per_share)} {earnings.currency} x {num(fx)}) = {num(float(row['ratio']))}",
                 "per_share_value": explain(m.column, rec),
             },
@@ -360,13 +369,13 @@ class ValuationService:
         cutoff = min(asked, detail.index[-1]) if asked is not None else detail.index[-1]
         series = detail.loc[detail.index <= cutoff, "ratio"].dropna()
         if series.empty:
-            raise RequestError(f"No {m.label} values for {stock.symbol} on or before {_day(cutoff)}")
+            raise RequestError(f"No {stock.metric_label(m)} values for {stock.symbol} on or before {_day(cutoff)}")
         window = series[series.index >= series.index[-1] - pd.DateOffset(years=years)]
         step = max(1, -(-len(window) // int(points)))
         thinned = window.iloc[::-1].iloc[::step].iloc[::-1]  # always keeps the last day
         return {
             "symbol": stock.symbol,
-            "metric": {"key": m.key, "label": m.label},
+            "metric": self._metric_info(stock, m),
             "as_of": _day(cutoff),
             "window": {"start": _day(window.index[0]), "end": _day(window.index[-1]), "trading_days": len(window), "every_n_trading_days": step},
             "values": [{"date": _day(d), "value": _float(v)} for d, v in thinned.items()],

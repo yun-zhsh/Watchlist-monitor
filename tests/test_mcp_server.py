@@ -143,7 +143,7 @@ def test_the_ratio_line_adds_up(service):
     result = service.valuation("0700.HK", "pe", 2)
     ratio = result["calculation"]["ratio"]
     close = float(CLOSE.iloc[-1])
-    assert ratio.startswith(f"PE (TTM) = close / (per-share value x FX rate) = {close:,.0f} HKD / (")
+    assert ratio.startswith(f"Basic PE (TTM) = close / (per-share value x FX rate) = {close:,.0f} HKD / (")
     assert ratio.endswith(f"= {result['value']:,.4f}".rstrip("0").rstrip("."))
 
 
@@ -246,9 +246,30 @@ def test_bad_requests_say_what_is_wrong(service, args, message):
 def test_list_stocks_shows_coverage_and_levels(service):
     result = service.list_stocks()
     stock = result["stocks"][0]
-    assert stock["symbol"] == "0700.HK" and stock["metrics"] == {"pe": "PE (TTM)", "pb": "PB"}
+    assert stock["symbol"] == "0700.HK" and stock["metrics"] == {"pe": "Basic PE (TTM)", "pb": "PB"} and stock["eps_basis"] == {"pe": "basic"}
     assert stock["latest_price_date"] == "2025-12-31" and stock["latest_price_age_days"] == 0 and stock["filings_saved"] == 6
     assert [lv["label"] for lv in result["levels"]][0] == "Deeply undervalued"
+
+
+def test_every_result_states_the_eps_basis_of_a_pe(service):
+    for result in (service.valuation("0700.HK", "pe", 2), service.history("0700.HK", "pe", 2)):
+        assert result["metric"] == {"key": "pe", "label": "Basic PE (TTM)", "eps_basis": "basic"}
+    for result in (service.valuation("0700.HK", "pb", 2), service.history("0700.HK", "pb", 2)):
+        assert result["metric"] == {"key": "pb", "label": "PB"}  # not based on EPS: no basis
+
+
+def test_a_diluted_pe_is_named_and_flagged_diluted(tmp_path):
+    """Like Alibaba's Non-GAAP PE: the config says the EPS is diluted (the company discloses no basic figure)."""
+    config = parse_config(
+        {"stocks": [{"symbol": "0700.HK", "name": "Tencent Holdings", "metrics": ["pe", "pb"], "eps_basis": {"pe": "diluted"}}], "lookback_options": [2, 1]}
+    )
+    service = build_service(tmp_path, config)
+    stock = service.list_stocks()["stocks"][0]
+    assert stock["metrics"] == {"pe": "Diluted PE (TTM)", "pb": "PB"} and stock["eps_basis"] == {"pe": "diluted"}
+    result = service.valuation("0700.HK", "pe", 2)
+    assert result["metric"] == {"key": "pe", "label": "Diluted PE (TTM)", "eps_basis": "diluted"}
+    assert result["calculation"]["ratio"].startswith("Diluted PE (TTM) = close / (per-share value x FX rate) = ")
+    assert service.history("0700.HK", "pe", 2)["metric"]["eps_basis"] == "diluted"
 
 
 # ---- the MCP wrapper -----------------------------------------------------------------------------------------------------------------

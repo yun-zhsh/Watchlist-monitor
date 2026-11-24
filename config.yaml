@@ -28,6 +28,9 @@ freshness:
 #   pe_non_gaap  PE Non-GAAP (TTM), based on the Non-GAAP profit disclosed by US-listed companies (excludes share-based compensation etc.); same idea as pe_non_ifrs
 #   ps           PS (TTM), price to sales, based on revenue of the last 4 quarters
 #   pb           PB, price to book, based on equity attributable to owners at the end of the latest period
+# eps_basis: the EPS a PE metric is based on, shown in its name ("Basic PE (TTM)", "Diluted PE Non-GAAP (TTM)"). The rule: basic EPS whenever
+#   the company discloses it, diluted only when it does not. Every PE is basic unless listed here, e.g. eps_basis: { pe_non_gaap: diluted }.
+#   It names what the parser reads (the press_release parser takes the diluted Non-GAAP EPS only when a release has no basic one).
 # filing_format: the layout of the earnings filings, which decides how the data is extracted
 #   highlights        a financial highlights table on the first page, results every quarter (Tencent)
 #   statements        only consolidated statements, usually results every half year (Sunny Optical)
@@ -83,6 +86,13 @@ stocks:
     cik: 1703399   # Sea Limited (Garena until 2017)
     filing_format: us_press_release   # 6-K press release, USD, US GAAP; 1 ADS = 1 Class A ordinary share, so price and EPS need no ADS ratio
     metrics: [pe, ps, pb]   # Sea's Non-GAAP measures changed over the years and today are only adjusted EBITDA, with no Non-GAAP EPS
+  - symbol: BABA
+    name: Alibaba Group (ADR)
+    market: US
+    cik: 1577552   # Alibaba Group Holding Limited; fiscal year ends March 31, results every calendar quarter
+    filing_format: press_release   # the price is in USD per ADS (8 ordinary shares since the 2019 subdivision; 1 before); EPS is in RMB per ADS
+    metrics: [pe, pe_non_gaap, ps, pb]   # PE on basic EPS per ADS; Alibaba discloses no basic Non-GAAP EPS, so its PE Non-GAAP uses the disclosed diluted one
+    eps_basis: { pe_non_gaap: diluted }   # shown as "Diluted PE Non-GAAP (TTM)"; JD's Non-GAAP EPS is basic
   - symbol: JD
     name: JD.com (ADR)
     market: US

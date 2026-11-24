@@ -24,6 +24,9 @@ FILING_SOURCES = {
 }
 
 
+EPS_BASES = ("basic", "diluted")  # the EPS a PE metric is based on: basic whenever the company discloses it, diluted only when it does not
+
+
 @dataclass(frozen=True)
 class StockConfig:
     symbol: str  # Yahoo Finance symbol, e.g. 0700.HK, JD
@@ -34,6 +37,16 @@ class StockConfig:
     cik: int | None = None  # SEC Central Index Key of a US-listed company
     sec_exhibit: str = "release"  # what is parsed: the earnings press release itself, the summary US GAAP financial statements exhibit (ASML) or the IFRS consolidated financial statements (XP)
     sec_form: str = "6-K"  # the SEC form that carries the earnings press release: 6-K (foreign private issuers, e.g. JD, ASML) or 8-K item 2.02 (US companies, e.g. Meta)
+    eps_basis: dict[str, str] = field(default_factory=dict)  # PE metric -> "diluted" where the company discloses no basic EPS (Alibaba: pe_non_gaap); others are basic
+
+    def basis(self, metric) -> str | None:
+        """The EPS basis of a PE metric ("basic" or "diluted"); None for a metric not based on EPS (PS, PB)."""
+        return self.eps_basis.get(metric.key, "basic") if metric.eps_based else None
+
+    def metric_label(self, metric) -> str:
+        """The name shown for a metric of this stock: a PE says whether it is on basic or diluted EPS, e.g. "Basic PE (TTM)", "Diluted PE Non-GAAP (TTM)"."""
+        basis = self.basis(metric)
+        return f"{basis.capitalize()} {metric.label}" if basis else metric.label
 
     @property
     def filing_source(self) -> str:
@@ -121,6 +134,12 @@ def parse_config(raw: dict) -> Config:
         sec_exhibit = str(s.get("sec_exhibit", "release"))
         if sec_exhibit not in ("release", "us_gaap_statements", "ifrs_statements"):
             raise ValueError(f"{symbol}: sec_exhibit must be release, us_gaap_statements or ifrs_statements, got {sec_exhibit}")
+        eps_basis = {str(k).lower(): str(v).lower() for k, v in (s.get("eps_basis") or {}).items()}
+        for key, basis in eps_basis.items():
+            if key not in metrics or not METRICS[key].eps_based:
+                raise ValueError(f"{symbol}: eps_basis is for the PE metrics of the stock ({[m for m in metrics if METRICS[m].eps_based]}), got {key}")
+            if basis not in EPS_BASES:
+                raise ValueError(f"{symbol}: eps_basis of {key} must be one of {list(EPS_BASES)}, got {basis}")
         stocks.append(
             StockConfig(
                 symbol=symbol,
@@ -131,6 +150,7 @@ def parse_config(raw: dict) -> Config:
                 cik=cik,
                 sec_form=sec_form,
                 sec_exhibit=sec_exhibit,
+                eps_basis={k: v for k, v in eps_basis.items() if v != "basic"},
             )
         )
     if not stocks:

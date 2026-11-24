@@ -59,6 +59,13 @@ stocks:
     sec_form: 8-K
     filing_format: us_press_release
     metrics: [pe, ps, pb]
+  - symbol: DT
+    name: Dynatrace
+    market: US
+    cik: 1773383   # Dynatrace, Inc. (Dynatrace Holdings LLC until the August 2019 IPO); fiscal year ends March 31, results every calendar quarter
+    sec_form: 8-K
+    filing_format: us_press_release   # USD, US GAAP, basic EPS
+    metrics: [pe, pe_non_gaap, ps, pb]   # the GAAP to Non-GAAP reconciliation in every release states a basic Non-GAAP EPS, so both PEs are basic
   - symbol: ASML
     name: ASML Holding (NY registry shares)
     market: US   # the NASDAQ line; one NY registry share = one ordinary share, so price and EPS need no ADS ratio

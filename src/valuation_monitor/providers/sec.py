@@ -2,7 +2,8 @@
 
 Earnings are furnished on Form 6-K by foreign private issuers (JD, ASML) and on Form 8-K item 2.02 by US companies (Meta, Cognizant);
 either way the press release is exhibit 99.1 (HTML). Two companies' press releases lack figures, so another exhibit is kept instead:
-ASML's summary US GAAP statements and XP's IFRS consolidated financial statements (see `exhibit` in results_announcements).
+ASML's summary US GAAP statements and XP's IFRS consolidated financial statements (see `exhibit` in results_announcements). SAP's exhibit is its
+quarterly results document, recognized by its statements rather than by a headline.
 Flow: list the 6-Ks (or the 8-Ks with item 2.02) from the submissions API -> look at the file list of each and pick the press release exhibit of a plausible size ->
 only a title like "... Announces ... Results" or "... Reports ... Results" is an earnings announcement.
 
@@ -132,6 +133,23 @@ def ifrs_statements_title(html: bytes) -> str | None:
     return f"{'Interim condensed consolidated' if interim else 'Consolidated'} financial statements at {date.group(1)}"
 
 
+def sap_statement_title(html: bytes) -> str | None:
+    """A title such as "IFRS results for the three months ended September 30, 2026" if the exhibit is one of SAP's quarterly results documents
+    with readable statements (see sap_ifrs.py): the footnote of the quarter's income statement and the equity row of the balance sheet; None otherwise.
+
+    This leaves out the short preliminary press releases (no statements), the half-year reports furnished next to the quarterly statement (only a
+    six-months footnote), annual reports, invitations and acquisition announcements, and the statements for the first quarter of 2020 and the
+    fourth quarter of 2021, whose tables are images.
+    """
+    from valuation_monitor.sap_ifrs import EQUITY_RE, QUARTER_SHARES_RE, document_text
+
+    text = document_text(html)
+    footnote = QUARTER_SHARES_RE.search(text)
+    if footnote is None or EQUITY_RE.search(text) is None:
+        return None
+    return f"IFRS results for the three months ended {footnote.group('month')} {footnote.group('day')}, {footnote.group('year')}"
+
+
 def index_page_items(page: bytes) -> list[dict]:
     """The documents of the "Document Format Files" table of a filing's index page, as index.json lists them: {"name", "size"}, sorted by name."""
     from bs4 import BeautifulSoup
@@ -172,7 +190,8 @@ class SecProvider:
 
         `form` is the SEC form that carries them: 6-K or 8-K (item 2.02). `exhibit` is what is kept of each: "release", the press release itself, or
         "us_gaap_statements", the summary US GAAP financial statements exhibit (ASML: its press release has only a few figures, the statements have the rest),
-        or "ifrs_statements", the IFRS consolidated financial statements (XP: furnished in a 6-K of their own; its press release has no basic EPS).
+        or "ifrs_statements", the IFRS consolidated financial statements (XP: furnished in a 6-K of their own; its press release has no basic EPS),
+        or "sap_ifrs", SAP's quarterly results document with its IFRS statements (see sap_statement_title).
         """
         folder = self.archive_dir / symbol.upper()
         index_path = folder / "index.json"
@@ -273,6 +292,8 @@ class SecProvider:
             html = self._archive_get(url, cache=False)
             if exhibit == "ifrs_statements":
                 title = ifrs_statements_title(html)
+            elif exhibit == "sap_ifrs":
+                title = sap_statement_title(html)
             else:
                 title = statements_title(html) if exhibit == "us_gaap_statements" else headline(html)
             if title:

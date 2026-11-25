@@ -14,7 +14,7 @@ equity attributable to owners (millions), shares disclosed in the filing (millio
       this period to date, same period last year to date; amounts are in thousands and converted to millions when read.
     - Balance sheet: same as above. EPS note: weighted average shares.
   press_release (JD, Alibaba; HTML) is in press_release.py; us_press_release and us_gaap_statements (Meta, Cognizant, Dynatrace, Sea, ASML) in us_release.py;
-  ifrs_statements (XP, HTML) in ifrs.py; kifrs_statements (Samsung, PDF) in kifrs.py;
+  ifrs_statements (XP, HTML) in ifrs.py; sap_ifrs (SAP, HTML) in sap_ifrs.py; kifrs_statements (Samsung, PDF) in kifrs.py;
   cn_report (Hikvision, Glodon, PDF) in cn_report.py. These parse functions return the common Parsed (see parsed.py).
 
 A company may publish results every quarter (4 periods a year) or only interim and annual (2 periods a year; the second half is obtained as full year minus first half).
@@ -43,6 +43,7 @@ from valuation_monitor.ifrs import parse_ifrs_statements
 from valuation_monitor.kifrs import parse_kifrs, parse_kifrs_deck
 from valuation_monitor.press_release import parse_press_release
 from valuation_monitor.release_eps import parse_adjusted_eps_release
+from valuation_monitor.sap_ifrs import parse_sap_statement
 from valuation_monitor.us_release import parse_us_release
 from valuation_monitor.providers.base import Filing
 
@@ -100,7 +101,7 @@ SERIES_LABELS = {
     "equity": "Equity attributable to owners",
     "wa_shares": "Weighted average shares",
 }
-PARSER_VERSIONS = {"highlights": 5, "statements": 3, "press_release": 4, "us_press_release": 5, "us_gaap_statements": 4, "ifrs_statements": 1, "kifrs_statements": 4, "cn_report": 8}  # add 1 when the parsing rules change; saved parse results are then re-parsed automatically
+PARSER_VERSIONS = {"highlights": 5, "statements": 3, "press_release": 4, "us_press_release": 5, "us_gaap_statements": 4, "ifrs_statements": 1, "sap_ifrs": 2, "kifrs_statements": 4, "cn_report": 8}  # add 1 when the parsing rules change; saved parse results are then re-parsed automatically
 SUPPLEMENT_FORMAT = "adjusted_eps_release"  # the layout of a supplementary document (XP's press release, see release_eps.py); its parse results carry their own version
 SUPPLEMENT_PARSER_VERSION = 1  # add 1 when the rules of release_eps.py change
 SUPPLEMENT_TABLE = "supplement"  # the "table" of a supplementary document's parse result in the stored announcements
@@ -153,6 +154,7 @@ class Announcement:
     shares_basis: str = ""  # period the disclosed weighted average shares refer to: empty means this period, "full year" means the full-year figure is disclosed (Q4), "year to date" the six or nine months (Sea)
     shares_label: str = "basic EPS weighted average shares"  # what kind of share count the filing discloses (A-share companies disclose the period-end total shares)
     note: str = ""  # explanation of the publication time etc.
+    series_notes: dict[str, str] = field(default_factory=dict)  # series -> note on its figures in this filing (Parsed.notes), carried to each period value
     per_share_factors: tuple[float, float] = (1.0, 1.0)  # set by adjust_for_splits: what per-share figures were divided by (this and the previous period; prior year)
     supplement: bool = False  # a supplementary document of the results (XP's press release): it only adds its Non-GAAP EPS for its own quarter, see build_history
 
@@ -176,6 +178,7 @@ class QuarterValue:
     published: pd.Timestamp  # publication time of the earliest filing that published this value
     observations: list[Observation] = field(default_factory=list)
     factor: float = 1.0  # what the filing's figure was divided by for splits (per-share data), to show the original figure
+    note: str = ""  # the note of the filing that first published this value (Announcement.series_notes), shown with the TTM formulas
 
     @property
     def max_deviation(self) -> float:
@@ -335,7 +338,7 @@ def parse_statements(pages: Pages) -> tuple[str, dict[str, list[float]]]:
 
 
 FORMATS = {"highlights": parse_highlights, "statements": parse_statements}  # HKEX PDF announcements
-FILING_FORMATS = {*FORMATS, "press_release", "us_press_release", "us_gaap_statements", "ifrs_statements", "kifrs_statements", "cn_report"}  # plus US HTML press releases (6-K of JD; 8-K of US companies), IFRS statements (6-K of XP), Samsung English financial statements and A-share reports
+FILING_FORMATS = {*FORMATS, "press_release", "us_press_release", "us_gaap_statements", "ifrs_statements", "sap_ifrs", "kifrs_statements", "cn_report"}  # plus US HTML press releases (6-K of JD; 8-K of US companies), IFRS statements (6-K of XP and SAP), Samsung English financial statements and A-share reports
 
 
 def parse_announcement(filing: Filing, fmt: str = "highlights", market: Market = HK, non_gaap: str | None = None) -> Announcement:
@@ -351,7 +354,7 @@ def parse_announcement(filing: Filing, fmt: str = "highlights", market: Market =
             parsed.period, filing.published, filing.url, parsed.currency, parsed.quarterly, parsed.values, market.key,
             filing.provisional, "", PERIOD_END_SHARES, filing.note,
         )
-    if fmt in ("press_release", "us_press_release", "us_gaap_statements", "ifrs_statements", "kifrs_statements"):  # the parse result carries its own reporting period and whether it is a single quarter
+    if fmt in ("press_release", "us_press_release", "us_gaap_statements", "ifrs_statements", "sap_ifrs", "kifrs_statements"):  # the parse result carries its own reporting period and whether it is a single quarter
         if fmt == "press_release":
             parsed = parse_press_release(filing.content)
         elif fmt == "us_press_release":
@@ -360,6 +363,8 @@ def parse_announcement(filing: Filing, fmt: str = "highlights", market: Market =
             parsed = parse_us_release(filing.content)
         elif fmt == "ifrs_statements":
             parsed = parse_ifrs_statements(filing.content)
+        elif fmt == "sap_ifrs":
+            parsed = parse_sap_statement(filing.content)
         elif filing.provisional:
             parsed = parse_kifrs_deck(filing.title, filing.content, filing.attachments["previous_bs"])
         else:
@@ -367,7 +372,7 @@ def parse_announcement(filing: Filing, fmt: str = "highlights", market: Market =
         basis = "" if parsed.quarterly else "full year" if parsed.period.quarter == 4 else YEAR_TO_DATE  # Sea's second- and third-quarter releases: six and nine months
         return Announcement(
             parsed.period, filing.published, filing.url, parsed.currency, parsed.quarterly, parsed.values, market.key,
-            filing.provisional, basis,
+            filing.provisional, basis, series_notes=dict(parsed.notes or {}),
         )
     period = parse_period(filing.title)
     currency, values = FORMATS[fmt](Pages(filing.content))
@@ -486,6 +491,14 @@ def adjust_for_splits(announcements: list[Announcement], splits: pd.Series) -> l
 ANNOUNCEMENT_COLUMNS = ["published", "period", "table", "currency", *SERIES, "url", "provisional", "shares_basis", "shares_label", "note", "parser_version"]
 
 
+SERIES_NOTE_PREFIX = {s: f"{label} of this filing: " for s, label in SERIES_LABELS.items()}  # how Announcement.series_notes are kept in the note column
+
+
+def _series_note(part: str) -> tuple[str, str] | None:
+    """A part of the saved note column that is a series note ("Non-IFRS EPS of this filing: ..."): (series, note); None for any other text."""
+    return next(((s, part[len(prefix) :]) for s, prefix in SERIES_NOTE_PREFIX.items() if part.startswith(prefix)), None)
+
+
 def announcements_to_frame(announcements: list[Announcement], parser_version: int) -> pd.DataFrame:
     """Storage format of parse results: one row per filing, values of a row joined with semicolons (numbers as in the filing).
 
@@ -501,7 +514,7 @@ def announcements_to_frame(announcements: list[Announcement], parser_version: in
             "provisional": int(a.provisional),
             "shares_basis": a.shares_basis,
             "shares_label": a.shares_label,
-            "note": a.note,
+            "note": "; ".join(x for x in (a.note, *(f"{SERIES_NOTE_PREFIX[s]}{t}" for s, t in sorted(a.series_notes.items()))) if x),
             "parser_version": SUPPLEMENT_PARSER_VERSION if a.supplement else parser_version,
         }
         for a in sorted(announcements, key=lambda a: a.published)
@@ -524,7 +537,8 @@ def announcements_from_frame(df: pd.DataFrame, market: Market = HK) -> list[Anno
                 provisional=str(r.get("provisional", "")) == "1",
                 shares_basis=str(r.get("shares_basis", "")),
                 shares_label=str(r.get("shares_label", "")) or "basic EPS weighted average shares",
-                note=str(r.get("note", "")),
+                note="; ".join(x for x in str(r.get("note", "")).split("; ") if x and not _series_note(x)),
+                series_notes=dict(n for x in str(r.get("note", "")).split("; ") if (n := _series_note(x))),
                 supplement=r["table"] == SUPPLEMENT_TABLE,
             )
         )
@@ -705,11 +719,11 @@ def build_history(parsed: list[Announcement], splits: pd.Series | None = None, n
             if derived:
                 raise ValueError(f"{a.url}: a Non-GAAP EPS from cumulative figures cannot be told apart by definition (non_gaap_changes)")
             d = definition_of(a)
-            own = definitions.setdefault(d, {}).setdefault(period, QuarterValue(value, a.available, a.published, factor=factor))
+            own = definitions.setdefault(d, {}).setdefault(period, QuarterValue(value, a.available, a.published, factor=factor, note=a.series_notes.get(series, "")))
             own.observations.append(Observation(value, a.url, derived))
             if first_definition.setdefault(period, d) != d:
                 return  # another definition's figure for a quarter first published under an earlier one: not compared with it
-        q = quarters[series].setdefault(period, QuarterValue(value, a.available, a.published, factor=factor))
+        q = quarters[series].setdefault(period, QuarterValue(value, a.available, a.published, factor=factor, note=a.series_notes.get(series, "")))
         q.observations.append(Observation(value, a.url, derived))
 
     def row_of(a: Announcement) -> tuple[dict, dict]:
@@ -799,7 +813,7 @@ def _ttm_row(
             q = qs[p]
             derived = q.observations[0].derived
             factor = q.factor if series in PER_SHARE and not derived else 1.0
-            out.append(Component(period_label(p, per_year), q.value, derived, q.value * factor if factor != 1.0 else None))
+            out.append(Component(period_label(p, per_year), q.value, derived, q.value * factor if factor != 1.0 else None, q.note))
         return out
 
     def total(comps: list[Component] | None) -> float | None:

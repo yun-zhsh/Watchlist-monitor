@@ -12,3 +12,4 @@ class Parsed(NamedTuple):
     values: dict[str, list[float]]  # series -> this period, same period last year, (previous period); equity: end of this period, end of last year
     period: pd.Period  # reporting quarter
     quarterly: bool = True  # False means year-to-date cumulative figures (e.g. the full year)
+    notes: dict[str, str] | None = None  # series -> what is special about its figures in this filing, shown with every TTM that uses them (SAP: non-IFRS EPS from continuing operations)

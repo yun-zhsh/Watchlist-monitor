@@ -52,7 +52,8 @@ def test_a_release_without_an_adjusted_eps_gives_nothing_not_the_reported_eps():
     )
     only_net_income = release("Exhibit 99.1 XP Inc. Reports 2Q20 Financial Results", "Adjusted Net Income¹ (in R$ mn) 565 228 148% 415 36%")
     diluted_only = release("XP Inc. Reports First Quarter 2026 Results", "In 1Q26, Adjusted Net Income reached R$1.3 billion . Adjusted Diluted EPS was R$2.49.")
-    assert parse_adjusted_eps_release(no_adjustments) == ("BRL", {}, pd.Period("2025Q2"), True)
+    parsed = parse_adjusted_eps_release(no_adjustments)
+    assert (parsed.currency, parsed.values, parsed.period, parsed.quarterly) == ("BRL", {}, pd.Period("2025Q2"), True)
     assert parse_adjusted_eps_release(only_net_income).values == {} and parse_adjusted_eps_release(only_net_income).period == pd.Period("2020Q2")
     assert parse_adjusted_eps_release(diluted_only).values == {}  # XP's PE Non-GAAP is basic: a diluted figure is not taken in its place
 

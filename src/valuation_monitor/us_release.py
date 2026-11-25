@@ -1,5 +1,5 @@
 """Extract earnings data from condensed US GAAP income statements and balance sheets in HTML: the earnings press releases of US companies
-(exhibit 99.1 of Form 8-K; Meta Platforms, Cognizant, Amphenol, Dynatrace), the 6-K press releases of Sea Limited, and the US GAAP summary financial statements that ASML
+(exhibit 99.1 of Form 8-K; Meta Platforms, Cognizant, Amphenol, Dynatrace, Apple), the 6-K press releases of Sea Limited, and the US GAAP summary financial statements that ASML
 furnishes with each quarterly 6-K (in euros).
 
 The document holds a condensed income statement and a condensed balance sheet as tables:
@@ -68,6 +68,9 @@ RAW_SHARES_RE = re.compile(r"except (?:for )?(?:the )?number of shares", re.I)  
 # a unit for dollars only leaves the share counts in single shares: Amphenol until 2015 "(dollars in millions, except per share data)" (later "(dollars and
 # shares in millions, ...)"), Dynatrace's first release (September 2019) "(Unaudited - dollars in thousands, except per share amounts)" with 237,693,127 shares
 DOLLARS_ONLY_RE = re.compile(r"^\(?(?:unaudited\s*[-\u2013\u2014]\s*)?dollars in (?:thousands|millions)\b", re.I)
+# Apple: "(In millions, except number of shares which are reflected in thousands and per share amounts)" (with commas from 2023 on): the
+# exception names the unit of the share counts, which RAW_SHARES_RE alone would read as single shares
+SHARES_IN_UNIT_RE = re.compile(r"except (?:for )?(?:the )?number of shares,? which (?:are|is) reflected in (thousands|millions)\b", re.I)
 PREFIX_RE = re.compile(r"^(?:for the|as of)\s+", re.I)  # Sea: "For the Three Months ended September 30,", "As of December 31,"
 TOLERANCE = 0.001
 NOTE_SUFFIX_RE = re.compile(r"\s+\d(?:,\d)*$")  # footnote numbers after a label: "Diluted net income per ordinary share 4"
@@ -95,8 +98,11 @@ def unit_scale(table, rows: list[list[str]]) -> float | None:
 
 def shares_scale(table, rows: list[list[str]], scale: float | None) -> float | None:
     """Factor converting the share counts of a table to millions: single shares if the table's unit excludes the number of shares (Sea)
-    or names dollars only (Amphenol until 2015: "(dollars in millions, ...)"), else the unit of the amounts. A unit in the label of the share rows ("(in thousands):") overrides it, see parse_income."""
+    or names dollars only (Amphenol until 2015: "(dollars in millions, ...)"), else the unit of the amounts; an exception that names the unit of the
+    shares gives that unit (Apple: "except number of shares which are reflected in thousands"). A unit in the label of the share rows ("(in thousands):") overrides it, see parse_income."""
     note = unit_note(table, rows)
+    if note is not None and (m := SHARES_IN_UNIT_RE.search(note)):
+        return 0.001 if m.group(1).lower() == "thousands" else 1.0
     return 1e-6 if note is not None and (RAW_SHARES_RE.search(note) or DOLLARS_ONLY_RE.search(note)) else scale
 
 

@@ -57,6 +57,13 @@ freshness:
 # only (its data is still updated; its page, downloads and MCP lookups still work). The "Order" button of the home page rewrites
 # both through the workflow home-order.yml: it moves whole entries and adds or removes only the hidden: true line.
 stocks:
+  - symbol: AAPL
+    name: Apple
+    market: US
+    cik: 320193   # Apple Inc.; fiscal year ends on the last Saturday of September (52/53 weeks), results every fiscal quarter
+    sec_form: 8-K   # exhibit 99.1 of an 8-K with item 2.02
+    filing_format: us_press_release   # USD, US GAAP, basic EPS; 4-for-1 split in August 2020 (the releases restate prior years; see the README)
+    metrics: [pe, ps, pb]   # no pe_non_gaap: Apple reports no Non-GAAP EPS (one exception: the Q4 FY2024 EU State Aid tax charge; see the README)
   - symbol: META   # Yahoo Finance symbol
     name: Meta Platforms
     market: US

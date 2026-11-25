@@ -28,6 +28,8 @@ freshness:
 #   pe_non_gaap  PE Non-GAAP (TTM), based on the Non-GAAP profit disclosed by US-listed companies (excludes share-based compensation etc.); same idea as pe_non_ifrs
 #   ps           PS (TTM), price to sales, based on revenue of the last 4 quarters
 #   pb           PB, price to book, based on equity attributable to owners at the end of the latest period
+# non_gaap_changes: the days a company changed the definition of its Non-GAAP EPS; a Non-GAAP TTM is only taken from four quarters of one
+#   definition, so it is empty until the new one has four quarters (Cognizant)
 # eps_basis: the EPS a PE metric is based on, shown in its name ("Basic PE (TTM)", "Diluted PE Non-GAAP (TTM)"). The rule: basic EPS whenever
 #   the company discloses it, diluted only when it does not. Every PE is basic unless listed here, e.g. eps_basis: { pe_non_gaap: diluted }.
 #   It names what the parser reads (the press_release parser takes the diluted Non-GAAP EPS only when a release has no basic one; the
@@ -40,6 +42,7 @@ freshness:
 #                     statements for the fourth quarter (full year minus nine months); needs a cik and sec_exhibit: ifrs_statements (XP)
 #   sap_ifrs          SAP's quarterly results document (press release or quarterly statement, HTML) furnished on Form 6-K, with its IFRS
 #                     statements; every quarter has a three-months income statement; needs a cik and sec_exhibit: sap_ifrs (SAP)
+# sec_release_non_gaap: true also reads the earnings press release next to the IFRS statements, for its "Adjusted Basic EPS" (pe_non_gaap; XP)
 #   kifrs_statements  English consolidated financial statements (K-IFRS) on the Samsung Electronics IR website, every quarter; market KR
 #   cn_report         periodic reports (Q1, half-year, Q3, annual) and annual express reports of A-share companies on CNINFO (Chinese originals); market CN
 # market: HK (HKEXnews; default for symbols ending in .HK), US (SEC EDGAR), KR (the IR website of a Korean company; default for
@@ -54,14 +57,16 @@ stocks:
     cik: 1326801   # Meta Platforms (Facebook until 2022)
     sec_form: 8-K   # a US company: the earnings press release is exhibit 99.1 of an 8-K with item 2.02, not a 6-K
     filing_format: us_press_release   # USD, US GAAP, basic EPS
-    metrics: [pe, ps, pb]
+    metrics: [pe, ps, pb]   # no pe_non_gaap: Facebook stopped reporting a Non-GAAP EPS with its first-quarter 2017 release
   - symbol: CTSH
     name: Cognizant Technology Solutions
     market: US
     cik: 1058290
     sec_form: 8-K
     filing_format: us_press_release
-    metrics: [pe, ps, pb]
+    metrics: [pe, pe_non_gaap, ps, pb]
+    eps_basis: { pe_non_gaap: diluted }   # Cognizant discloses no basic Non-GAAP EPS: "Diluted PE Non-GAAP (TTM)"
+    non_gaap_changes: [2019-02-06]   # "Non-GAAP diluted EPS" (excluding stock-based compensation) until Q3 2018, "Adjusted Diluted EPS" (including it) from the Q4 2018 release
   - symbol: APH
     name: Amphenol
     market: US
@@ -91,7 +96,7 @@ stocks:
     sec_form: 6-K   # a foreign private issuer: a 6-K every quarter
     sec_exhibit: us_gaap_statements   # the press release has only a few figures; the quarterly US GAAP summary statements (EUR) have the rest
     filing_format: us_gaap_statements   # price in USD, earnings in EUR: converted with the EURUSD rate of each day
-    metrics: [pe, ps, pb]
+    metrics: [pe, ps, pb]   # ASML discloses no Non-GAAP EPS (its only non-GAAP measure is free cash flow)
 
   - symbol: 005930.KS
     name: Samsung Electronics
@@ -104,13 +109,14 @@ stocks:
     cik: 1787425
     sec_exhibit: ifrs_statements   # the press release has no basic EPS; the IFRS statements are furnished on 6-K the same day (from 2022 on mostly in a 6-K of their own)
     filing_format: ifrs_statements   # price in USD per Class A share, earnings in BRL (IFRS): converted with the BRLUSD rate of each day
-    metrics: [pe, ps, pb]
+    sec_release_non_gaap: true   # the press release as well, for its "Adjusted Basic EPS" (stated since the fourth quarter of 2024; quarters without adjustments stay empty)
+    metrics: [pe, pe_non_gaap, ps, pb]
   - symbol: SE
     name: Sea Limited (ADR)
     market: US
     cik: 1703399   # Sea Limited (Garena until 2017)
     filing_format: us_press_release   # 6-K press release, USD, US GAAP; 1 ADS = 1 Class A ordinary share, so price and EPS need no ADS ratio
-    metrics: [pe, ps, pb]   # Sea's Non-GAAP measures changed over the years and today are only adjusted EBITDA, with no Non-GAAP EPS
+    metrics: [pe, ps, pb]   # Sea has never published a Non-GAAP EPS: an adjusted net loss without a per-share figure in 2017-2018, adjusted EBITDA since
   - symbol: BABA
     name: Alibaba Group (ADR)
     market: US

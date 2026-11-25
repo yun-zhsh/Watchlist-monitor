@@ -19,6 +19,8 @@ import pandas as pd
 from valuation_monitor.db import FINAL_COLUMNS, Database
 from valuation_monitor.filings import (
     PARSER_VERSIONS,
+    SUPPLEMENT_PARSER_VERSION,
+    SUPPLEMENT_TABLE,
     EarningsHistory,
     adjust_for_splits,
     announcements_from_frame,
@@ -242,17 +244,20 @@ class EarningsStore:
         fmt: str = "highlights",
         market: Market = HK,
         non_gaap: str | None = None,
+        non_gaap_changes: tuple[str, ...] = (),
     ) -> EarningsHistory:
         """Parse the filings and compute EPS. Already parsed filings read the saved result; only new filings are parsed.
 
         trading_days is used to list in the saved detail the trading day each value actually starts to be used; fmt is the layout of the filings;
-        non_gaap is the EPS basis of the stock's Non-GAAP PE (None without one), passed to the parser.
+        non_gaap is the EPS basis of the stock's Non-GAAP PE (None without one), passed to the parser; non_gaap_changes are the days the company
+        changed its definition (see build_history).
         """
         version = PARSER_VERSIONS[fmt]
         saved = {}
         df = self.db.read_frame("announcements", symbol, text=True)
         if df is not None:
-            df = df[df["parser_version"].astype(int) == version]
+            supplement = df["table"] == SUPPLEMENT_TABLE  # supplementary documents (XP's press release) carry the version of their own parser
+            df = df[df["parser_version"].astype(int) == supplement.map({True: SUPPLEMENT_PARSER_VERSION, False: version})]
             saved = {a.url: a for a in announcements_from_frame(df, market)}
             if non_gaap is not None and fmt == "us_press_release" and not any("non_ifrs_eps" in a.values for a in saved.values()):
                 saved = {}  # parsed before the stock had a Non-GAAP PE: parse again to read it
@@ -265,7 +270,7 @@ class EarningsStore:
                 if not f.provisional:
                     raise
                 print(f"{symbol}: cannot parse the provisional data {f.url} ({e}); waiting for the official report", file=sys.stderr)
-        history = build_history(adjust_for_splits(parsed, splits), splits)
+        history = build_history(adjust_for_splits(parsed, splits), splits, non_gaap_changes)
 
         if not self.db.readonly:  # the saved frames are a cache of what was just computed; a read-only database (the MCP server) keeps its copy as it is
             self.db.write_frame("announcements", symbol, announcements_to_frame(parsed, version), text=True)

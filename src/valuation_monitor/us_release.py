@@ -481,8 +481,53 @@ def adjusted_eps_from_text(soup, period: pd.Period) -> list[float] | None:
     return None
 
 
+# Cognizant: the reconciliation table at the end of the release, "Three Months Ended September 30," over the years, with one row of the measure.
+# Until the third quarter of 2018 "Non-GAAP diluted earnings per share" (excluding stock-based compensation); from the fourth quarter of 2018
+# "Adjusted Diluted Earnings Per Share" (including it). The release of the fourth quarter of 2018 has both rows: the new measure is taken, as
+# in all later releases. Which definition a figure belongs to is set by `non_gaap_changes` in config.yaml (see build_history).
+COGNIZANT_ROWS = (
+    re.compile(r"^adjusted diluted earnings per share$", re.I),  # preferred: the measure of the fourth quarter of 2018 on
+    re.compile(r"^non-gaap diluted earnings per share$", re.I),
+)
+THREE_MONTHS_GROUP_RE = re.compile(r"^three months ended (?P<month>[A-Z][a-z]+) \d{1,2},?$", re.I)
+
+
+def cognizant_non_gaap_row(soup, period: pd.Period) -> tuple[str, list[float]] | None:
+    """(label, [this quarter, same quarter last year]) of the Non-GAAP diluted EPS row of a reconciliation table whose first group is the three
+    months to the end of `period` with the columns of this year and last year; None if there is none. Rows of two tables must agree."""
+    month = pd.Timestamp(period.end_time).strftime("%B")
+    found: dict[int, set[tuple[str, tuple[float, float]]]] = {}
+    for table in soup.find_all("table"):
+        rows = table_rows(table)
+        if len(rows) < 3 or not rows[0]:
+            continue
+        group = THREE_MONTHS_GROUP_RE.match(header_cell(rows[0][0])) or (len(rows[0]) > 1 and THREE_MONTHS_GROUP_RE.match(header_cell(rows[0][1])))
+        if not group or group.group("month").lower() != month.lower():
+            continue
+        if years_in([header_cell(c) for c in rows[1]])[:2] != [period.year, period.year - 1]:
+            continue
+        for row in rows[2:]:
+            label = NOTE_SUFFIX_RE.sub("", header_cell(row[0]))
+            for rank, pattern in enumerate(COGNIZANT_ROWS):
+                if pattern.match(label):
+                    nums = numbers(row)  # the cells after the label
+                    if len(nums) < 2:
+                        raise ValueError(f"The row {row[0]!r} has no figures for this quarter and last year")
+                    found.setdefault(rank, set()).add((label, (nums[0], nums[1])))
+    if not found:
+        return None
+    rows = found[min(found)]
+    if len(rows) > 1:
+        raise ValueError(f"The reconciliation tables in this release disagree on the Non-GAAP diluted EPS: {sorted(rows)}")
+    label, pair = rows.pop()
+    return label, list(pair)
+
+
 def adjusted_diluted_eps(soup, period: pd.Period) -> list[float] | None:
-    return adjusted_eps_from_tables(soup, period) or adjusted_eps_from_text(soup, period)
+    if (found := adjusted_eps_from_tables(soup, period) or adjusted_eps_from_text(soup, period)) is not None:  # Amphenol
+        return found
+    row = cognizant_non_gaap_row(soup, period)
+    return None if row is None else row[1]
 
 
 def parse_us_release(html: bytes, non_gaap: str | None = None) -> Parsed:

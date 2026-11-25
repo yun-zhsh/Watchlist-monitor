@@ -42,6 +42,7 @@ from valuation_monitor.audit import Component, num, shares_formula, split_notes,
 from valuation_monitor.ifrs import parse_ifrs_statements
 from valuation_monitor.kifrs import parse_kifrs, parse_kifrs_deck
 from valuation_monitor.press_release import parse_press_release
+from valuation_monitor.release_eps import parse_adjusted_eps_release
 from valuation_monitor.sap_ifrs import parse_sap_statement
 from valuation_monitor.us_release import parse_us_release
 from valuation_monitor.providers.base import Filing
@@ -100,7 +101,10 @@ SERIES_LABELS = {
     "equity": "Equity attributable to owners",
     "wa_shares": "Weighted average shares",
 }
-PARSER_VERSIONS = {"highlights": 5, "statements": 3, "press_release": 4, "us_press_release": 4, "us_gaap_statements": 4, "ifrs_statements": 1, "sap_ifrs": 2, "kifrs_statements": 4, "cn_report": 8}  # add 1 when the parsing rules change; saved parse results are then re-parsed automatically
+PARSER_VERSIONS = {"highlights": 5, "statements": 3, "press_release": 4, "us_press_release": 5, "us_gaap_statements": 4, "ifrs_statements": 1, "sap_ifrs": 2, "kifrs_statements": 4, "cn_report": 8}  # add 1 when the parsing rules change; saved parse results are then re-parsed automatically
+SUPPLEMENT_FORMAT = "adjusted_eps_release"  # the layout of a supplementary document (XP's press release, see release_eps.py); its parse results carry their own version
+SUPPLEMENT_PARSER_VERSION = 1  # add 1 when the rules of release_eps.py change
+SUPPLEMENT_TABLE = "supplement"  # the "table" of a supplementary document's parse result in the stored announcements
 PER_SHARE_TOLERANCE = 0.005  # allowed difference of the same value between filings: per-share data (rounding, subtraction of cumulative figures)
 PER_SHARE_RELATIVE_TOLERANCE = 5e-4
 AMOUNT_TOLERANCE = 0.001  # amounts: relative difference
@@ -152,6 +156,7 @@ class Announcement:
     note: str = ""  # explanation of the publication time etc.
     series_notes: dict[str, str] = field(default_factory=dict)  # series -> note on its figures in this filing (Parsed.notes), carried to each period value
     per_share_factors: tuple[float, float] = (1.0, 1.0)  # set by adjust_for_splits: what per-share figures were divided by (this and the previous period; prior year)
+    supplement: bool = False  # a supplementary document of the results (XP's press release): it only adds its Non-GAAP EPS for its own quarter, see build_history
 
     @property
     def available(self) -> pd.Timestamp:
@@ -340,6 +345,9 @@ def parse_announcement(filing: Filing, fmt: str = "highlights", market: Market =
     """Parse one earnings filing; values stay as in the filing (amounts converted to millions, EPS to yuan; not adjusted for splits).
 
     non_gaap is the EPS basis of the stock's Non-GAAP PE, None without one; only the us_press_release layout uses it (see parse_us_release)."""
+    if filing.supplement:  # a supplementary document whatever the layout of the main filings: only its Non-GAAP EPS is read
+        parsed = parse_adjusted_eps_release(filing.content)
+        return Announcement(parsed.period, filing.published, filing.url, parsed.currency, True, parsed.values, market.key, note=filing.note, supplement=True)
     if fmt == "cn_report":  # A-shares: periodic report or express report (preliminary)
         parsed = parse_cn_express(filing.title, filing.content) if "express" in filing.title else parse_cn_report(filing.title, filing.content)
         return Announcement(
@@ -492,12 +500,14 @@ def _series_note(part: str) -> tuple[str, str] | None:
 
 
 def announcements_to_frame(announcements: list[Announcement], parser_version: int) -> pd.DataFrame:
-    """Storage format of parse results: one row per filing, values of a row joined with semicolons (numbers as in the filing)."""
+    """Storage format of parse results: one row per filing, values of a row joined with semicolons (numbers as in the filing).
+
+    A supplementary document is stored with the table "supplement" and the version of its own parser (SUPPLEMENT_PARSER_VERSION)."""
     rows = [
         {
             "published": f"{a.published:%Y-%m-%d %H:%M}",
             "period": str(a.period),
-            "table": "quarterly" if a.is_quarterly_table else "cumulative",
+            "table": SUPPLEMENT_TABLE if a.supplement else "quarterly" if a.is_quarterly_table else "cumulative",
             "currency": a.currency,
             **{s: ";".join(f"{v:.10g}" for v in a.values[s]) if s in a.values else "" for s in SERIES},
             "url": a.url,
@@ -505,7 +515,7 @@ def announcements_to_frame(announcements: list[Announcement], parser_version: in
             "shares_basis": a.shares_basis,
             "shares_label": a.shares_label,
             "note": "; ".join(x for x in (a.note, *(f"{SERIES_NOTE_PREFIX[s]}{t}" for s, t in sorted(a.series_notes.items()))) if x),
-            "parser_version": parser_version,
+            "parser_version": SUPPLEMENT_PARSER_VERSION if a.supplement else parser_version,
         }
         for a in sorted(announcements, key=lambda a: a.published)
     ]
@@ -521,7 +531,7 @@ def announcements_from_frame(df: pd.DataFrame, market: Market = HK) -> list[Anno
                 published=pd.Timestamp(r["published"]),
                 url=r["url"],
                 currency=r["currency"],
-                is_quarterly_table=r["table"] == "quarterly",
+                is_quarterly_table=r["table"] in ("quarterly", SUPPLEMENT_TABLE),
                 values={s: [float(v) for v in str(r[s]).split(";")] for s in SERIES if str(r.get(s, ""))},
                 market=market.key,
                 provisional=str(r.get("provisional", "")) == "1",
@@ -529,6 +539,7 @@ def announcements_from_frame(df: pd.DataFrame, market: Market = HK) -> list[Anno
                 shares_label=str(r.get("shares_label", "")) or "basic EPS weighted average shares",
                 note="; ".join(x for x in str(r.get("note", "")).split("; ") if x and not _series_note(x)),
                 series_notes=dict(n for x in str(r.get("note", "")).split("; ") if (n := _series_note(x))),
+                supplement=r["table"] == SUPPLEMENT_TABLE,
             )
         )
     return out
@@ -551,6 +562,7 @@ class EarningsHistory:
     periods_per_year: int = 4  # earnings periods published per year: 4 (quarterly), 2 (half-yearly), 1 (annual)
     ttm_detail: list[dict] = field(default_factory=list)  # row by row matching ttm: how each item was calculated (see audit.py)
     shares_basis: dict[pd.Period, str] = field(default_factory=dict)  # period the disclosed weighted average shares of each period refer to (empty = this period, "full year", "year to date")
+    non_gaap_changes: tuple[pd.Timestamp, ...] = ()  # when the company changed the definition of its Non-GAAP EPS (see build_history)
 
     @property
     def step(self) -> int:
@@ -571,6 +583,16 @@ class EarningsHistory:
         for a in self.announcements:
             if a.provisional:
                 out.append(f"The {period_label(a.period, self.periods_per_year)} data {PROVISIONAL_NOTES.get(a.market, PROVISIONAL_NOTES['*'])}")
+        for change in self.non_gaap_changes:
+            after = self.ttm[pd.to_datetime(self.ttm["published"]) >= change]
+            empty = after["non_ifrs_eps_ttm"].isna()
+            resumed = after[~empty]
+            out.append(
+                f"The company changed the definition of its Non-GAAP EPS with the filing published {change:%Y-%m-%d}: the Non-GAAP EPS TTM is only taken "
+                "from four quarters of one definition (the figures published since then; earlier quarters keep their first published figures under the "
+                "old one), so it is empty "
+                + (f"until the filing published {resumed['published'].iloc[0]}" if len(resumed) and empty.iloc[0] else "for the filings since then" if empty.all() else "for no filing")
+            )
         shares = {p: s for p in sorted(self.quarters["eps"]) if (s := implied_shares(self.quarters, p))}
         periods = list(shares)
         label = lambda p: period_label(p, self.periods_per_year)  # noqa: E731
@@ -656,7 +678,22 @@ def infer_periods_per_year(periods: list[pd.Period]) -> int:
     return 2 if 2 in quarters else 1
 
 
-def build_history(parsed: list[Announcement], splits: pd.Series | None = None) -> EarningsHistory:
+def build_history(parsed: list[Announcement], splits: pd.Series | None = None, non_gaap_changes: tuple[str | pd.Timestamp, ...] = ()) -> EarningsHistory:
+    """Arrange the parsed filings into per-period values and the data available after each filing.
+
+    non_gaap_changes are the days the company changed the definition of its Non-GAAP EPS (Cognizant: 2019-02-06, from "Non-GAAP diluted EPS" to
+    "Adjusted Diluted EPS"). A Non-GAAP figure belongs to the definition in force when its filing was published, and each definition keeps the first
+    published figure of every quarter on its own: a later filing's figure for an earlier quarter under the new definition is not a restatement of the
+    old one. A TTM row takes its Non-GAAP EPS only from figures of the definition of its own filing; while the new definition does not yet have four
+    quarters, the Non-GAAP EPS TTM is empty. The per-period values (quarters) keep the first published figure of each quarter, whatever its definition.
+
+    Supplementary documents (XP's press release next to its IFRS statements) only add their Non-GAAP EPS, for their own quarter and with their own
+    publication time. One published on the day its quarter's TTM row becomes available (before or after the statements) completes that row; one that
+    becomes available later adds a row of its own, a copy of the latest row with the Non-GAAP EPS TTM brought up to date. A supplement without a
+    value, or for a quarter that has no filing, changes nothing. Without supplements the result is exactly what it was before they existed.
+    """
+    supplements = sorted((a for a in parsed if a.supplement), key=lambda x: (x.available, x.published))
+    parsed = [a for a in parsed if not a.supplement]
     announcements: dict[pd.Period, Announcement] = {}
     for a in sorted(parsed, key=lambda x: x.available):
         announcements.setdefault(a.period, a)  # for duplicate filings of the same reporting period only the earliest is taken
@@ -671,13 +708,56 @@ def build_history(parsed: list[Announcement], splits: pd.Series | None = None) -
     ytd: dict[str, dict[pd.Period, float]] = {s: {} for s in FLOWS}
     ttm_rows, details = [], []
     shares_basis: dict[pd.Period, str] = {}
+    changes = tuple(sorted(pd.Timestamp(c) for c in non_gaap_changes))
+    definitions: dict[int, dict[pd.Period, QuarterValue]] = {}  # with non_gaap_changes: definition (0, 1, ...) -> the Non-GAAP EPS of each quarter
+    definition_of = lambda a: sum(a.published >= c for c in changes)  # noqa: E731
+    first_definition: dict[pd.Period, int] = {}
 
     def record(series: str, period: pd.Period, value: float, a: Announcement, derived: bool) -> None:
         factor = (a.per_share_factors[1] if period == a.period - 4 else a.per_share_factors[0]) if series in PER_SHARE else 1.0
+        if series == "non_ifrs_eps" and changes:
+            if derived:
+                raise ValueError(f"{a.url}: a Non-GAAP EPS from cumulative figures cannot be told apart by definition (non_gaap_changes)")
+            d = definition_of(a)
+            own = definitions.setdefault(d, {}).setdefault(period, QuarterValue(value, a.available, a.published, factor=factor, note=a.series_notes.get(series, "")))
+            own.observations.append(Observation(value, a.url, derived))
+            if first_definition.setdefault(period, d) != d:
+                return  # another definition's figure for a quarter first published under an earlier one: not compared with it
         q = quarters[series].setdefault(period, QuarterValue(value, a.available, a.published, factor=factor, note=a.series_notes.get(series, "")))
         q.observations.append(Observation(value, a.url, derived))
 
+    def row_of(a: Announcement) -> tuple[dict, dict]:
+        own = definitions.get(definition_of(a), {}) if changes else None
+        return _ttm_row(a, quarters, per_year, splits if splits is not None else pd.Series(dtype=float), shares_basis, own)
+
+    pending = list(supplements)
+    rows_of: list[Announcement] = []  # the filing each TTM row is for
+
+    def add_supplements(until: pd.Timestamp | None) -> None:
+        """Record the supplements available before `until` (all when None); refresh the rows they change."""
+        while pending and (until is None or pending[0].available < until):
+            s = pending.pop(0)
+            if s.currency not in currencies:
+                raise ValueError(f"{s.url}: the supplementary document is in {s.currency}, the filings in {currencies}")
+            for series, vals in s.values.items():
+                if series != "non_ifrs_eps":
+                    raise ValueError(f"{s.url}: a supplementary document only adds the Non-GAAP EPS, got {series}")
+                record(series, s.period, vals[0], s, derived=False)
+            if not s.values or not rows_of or not 0 <= (rows_of[-1].period - s.period).n < 4:
+                continue  # nothing to add, or not part of the latest TTM: its own quarter's row will use it
+            latest = rows_of[-1]
+            row, detail = row_of(latest)
+            if s.available == ttm_rows[-1]["available_date"]:  # available on the same day as the latest row: that row is completed
+                ttm_rows[-1], details[-1] = row, detail
+            else:  # available later: a row of its own, from the day the press release can be used
+                row = {**row, "published": f"{s.published:%Y-%m-%d %H:%M}", "available_date": s.available}
+                detail = {**detail, "published": row["published"], "note": "; ".join(x for x in (detail["note"], f"Non-GAAP EPS from the press release published {row['published']}") if x)}
+                ttm_rows.append(row)
+                details.append(detail)
+                rows_of.append(latest)
+
     for a in sorted(announcements.values(), key=lambda x: x.available):
+        add_supplements(a.available)
         for series, vals in a.values.items():
             touched: list[tuple[pd.Period, float]] = []  # the year-to-date cumulative figures in this filing
             if series in BALANCES:
@@ -701,26 +781,31 @@ def build_history(parsed: list[Announcement], splits: pd.Series | None = None) -
                 _derive_from_ytd(series, quarters[series], ytd[series], a, record, step)
                 _cross_check_ytd(quarters[series], touched, a, step)
 
-        row, detail = _ttm_row(a, quarters, per_year, splits if splits is not None else pd.Series(dtype=float), shares_basis)
+        row, detail = row_of(a)
         ttm_rows.append(row)
         details.append(detail)
+        rows_of.append(a)
+        add_supplements(a.available + pd.Timedelta(days=1))  # those of the same day complete this row
+    add_supplements(None)
 
     ttm = pd.DataFrame(ttm_rows, columns=TTM_COLUMNS)
-    return EarningsHistory(currencies.pop(), quarters, ttm, list(announcements.values()), per_year, details, shares_basis)
+    return EarningsHistory(currencies.pop(), quarters, ttm, [*announcements.values(), *supplements], per_year, details, shares_basis, changes)
 
 
 def _ttm_row(
-    a: Announcement, quarters: dict[str, dict[pd.Period, QuarterValue]], per_year: int, splits: pd.Series, shares_basis: dict[pd.Period, str]
+    a: Announcement, quarters: dict[str, dict[pd.Period, QuarterValue]], per_year: int, splits: pd.Series, shares_basis: dict[pd.Period, str],
+    non_gaap: dict[pd.Period, QuarterValue] | None = None,
 ) -> tuple[dict, dict]:
     """The data available after this filing is published: each TTM (sum of the periods in the last year), shares, revenue per share, book value per share.
 
     Returns (row of values, calculation). The calculation records which values of which periods add up to each TTM, for checking.
+    non_gaap, when given, are the Non-GAAP EPS of the definition of this filing (see build_history), used instead of quarters["non_ifrs_eps"].
     """
     last_year = [a.period - k * (4 // per_year) for k in range(per_year)]
     periods = list(reversed(last_year))  # oldest to newest
 
     def components(series: str) -> list[Component] | None:
-        qs = quarters[series]
+        qs = non_gaap if series == "non_ifrs_eps" and non_gaap is not None else quarters[series]
         if not all(p in qs for p in periods):
             return None
         out = []

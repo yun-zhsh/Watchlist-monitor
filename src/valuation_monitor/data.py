@@ -45,6 +45,8 @@ class DataLoader:
         since = now - pd.DateOffset(years=self.config.max_lookback + 2)
         if stock.market == "US":
             filings = self.sec.results_announcements(stock.symbol, stock.cik, since, stock.sec_form, stock.sec_exhibit)
+            if stock.sec_release_non_gaap:  # the press release as well, for its adjusted EPS (XP)
+                filings += self.sec.results_announcements(stock.symbol, stock.cik, since, stock.sec_form, supplement=True)
         elif stock.market == "KR":
             filings = self.samsung.results_announcements(stock.symbol, since)
         elif stock.market == "CN":
@@ -52,7 +54,7 @@ class DataLoader:
         else:
             filings = self.hkex.results_announcements(stock.symbol, since)
         non_gaap = stock.eps_basis.get("pe_non_gaap", "basic") if "pe_non_gaap" in stock.metrics else None  # which Non-GAAP EPS the parser reads, if any
-        earnings = self.earnings.load(stock.symbol, filings, prices.splits, prices.close.index, stock.filing_format, market, non_gaap)
+        earnings = self.earnings.load(stock.symbol, filings, prices.splits, prices.close.index, stock.filing_format, market, non_gaap, stock.non_gaap_changes)
 
         if earnings.currency == prices.currency:
             fx = pd.Series(1.0, index=prices.close.index)

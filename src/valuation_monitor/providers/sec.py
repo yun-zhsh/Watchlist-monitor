@@ -9,6 +9,8 @@ only a title like "... Announces ... Results" or "... Reports ... Results" is an
 
 Downloaded earnings filings are saved in data/filings/<symbol>/ (committed to the repository with the code); index.json there
 records every filing that has been checked (including those that are not earnings), so they are not checked again. When EDGAR cannot be reached the locally saved filings are used.
+XP's press release is read as well, for its adjusted EPS (results_announcements with supplement=True): every 6-K is checked once more for it, recorded in
+releases.json next to index.json, so the selection of the statements in index.json is not touched.
 
 EDGAR requires every request to carry a User-Agent that identifies a contact, and allows at most 10 requests per second.
 The contact is not written in the code but provided through the SEC_USER_AGENT environment variable, e.g. "valuation-monitor your-email".
@@ -28,6 +30,7 @@ import requests
 
 from valuation_monitor.providers.base import Filing, save_index
 from valuation_monitor.providers.http import HttpClient
+from valuation_monitor.release_eps import is_results_release_title
 
 USER_AGENT_ENV = "SEC_USER_AGENT"
 SUBMISSIONS_URL = "https://data.sec.gov/submissions/{name}"
@@ -65,6 +68,7 @@ class ArchiveNotAvailable(RuntimeError):
 # EDGAR's CDN now and then answers a filing's index.json with a 404 page "Directory listing is Not Available Yet" and may keep serving it from
 # its cache for minutes ("surrogate-control: max-age=300, stale-while-revalidate=120"), so retrying a few seconds later gets the same 404, with
 # or without a query string. The filing's own index page ("<accession>-index.htm") lists the same documents with their sizes and is used instead.
+SUPPLEMENT_EXHIBIT = "supplementary_release"  # an earnings press release kept next to the results of another exhibit (see results_announcements)
 INDEX_PAGE_NAME = "{accession}-index.htm"
 
 
@@ -193,16 +197,22 @@ class SecProvider:
         self.http = http
         self.archive_dir = Path(archive_dir)
 
-    def results_announcements(self, symbol: str, cik: int, since: datetime, form: str = "6-K", exhibit: str = "release") -> list[Filing]:
+    def results_announcements(
+        self, symbol: str, cik: int, since: datetime, form: str = "6-K", exhibit: str = "release", supplement: bool = False
+    ) -> list[Filing]:
         """All earnings releases published after `since`, in ascending order of publication time.
 
         `form` is the SEC form that carries them: 6-K or 8-K (item 2.02). `exhibit` is what is kept of each: "release", the press release itself, or
         "us_gaap_statements", the summary US GAAP financial statements exhibit (ASML: its press release has only a few figures, the statements have the rest),
         or "ifrs_statements", the IFRS consolidated financial statements (XP: furnished in a 6-K of their own; its press release has no basic EPS),
         or "sap_ifrs", SAP's quarterly results document with its IFRS statements (see sap_statement_title).
+        With `supplement` the earnings press releases are looked for as supplementary documents of results parsed from another exhibit (XP: for the
+        adjusted EPS of its press release), with an index of their own (releases.json) and only a title "... Reports ... Quarter ... Results" taken.
         """
+        if supplement:
+            exhibit = SUPPLEMENT_EXHIBIT
         folder = self.archive_dir / symbol.upper()
-        index_path = folder / "index.json"
+        index_path = folder / ("releases.json" if supplement else "index.json")
         index = json.loads(index_path.read_text(encoding="utf-8")) if index_path.exists() else []
         known = {e["accession"] for e in index}
 
@@ -211,6 +221,9 @@ class SecProvider:
                 raise SecUserAgentMissing(f"The environment variable {USER_AGENT_ENV} is not set")
             added = self._examine_new(symbol, cik, since, folder, index, known, form, exhibit)
         except Exception as e:
+            if supplement and not index:  # supplementary documents are optional: without any saved, the results stand on the main filings alone
+                print(f"{symbol}: cannot reach the SEC ({e}); no press releases saved for the adjusted EPS", file=sys.stderr)
+                return []
             if not any(e_["results"] for e_ in index):
                 raise
             print(f"{symbol}: cannot reach the SEC ({e}); using the {sum(x['results'] for x in index)} saved filings", file=sys.stderr)
@@ -222,7 +235,7 @@ class SecProvider:
 
         since_ts = pd.Timestamp(since)
         return [
-            Filing(e["title"], pd.Timestamp(e["published"]), e["url"], (folder / e["file"]).read_bytes())
+            Filing(e["title"], pd.Timestamp(e["published"]), e["url"], (folder / e["file"]).read_bytes(), supplement=supplement)
             for e in index
             if e["results"] and pd.Timestamp(e["published"]) >= since_ts
         ]
@@ -307,6 +320,8 @@ class SecProvider:
                 title = sap_statement_title(html)
             else:
                 title = statements_title(html) if exhibit == "us_gaap_statements" else headline(html)
+                if title and exhibit == SUPPLEMENT_EXHIBIT and not is_results_release_title(title):
+                    title = None  # a notice of the results date, or preliminary estimates ("XP INC. ANNOUNCES PRELIMINARY ESTIMATED 2Q20 FINANCIAL RESULTS")
             if title:
                 file = f"{item['published']:%Y-%m-%d}_{name}"
                 folder.mkdir(parents=True, exist_ok=True)

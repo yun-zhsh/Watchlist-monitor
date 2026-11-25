@@ -74,11 +74,18 @@ def test_a_stock_without_saved_data_is_an_error_entry_not_a_crash(real_service):
             assert "error" in s and "Saved data could not be read" in s["error"]
 
 
+def awaits_first_update(stock, key: str) -> bool:
+    """A metric whose documents the first scheduled update saves, like a new stock: XP's PE Non-GAAP comes from its press releases (releases.json)."""
+    return key == "pe_non_gaap" and stock.sec_release_non_gaap and not (ROOT / "data" / "filings" / stock.symbol / "releases.json").exists()
+
+
 def test_every_metric_of_every_stock_can_be_asked_for(real_service):
     for stock in real_service.config.stocks:
         if stock.symbol not in saved_symbols(real_service):
             continue
         for key in stock.metrics:
+            if awaits_first_update(stock, key):
+                continue
             result = real_service.valuation(stock.symbol, key, 5)
             assert result["sources"]["earnings_record"]["filing_url"], (stock.symbol, key)
 

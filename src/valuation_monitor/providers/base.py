@@ -18,6 +18,7 @@ class Filing:
     attachments: dict[str, bytes] = field(default_factory=dict)  # other files of the same filing (e.g. Samsung's balance sheet)
     provisional: bool = False  # preliminary data (e.g. Samsung earnings call presentation), replaced when the official report is out
     note: str = ""  # explanation of the publication time etc. (e.g. the annual report keeps the express report's publication time)
+    supplement: bool = False  # a supplementary document of results parsed from other filings (XP's press release): only its Non-GAAP EPS is read
 
 
 @dataclass(frozen=True)

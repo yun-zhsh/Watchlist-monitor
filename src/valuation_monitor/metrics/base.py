@@ -18,11 +18,13 @@ class Metric(ABC):
 
 
 def applicable_record(data: StockData, column: str) -> pd.Series:
-    """Which earnings record is used on each trading day: the row number in data.fundamentals (the latest one already published that day with a value in the column), NaN if none."""
-    f = data.fundamentals.reset_index(drop=True).dropna(subset=[column]).sort_values("available_date", kind="stable")
+    """Which earnings record is used on each trading day: the row number in data.fundamentals (the latest one already published that day), NaN if none
+    or if that record has no value in the column. A newer record without a value ends the use of an older one: when a quarter lacks a figure (XP's
+    adjusted EPS of a quarter without adjustments), the TTM of the year before is not carried on as if it were current."""
+    f = data.fundamentals.reset_index(drop=True).sort_values("available_date", kind="stable")
     days = pd.DataFrame({"date": data.close.index})
     merged = pd.merge_asof(days, f[["available_date", column]].assign(record=f.index), left_on="date", right_on="available_date")
-    return pd.Series(merged["record"].to_numpy(), index=data.close.index, dtype=float)
+    return pd.Series(merged["record"].where(merged[column].notna()).to_numpy(), index=data.close.index, dtype=float)
 
 
 def point_in_time(data: StockData, column: str) -> pd.Series:

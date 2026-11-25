@@ -20,6 +20,7 @@ class Component:
     value: float
     derived: bool = False  # obtained by subtracting cumulative figures (e.g. Q4 = full year - first three quarters)
     raw: float | None = None  # the original figure in the filing before the split adjustment (None if not adjusted)
+    note: str = ""  # what is special about this figure, from the filing that first published it (e.g. SAP's non-IFRS EPS from continuing operations)
 
 
 def num(value: float | None) -> str:
@@ -34,10 +35,20 @@ def sum_terms(components: list[Component]) -> str:
     return " + ".join(f"{c.period} {num(c.value)}{'*' if c.derived else ''}" for c in components)
 
 
+def component_notes(components: list[Component] | None) -> str:
+    """The notes of the periods of a sum, each note once with its periods: "2023Q1, 2023Q2: non-IFRS EPS from continuing operations (...)"."""
+    by_note: dict[str, list[str]] = {}
+    for c in components or []:
+        if c.note:
+            by_note.setdefault(c.note, []).append(c.period)
+    return "; ".join(f"{', '.join(periods)}: {note}" for note, periods in by_note.items())
+
+
 def sum_formula(components: list[Component] | None, total: float | None) -> str:
     if not components or total is None:
         return ""
-    return f"{sum_terms(components)} = {num(total)}"
+    notes = component_notes(components)
+    return f"{sum_terms(components)} = {num(total)}" + (f" ({notes})" if notes else "")
 
 
 SHARES_UNIT = "millions of shares; millions of ADS for ADRs"

@@ -38,6 +38,8 @@ freshness:
 #   press_release     earnings press release (Form 6-K) filed with the SEC on EDGAR by US-listed companies, every quarter; needs a cik
 #   ifrs_statements   IFRS consolidated financial statements (HTML) furnished on Form 6-K, interim (IAS 34) every quarter and the audited annual
 #                     statements for the fourth quarter (full year minus nine months); needs a cik and sec_exhibit: ifrs_statements (XP)
+#   sap_ifrs          SAP's quarterly results document (press release or quarterly statement, HTML) furnished on Form 6-K, with its IFRS
+#                     statements; every quarter has a three-months income statement; needs a cik and sec_exhibit: sap_ifrs (SAP)
 #   kifrs_statements  English consolidated financial statements (K-IFRS) on the Samsung Electronics IR website, every quarter; market KR
 #   cn_report         periodic reports (Q1, half-year, Q3, annual) and annual express reports of A-share companies on CNINFO (Chinese originals); market CN
 # market: HK (HKEXnews; default for symbols ending in .HK), US (SEC EDGAR), KR (the IR website of a Korean company; default for
@@ -75,6 +77,13 @@ stocks:
     sec_form: 8-K
     filing_format: us_press_release   # USD, US GAAP, basic EPS
     metrics: [pe, pe_non_gaap, ps, pb]   # the GAAP to Non-GAAP reconciliation in every release states a basic Non-GAAP EPS, so both PEs are basic
+  - symbol: SAP
+    name: SAP (ADR)
+    market: US   # NYSE; one ADS = one ordinary share, so price and EPS need no ADS ratio; a foreign private issuer filing 20-F and 6-K
+    cik: 1000184   # SAP SE; fiscal year = calendar year, results every quarter
+    sec_exhibit: sap_ifrs   # the 6-K exhibit with SAP's quarterly results and its IFRS statements (press release or quarterly statement)
+    filing_format: sap_ifrs   # price in USD per ADS, earnings in EUR (IFRS): converted with the EURUSD rate of each day
+    metrics: [pe, pe_non_ifrs, ps, pb]   # PE Non-IFRS on SAP's basic non-IFRS EPS (from continuing operations in 2023 and 2024)
   - symbol: ASML
     name: ASML Holding (NY registry shares)
     market: US   # the NASDAQ line; one NY registry share = one ordinary share, so price and EPS need no ADS ratio

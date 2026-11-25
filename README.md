@@ -621,6 +621,14 @@ committed as data and only read at run time; the saved prices and an index per e
 and to count staleness in trading days. The complete specification and the plan (four pull requests) are in
 [docs/trading-calendar.md](docs/trading-calendar.md).
 
+## Planned: price sources
+
+A design, not built yet, for cross-checking the prices of the markets that have only Yahoo today (Korea, A-shares, US): Tencent's quote
+API as a second source for A-shares (and possibly US stocks), a backtest of Samsung's saved closes against the Korea Exchange before any
+change of the Korean source, a check of the A-share bonus share history, the PS and PB share basis of Samsung, and an MCP tool that
+returns the saved prices with their sources. The complete specification, the plan and the open questions are in
+[docs/price-sources.md](docs/price-sources.md).
+
 ## To do
 
 Low priority, to be done when needed:

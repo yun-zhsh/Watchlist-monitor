@@ -6,6 +6,10 @@
 lookback_years: 10   # the number of years selected by default
 lookback_options: [10, 5, 3, 2, 1]   # the number of years that can be chosen in the drop-down on the web page
 
+# The GitHub repository of this project (owner/name). The "Order" button of the home page saves through its workflow
+# home-order.yml, and every home page (GitHub Pages and Cloud Run) reads the newest order from its GitHub Pages site.
+github_repository: yun-zhsh/Watchlist-monitor
+
 # Valuation levels: a percentile <= upper falls into that level (sorted by upper ascending; the last upper must be 100)
 levels:
   - { upper: 10, label: Deeply undervalued }
@@ -49,7 +53,9 @@ freshness:
 # symbols ending in .KS) or CN (A-shares, CNINFO; default for symbols ending in .SZ or .SS).
 # Accessing EDGAR requires identifying yourself: before running, set the environment variable
 # SEC_USER_AGENT="valuation-monitor your-email" (see the README).
-# The order below is the order of the stocks on the home page and in the reports.
+# The order below is the order of the stocks on the home page and in the reports. hidden: true leaves a stock off the home page
+# only (its data is still updated; its page, downloads and MCP lookups still work). The "Order" button of the home page rewrites
+# both through the workflow home-order.yml: it moves whole entries and adds or removes only the hidden: true line.
 stocks:
   - symbol: META   # Yahoo Finance symbol
     name: Meta Platforms

@@ -1,11 +1,15 @@
 {% extends "base.html" %}
+{% block topbar_extra %}
+<button type="button" id="order-open" class="btn btn-secondary" aria-haspopup="dialog" aria-controls="order-panel">Order</button>
+{% endblock %}
 {% block content %}
 <h1>Tracked stocks</h1>
 <p class="muted">Click a stock to see its valuation trends and data checks, and to download the historical data. The percentile is based on the number of years selected at the top right.</p>
+<div id="order-notice" class="notice" aria-live="polite" hidden></div>
 
-<div class="stock-list">
+<div class="stock-list" id="stock-list">
   {% for r in reports %}
-  <a class="card stock-card" href="{{ url_for('stock', symbol=r.stock.symbol) }}" data-keep-years>
+  <a class="card stock-card" href="{{ url_for('stock', symbol=r.stock.symbol) }}" data-keep-years data-symbol="{{ r.stock.symbol }}" data-name="{{ r.stock.name }}"{% if r.stock.hidden %} hidden{% endif %}>
     <div class="stock-head">
       <div>
         <div class="stock-name">{{ r.stock.name }}</div>
@@ -42,4 +46,36 @@
   <p>There are no stocks in the config file yet.</p>
   {% endfor %}
 </div>
+
+<dialog id="order-panel" class="order-panel" aria-labelledby="order-title">
+  <div class="order-head">
+    <h2 id="order-title">Order of the home page</h2>
+    <button type="button" class="btn btn-secondary" data-order-close>Close</button>
+  </div>
+  <p class="muted small">Move a stock with its buttons, or drag it on a computer. A hidden stock is only left off this page: its data is still updated and its own page still works. Save stores the order for every device; Close without saving keeps the saved order.</p>
+  <ol id="order-list" class="order-list"></ol>
+  <div class="order-actions">
+    <button type="button" class="btn btn-secondary" data-order-undo title="Back to the order and hidden stocks last saved">Undo changes</button>
+    <button type="button" class="btn btn-secondary" data-order-show-all title="Show every stock (press Save to keep it)">Show all</button>
+    <button type="button" class="btn" data-order-save>Save</button>
+  </div>
+  <div id="order-message" class="notice" aria-live="polite" hidden></div>
+  <details class="order-token">
+    <summary>GitHub token for saving (needed once on each device)</summary>
+    <p class="small">Saving starts the workflow "Save the home page order" of the repository, which writes the new order into config.yaml and republishes the site. GitHub needs a token for that:</p>
+    <ol class="small">
+      <li>On GitHub open Settings, Developer settings, Personal access tokens, Fine-grained tokens, and click "Generate new token".</li>
+      <li>Repository access: "Only select repositories", and choose <span data-order-repo>this repository</span> only.</li>
+      <li>Permissions: Repository permissions, "Actions": "Read and write". Nothing else is needed.</li>
+      <li>Copy the token and paste it below. It is kept in this browser only and sent to GitHub only.</li>
+    </ol>
+    <div class="order-token-row">
+      <input type="password" id="order-token" autocomplete="off" spellcheck="false" placeholder="github_pat_..." aria-label="GitHub token">
+      <button type="button" class="btn btn-secondary" data-token-remember>Remember</button>
+      <button type="button" class="btn btn-secondary" data-token-forget>Forget</button>
+    </div>
+    <p class="muted small" id="order-token-state"></p>
+  </details>
+</dialog>
 {% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='home-order.js') }}"></script>{% endblock %}

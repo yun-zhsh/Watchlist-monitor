@@ -79,7 +79,7 @@ def test_python_string_literals_have_no_cjk():
 @pytest.mark.parametrize(
     "path",
     [*sorted(SRC.glob("web/templates/*.html")), *sorted(SRC.glob("web/static/*.js")), *sorted(SRC.glob("web/static/*.css")),
-     *sorted(SRC.glob("cmaps/*")), ROOT / "config.yaml", ROOT / ".github" / "workflows" / "pages.yml", ROOT / ".github" / "workflows" / "ci.yml"],
+     *sorted(SRC.glob("cmaps/*")), ROOT / "config.yaml", *sorted((ROOT / ".github" / "workflows").glob("*.yml"))],
     ids=lambda p: str(p.relative_to(ROOT)),
 )
 def test_templates_static_files_and_config_have_no_cjk(path):
@@ -127,6 +127,18 @@ def test_rendered_pages_and_downloads_have_no_cjk(client, monitor, tmp_path):
         assert not CJK.search(r.headers.get("Content-Disposition", "")), url
     out = tmp_path / "site"
     export_site(monitor, out, base_path="/x")
-    for page in out.rglob("*.html"):
+    for page in [*out.rglob("*.html"), out / "home-order.json"]:
         assert not CJK.search(page.read_text(encoding="utf-8")), page
+
+
+def test_the_order_rewrite_messages_are_english(tmp_path, capsys):
+    from valuation_monitor.home_order import main
+
+    config = tmp_path / "config.yaml"
+    config.write_text("stocks:\n  - symbol: 0700.HK\n    name: Tencent Holdings\n", encoding="utf-8")
+    for request in ('{"order": ["0700.HK"], "hidden": ["0700.HK"]}', "not json", '{"order": [], "hidden": []}'):
+        (tmp_path / "request.json").write_text(request, encoding="utf-8")
+        main(["--config", str(config), "--input", str(tmp_path / "request.json")])
+        out = capsys.readouterr()
+        assert out.out + out.err and not CJK.search(out.out + out.err + config.read_text(encoding="utf-8"))
 

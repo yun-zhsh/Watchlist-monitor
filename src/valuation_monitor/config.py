@@ -41,6 +41,7 @@ class StockConfig:
     eps_basis: dict[str, str] = field(default_factory=dict)  # PE metric -> "diluted" where the company discloses no basic EPS (Alibaba: pe_non_gaap); others are basic
     sec_release_non_gaap: bool = False  # also read the earnings press release for its adjusted EPS, next to the statements (XP; see release_eps.py)
     non_gaap_changes: tuple[str, ...] = ()  # days (YYYY-MM-DD) the company changed the definition of its Non-GAAP EPS (Cognizant: 2019-02-06; see build_history)
+    hidden: bool = False  # left off the home page only (set by the "Order" panel there); data, the stock page, downloads and MCP are unaffected
 
     def basis(self, metric) -> str | None:
         """The EPS basis of a PE metric ("basic" or "diluted"); None for a metric not based on EPS (PS, PB)."""
@@ -83,6 +84,15 @@ class Config:
     levels: list[Level] = field(default_factory=list)
     lookback_options: list[int] = field(default_factory=lambda: list(DEFAULT_LOOKBACK_OPTIONS))  # lookback years selectable on the web page
     freshness: Freshness = field(default_factory=Freshness)
+    github_repository: str | None = None  # "owner/name": where the "Order" panel saves (workflow home-order.yml) and whose GitHub Pages site it reads
+
+    @property
+    def pages_url(self) -> str | None:
+        """The GitHub Pages project site of github_repository (https://owner.github.io/name/), or None."""
+        if not self.github_repository:
+            return None
+        owner, name = self.github_repository.split("/")
+        return f"https://{owner.lower()}.github.io/{name}/"
 
     @property
     def max_lookback(self) -> int:
@@ -165,10 +175,15 @@ def parse_config(raw: dict) -> Config:
                 eps_basis={k: v for k, v in eps_basis.items() if v != "basic"},
                 sec_release_non_gaap=sec_release_non_gaap,
                 non_gaap_changes=non_gaap_changes,
+                hidden=parse_hidden(symbol, s.get("hidden", False)),
             )
         )
     if not stocks:
         raise ValueError("The config has no stocks (stocks is empty)")
+    symbols = [s.symbol for s in stocks]
+    duplicates = sorted({s for s in symbols if symbols.count(s) > 1})
+    if duplicates:
+        raise ValueError(f"Each stock may appear only once in the config: {duplicates}")
 
     levels = [Level(float(lv["upper"]), str(lv["label"])) for lv in raw.get("levels") or []]
     levels = sorted(levels, key=lambda lv: lv.upper) or DEFAULT_LEVELS
@@ -181,7 +196,21 @@ def parse_config(raw: dict) -> Config:
     default = int(raw.get("lookback_years", options[0]))
     if default not in options:
         raise ValueError(f"lookback_years={default} must be one of lookback_options {options}")
-    return Config(stocks=stocks, lookback_years=default, levels=levels, lookback_options=options, freshness=parse_freshness(raw.get("freshness") or {}))
+    repository = raw.get("github_repository")
+    if repository is not None and not (isinstance(repository, str) and GITHUB_REPOSITORY.fullmatch(repository)):
+        raise ValueError(f"github_repository must be written owner/name, got {repository!r}")
+    return Config(stocks=stocks, lookback_years=default, levels=levels, lookback_options=options, freshness=parse_freshness(raw.get("freshness") or {}),
+                  github_repository=repository)
+
+
+GITHUB_REPOSITORY = re.compile(r"[A-Za-z0-9-]+/[A-Za-z0-9._-]+")
+
+
+def parse_hidden(symbol: str, value) -> bool:
+    """hidden must be a YAML boolean, so that a typo such as "hidden: yes please" fails instead of being taken as true."""
+    if not isinstance(value, bool):
+        raise ValueError(f"{symbol}: hidden must be true or false, got {value!r}")
+    return value
 
 
 def parse_freshness(raw: dict) -> Freshness:

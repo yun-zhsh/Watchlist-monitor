@@ -16,6 +16,7 @@
           {% for y in year_options %}<option value="{{ y }}"{% if y == default_years %} selected{% endif %}>Past {{ y }} {{ "year" if y == 1 else "years" }}</option>{% endfor %}
         </select>
       </label>
+      {% block topbar_extra %}{% endblock %}
       {% if not static_site %}
       <form method="post" action="{{ url_for('refresh_view') }}" class="refresh-form">
         <input type="hidden" name="next" value="{{ request.path }}">

@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import io
+import json
 import shutil
 import sys
 import threading
@@ -22,7 +23,7 @@ from pathlib import Path
 import pandas as pd
 from flask import Flask, abort, g, redirect, render_template, request, send_file, url_for
 
-from valuation_monitor import __version__, cloud
+from valuation_monitor import __version__, cloud, home_order
 from valuation_monitor.audit import explain
 from valuation_monitor.config import Config, load_config
 from valuation_monitor.service import PRICE_STATUS_LABELS, MetricResult, Monitor, StockReport
@@ -242,7 +243,8 @@ def create_app(
         ensure_state()
         reports = list(state.values())
         views = {r.stock.symbol: metric_views(r, monitor.config) for r in reports}
-        return render_template("index.html", reports=reports, views=views, data=view_data(reports, monitor.config))
+        data = view_data(reports, monitor.config, home_order=home_order_settings(monitor.config))
+        return render_template("index.html", reports=reports, views=views, data=data)
 
     # page URLs end with / and download URLs carry an extension, so the URLs stay the same after exporting a static site
     @app.get("/stock/<symbol>/")
@@ -290,6 +292,17 @@ UPDATE_TIMEOUT = timedelta(minutes=35)  # the job's limit (30 minutes) plus the 
 FINAL_RESULTS = (cloud.NEW_DATA, cloud.NO_NEW_DATA, cloud.FAILED)
 
 
+def home_order_settings(config: Config) -> dict:
+    """What the "Order" panel of the home page needs: where the newest published order is, and where to save a new one."""
+    pages = config.pages_url
+    return {
+        "url": f"{pages}{home_order.FILE_NAME}" if pages else None,  # fetched when the page loads (home_order.apply)
+        "repository": config.github_repository,
+        "workflow": home_order.WORKFLOW,
+        "ref": home_order.BRANCH,
+    }
+
+
 def _from_epoch(text: str | None) -> datetime | None:
     try:
         return datetime.fromtimestamp(int(text or ""), timezone.utc)
@@ -330,11 +343,15 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
-def export_site(monitor: Monitor, out: str | Path, base_path: str = "") -> list[Path]:
-    """Export all pages and downloads as a static site. base_path is the sub-path the site lives under (e.g. /repo-name on GitHub Pages)."""
+def export_site(monitor: Monitor, out: str | Path, base_path: str = "", offline: bool = False) -> list[Path]:
+    """Export all pages and downloads as a static site. base_path is the sub-path the site lives under (e.g. /repo-name on GitHub Pages).
+
+    offline: use the saved data only, without fetching (the workflow that only republishes after a new home page order).
+    The site also gets home-order.json, the order and hidden stocks of the config, which every home page fetches (see home_order.py).
+    """
     out = Path(out)
     app = create_app(monitor, static_site=True)
-    app.config["refresh"]()
+    app.config["refresh"](offline=offline)
     client = app.test_client()
     base_url = f"http://localhost{base_path.rstrip('/')}/"
 
@@ -356,6 +373,9 @@ def export_site(monitor: Monitor, out: str | Path, base_path: str = "") -> list[
         target.write_bytes(resp.data)
         written.append(target)
     shutil.copytree(app.static_folder, out / "static")
+    order_file = out / home_order.FILE_NAME
+    order_file.write_text(json.dumps(home_order.payload(monitor.config), indent=2) + "\n", encoding="utf-8")
+    written.append(order_file)
     (out / ".nojekyll").touch()  # make GitHub Pages publish as is, without Jekyll processing
     return written
 
@@ -367,9 +387,10 @@ def export_main(argv: list[str] | None = None) -> int:
     add_common_args(parser)
     parser.add_argument("--out", default="site", help="Output directory (default: site; it is emptied first)")
     parser.add_argument("--base-path", default="", help="Sub-path the site is served from, e.g. /repository-name for a GitHub Pages project site")
+    parser.add_argument("--offline", action="store_true", help="Do not update the data: export what is saved (used after a new home page order)")
     args = parser.parse_args(argv)
 
-    monitor = Monitor(load_config(args.config), args.data_dir, args.cache_dir, args.refresh, db_path=args.db)
-    written = export_site(monitor, args.out, args.base_path)
+    monitor = Monitor(load_config(args.config), args.data_dir, args.cache_dir, args.refresh, db_path=args.db, offline=args.offline)
+    written = export_site(monitor, args.out, args.base_path, offline=args.offline)
     print(f"Exported {len(written)} files to {args.out}/")
     return 0

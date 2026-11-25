@@ -1,0 +1,115 @@
+# Save the home page order: started by the "Order" panel of the home page (through the GitHub API, with the maintainer's
+# fine-grained token) or by hand from the Actions page. It rewrites config.yaml (the order of the stocks and their hidden: true
+# lines only; see home_order.py), commits it straight to main and republishes GitHub Pages from the saved data: no tests (only the
+# order of the config changed, which valuation-monitor-home-order checks) and no data update. Cloud Run needs no redeploy: its
+# home page reads home-order.json from the published site.
+name: Save the home page order
+
+on:
+  workflow_dispatch:
+    inputs:
+      order:
+        description: 'The new order as JSON: {"order": [every symbol of config.yaml], "hidden": [symbols]}'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  save:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # commit config.yaml
+    # One save at a time. A newer save waiting behind a running one replaces an older waiting one, which is fine: each save
+    # holds the whole order.
+    concurrency:
+      group: home-order
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install
+        run: pip install -e .
+
+      # The input is passed through the environment, never pasted into the script. The program checks it strictly and changes
+      # nothing unless the new config.yaml equals the old one in everything but the order and the hidden stocks.
+      - name: Write the new order into config.yaml
+        env:
+          ORDER: ${{ inputs.order }}
+        run: printf '%s' "$ORDER" | valuation-monitor-home-order --config config.yaml
+
+      - name: Commit the new order
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add config.yaml
+          if git diff --cached --quiet; then
+            echo "The order is unchanged"
+            exit 0
+          fi
+          if [ -n "$(git status --porcelain --untracked-files=no -- . ':!config.yaml')" ]; then
+            echo "::error::Files other than config.yaml changed"
+            exit 1
+          fi
+          git commit -m "Update the home page order"
+          # The scheduled data workflow may push data in the meantime: rebase onto it and try again.
+          for attempt in 1 2 3 4; do
+            if git pull --rebase origin main && git push origin HEAD:main; then
+              exit 0
+            fi
+            sleep $((attempt * 10))
+          done
+          echo "::error::Could not push the new order"
+          exit 1
+
+  publish:
+    needs: save
+    if: ${{ !cancelled() && needs.save.result == 'success' }}
+    runs-on: ubuntu-latest
+    # The same group as the scheduled data workflow (pages.yml), so the two never build or deploy at the same time, and a data
+    # run that started before this save cannot publish the old order after it.
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    env:
+      TZ: Asia/Hong_Kong # the update time shown on the pages is in Hong Kong time
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main # with the new order and the newest committed data
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install
+        run: pip install -e .
+
+      - name: Export the site from the saved data
+        run: valuation-monitor-export --offline --out _site --base-path "/${{ github.event.repository.name }}"
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -127,3 +127,36 @@ h2 { font-size: 1.1rem; margin: 0 0 0.75rem; }
 
 .notice { margin: 12px 0; padding: 10px 14px; border: 1px solid var(--accent); border-radius: 8px; background: var(--card); }
 .notice-error { border-color: #dc2626; color: #dc2626; }
+
+/* The "Order" panel of the home page (home-order.js) */
+[hidden] { display: none !important; }
+.order-panel {
+  width: min(640px, calc(100vw - 24px)); max-height: calc(100vh - 24px); padding: 16px;
+  background: var(--card); color: var(--text); border: 1px solid var(--border); border-radius: 10px;
+}
+.order-panel::backdrop { background: rgba(0, 0, 0, 0.4); }
+.order-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.order-head h2 { margin: 0; }
+.order-list { list-style: none; margin: 12px 0; padding: 0; border-top: 1px solid var(--border); }
+.order-item {
+  display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap;
+  padding: 8px 4px; border-bottom: 1px solid var(--border); cursor: grab;
+}
+.order-item.order-over { border-top: 2px solid var(--accent); }
+.order-hidden .order-label { opacity: 0.55; }
+.order-label { min-width: 0; overflow-wrap: anywhere; }
+.order-tools { display: flex; gap: 6px; flex-wrap: wrap; }
+.btn-small { padding: 4px 10px; font-size: 0.85rem; }
+.btn-small:disabled { cursor: default; opacity: 0.4; }
+.order-actions { display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }
+.order-token { margin-top: 12px; }
+.order-token summary { cursor: pointer; color: var(--accent); }
+.order-token-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.order-token-row input {
+  flex: 1 1 200px; min-width: 0; font: inherit; color: var(--text); background: var(--bg);
+  border: 1px solid var(--border); border-radius: 8px; padding: 6px 8px;
+}
+@media (max-width: 700px) {
+  .topbar { flex-wrap: wrap; gap: 8px; }
+  .topbar-right { flex-wrap: wrap; }
+}

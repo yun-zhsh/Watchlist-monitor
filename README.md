@@ -81,7 +81,7 @@ its sources (filing link, publication time, effective trading day and the writte
 data that was public by then is used, and all arithmetic stays in Python so the model only calls tools and explains the result. The cost is
 that the assistant can only answer what the tools offer, in return a wrong or unsourced number is hard to produce and easy to catch.
 
-**Status:** v0.4.3. Project conventions (English-only code and output, tests, how the data is written) are in [CLAUDE.md](CLAUDE.md).
+**Status:** v0.4.4. Project conventions (English-only code and output, tests, how the data is written) are in [CLAUDE.md](CLAUDE.md).
 
 ## What it tracks
 
@@ -137,6 +137,7 @@ On start it first updates the data (a few seconds to a dozen or so), then opens 
 
 - **History selector**: the drop-down at the top right chooses which period the historical percentile is computed over: the past 10, 5, 3, 2 or 1 years (default 10). The percentile and level on the home page, the metric cards on a stock page, and the time range and percentile lines of the trend charts all follow it. The choice is remembered and carried to other pages (the URL gets `?years=5`; share that URL and the other person sees the same choice). The results for every number of years are computed when the page is generated, so the online (static) site can switch too.
 - **Home page**: lists all tracked stocks with the latest price, the current value of each metric, its historical percentile and valuation level.
+- **Order**: the button next to "History" on the home page opens a panel that lists every stock (English name and symbol). Move a stock with Top, Up and Down (or drag it on a computer), hide or show it, then press Save; see "Home page order" below.
 - **Stock page**: click a stock. It shows:
   - the current value and historical percentile of each metric, with a bar marking the current position;
   - a trend chart for each metric (with P10-P90 percentile lines) and a price chart;
@@ -146,6 +147,50 @@ On start it first updates the data (a few seconds to a dozen or so), then opens 
 - **Update data**: the button at the top right fetches the latest prices and filings over the network. A line at the top of the page then says whether new data was loaded or there was none (on Google Cloud, while the update job runs, that it is still running).
 
 Options: `--port` sets the port (default 8050), `--no-browser` does not open the browser; `-c`, `--data-dir` and `--refresh` are the same as in the CLI. By default only the local machine may connect.
+
+### Home page order
+
+`config.yaml` is the only place the order is kept: the home page shows the stocks in the order of its `stocks` list, and a stock
+with `hidden: true` in its entry is left off the home page. Hiding concerns the home page only: the stock's data is still updated,
+and its own page, its downloads and the MCP server work as before (open it by its URL, e.g. `/stock/JD/`). A hidden stock stays in
+the "Order" panel so it can be shown again. A new stock is added to `config.yaml` by hand at the position you want.
+
+**Saving from the page** (one click, from any device): Save starts the workflow "Save the home page order"
+(`.github/workflows/home-order.yml`) through the GitHub API. The workflow checks the request strictly (its shape and size, the
+order lists every stock of `config.yaml` exactly once, the hidden ones are among them), rewrites `config.yaml` with
+`valuation-monitor-home-order` (it moves whole stock entries and adds or removes only the `hidden: true` line, so every comment
+stays; the rewritten file must parse to the same config except for the order and `hidden`, or nothing is committed), commits it
+straight to `main` ("Update the home page order"), and republishes GitHub Pages from the saved data (no tests and no data update).
+"Undo changes" puts the panel back to the order and hidden stocks last saved (as published), discarding its unsaved edits;
+"Show all" clears every hidden mark in the panel (press Save to keep it). There is no fixed default order: the last saved
+`config.yaml` is the reference. Close without saving changes nothing.
+
+**The token** (once on each device): GitHub needs a fine-grained personal access token to start the workflow.
+
+1. On GitHub: Settings -> Developer settings -> Personal access tokens -> Fine-grained tokens -> Generate new token.
+2. Repository access: "Only select repositories" -> `yun-zhsh/Watchlist-monitor` only.
+3. Permissions: Repository permissions -> **Actions: Read and write**. Nothing else (Metadata: read is added automatically).
+4. Paste it in the panel ("GitHub token for saving"). It is kept in that browser's local storage only, sent only to
+   api.github.com, and never written to the repository; "Forget" removes it. A token expires at the date chosen when it was made.
+
+The page says what went wrong when GitHub refuses: 401 (wrong or expired token), 403 (the token lacks Actions: Read and write for
+this repository), 404 (the token cannot see the repository, or the workflow is not on `main`).
+
+**How every page follows it**: the GitHub Pages export also publishes `home-order.json` (the order and the hidden stocks; it is
+generated, never committed). Every home page, on GitHub Pages and on Cloud Run, fetches the newest copy when it loads and applies
+it, so the Cloud Run page (whose `config.yaml` is baked into the image) follows a new order without being redeployed. If the fetch
+fails, the page keeps the order of its own `config.yaml`. The repository is named by `github_repository` in `config.yaml`.
+
+Limits:
+
+- A save takes a few minutes to reach every device: the workflow run (about two minutes) plus the GitHub Pages cache (up to ten
+  minutes). The device that saved shows the new order at once, and for 30 minutes prefers it to an older published file.
+- The saving workflow shares its publication step's concurrency group with the scheduled data workflow, so they never publish at
+  the same time. GitHub keeps only one waiting run per group: if a scheduled data run is waiting while another run of the group
+  is in progress, a save that arrives then replaces the waiting data run, and that data update happens at the next schedule.
+- Saving needs the panel's page to list exactly the stocks of `config.yaml` on `main`; a Cloud Run image older than a newly
+  added stock cannot save until it is redeployed (the workflow refuses the request and changes nothing).
+- Without a network connection to GitHub Pages (or if the site is down) a page shows the order it was built with.
 
 ### Online site (GitHub Pages)
 
@@ -164,6 +209,7 @@ Notes:
 - The repository is public, so anyone can open the site.
 - If a public repository has no activity for 60 days, GitHub disables scheduled workflows automatically; re-enable them on the Actions page.
 - You can also export the static site locally: `.venv/bin/valuation-monitor-export --out site`.
+- Saving a new home page order runs a second workflow, "Save the home page order" (`home-order.yml`), which commits `config.yaml` and republishes the site without tests and without updating the data (see "Home page order"). `--offline` exports from the saved data only, as that workflow does.
 
 ### Running on Google Cloud (dynamic page, only you can open it)
 
@@ -267,6 +313,7 @@ Everything the program saves lives in `data/` and is committed to the repository
 | `data/filings/300308.SZ/*.pdf`, `index.json` | The same for Zhongji Innolight (about 63 since 2013, about 25MB) | Only newly published filings are downloaded |
 | `data/filings/600111.SS/*.pdf`, `index.json` | The same for China Northern Rare Earth (about 51 since 2015, about 25MB) | Only newly published filings are downloaded |
 | `data/filings/601009.SS/*.pdf`, `index.json` | The same for Bank of Nanjing (56 since the 2014 annual report, about 37MB: a bank's annual and half-year reports repeat the item names on many pages, so their excerpts keep 30-46 pages) | Only newly published filings are downloaded |
+| `config.yaml` (`stocks` order, `hidden: true`) | The order of the stocks on the home page and the ones hidden there (see "Home page order"); the site publishes it as `home-order.json` | By hand, or by the workflow `home-order.yml` when Save is pressed in the "Order" panel |
 | `data/valuation.db`, table `price_bars` | Daily bars of each source and symbol: Tencent (open, high, low, close, volume, **unadjusted actual traded prices**; HK stocks only) and Yahoo (close ex-rights adjusted, adjclose further adjusted for dividends) | Only trading days after the last saved day are inserted; when Yahoo adjusts history retroactively the series is downloaded again |
 | table `fx_rates` | Daily FX rates of RMB to HKD and USD (USD is for JD and Alibaba) | Only new trading days are inserted |
 | table `prices_final` | **The final closing price decided from all sources**, plus source, cross-check status, the price of each source and the Yahoo adjustment factor | Decided again on every run; only changed days are written |
@@ -488,6 +535,7 @@ All of Tencent's earnings announcements since 2014 were published between 16:00 
 
 ## Known limitations
 
+- A home page order saved from the "Order" panel reaches the other devices after a few minutes (the workflow run plus the GitHub Pages cache); the limits of saving are listed under "Home page order".
 - For the markets that have only Yahoo as a price source (US, Korea, China A-shares), the newest trading day can arrive late: after the close, Yahoo creates that day's daily bar with an empty close, sometimes for many hours. The program skips a bar without a close (it never saves incomplete data) and fills the day in on a later run, so those stocks can lag the real close by about half a day to a day. Hong Kong stocks are not affected, because Tencent's quote API is a second source.
 - The parsing rules were written for the filing layouts of Tencent (`highlights`), Sunny Optical (`statements`), JD and Alibaba (`press_release`), Meta, Cognizant, Amphenol, Dynatrace and Sea (`us_press_release`), ASML (`us_gaap_statements`), XP (`ifrs_statements`), SAP (`sap_ifrs`), Samsung (`kifrs_statements`) and Hikvision, Glodon, Zhongji Innolight, China Northern Rare Earth and Bank of Nanjing (`cn_report`), and verified on all of their filings since 2014 (XP: since its listing in December 2019). Other companies' layouts may differ and need a new parse function, or a check of whether an existing layout applies (see "Extending").
 - Bank of Nanjing: its 2015 annual report and 2016 Q1 report neither break down the other equity instruments nor give the ordinary shareholders' equity, so their equity includes the RMB 4.9 billion of preference shares issued in December 2015 (about 9%; the bank's later reports give 47,153 million for the end of 2015, the 2015 annual report 52,027 million, and the program warns about the difference). PB is about 9% too low from 2016-04-28 to 2016-08-30, before the default 10-year window. Its 2016 half-year express report (in use 2016-08-05 to 2016-08-30) gives only the total equity, including them. Its express reports are rounded to RMB 1 million (see "`cn_report` layout"). Its saved excerpts are larger than the other A-shares' (about 37MB), because the item names the page selection looks for recur on many pages of a bank's report. Its 2013 annual report and 2014 half-year and Q3 reports (an older layout that does not parse) are before the 12-year fetch window and are never downloaded.
@@ -516,6 +564,7 @@ CLAUDE.md                          working rules for Claude Code sessions (langu
 src/valuation_monitor/
   cli.py                           command line entry points (valuation-monitor, valuation-monitor-update, valuation-monitor-check, valuation-monitor-db; the MCP server is in mcp_server.py)
   config.py                        config parsing
+  home_order.py                    the home page order and hidden stocks: checking a request, rewriting config.yaml, home-order.json
   data.py                          gathers the data sources into what the metric calculations need
   db.py                            the SQLite database: tables, reading and writing only what changed
   freshness.py                     checks how old the newest saved price, FX rate and filing is (limits in config.yaml); fails the update when prices or FX rates are stale
@@ -547,6 +596,7 @@ src/valuation_monitor/
   web/                             web interface (Flask; wsgi.py is the server entry point for Cloud Run): page templates, styles, Chart.js, chart tooltips, download file generation (including daily valuation detail), static site export
 data/                              valuation.db (prices, FX rates, parsed filings, earnings) and the saved original filings (see "Saved data")
 .github/workflows/pages.yml        scheduled data update and GitHub Pages publication
+.github/workflows/home-order.yml   saves the home page order from the "Order" panel into config.yaml and republishes GitHub Pages
 Dockerfile, docs/                  container image and the Google Cloud deployment guide
 tests/                             unit tests (offline, no network access)
 ```

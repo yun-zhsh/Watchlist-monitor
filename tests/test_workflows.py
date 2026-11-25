@@ -56,7 +56,7 @@ def test_a_job_after_a_skippable_job_is_not_skipped_with_it():
     # GitHub skips a job when any job upstream of it, however far back, was skipped, unless the job has a condition with a
     # status check function. The scheduled runs skip "tests", which once left the deployment skipped on every scheduled
     # run, while the runs still showed as successful.
-    for name in ("ci.yml", "pages.yml"):
+    for name in ("ci.yml", "pages.yml", "home-order.yml"):
         jobs = load(name)["jobs"]
         for job_name, job in jobs.items():
             skippable = [up for up in upstream(jobs, job_name) if "if" in jobs[up]]
@@ -86,3 +86,28 @@ def test_stale_data_still_publishes_but_fails_the_run_at_the_end():
     assert pages["jobs"]["build"]["outputs"]["stale"] == "${{ steps.freshness.outputs.stale }}"
     last = pages["jobs"]["deploy"]["steps"][-1]  # ...but after it has happened, the run fails
     assert last["name"] == "Fail the run if the data is stale" and last["if"] == "needs.build.outputs.stale == 'true'" and "exit 1" in last["run"]
+
+
+def test_the_home_page_order_workflow_only_rewrites_config_and_republishes():
+    workflow = load("home-order.yml")
+    order = triggers(workflow)["workflow_dispatch"]["inputs"]["order"]
+    assert set(triggers(workflow)) == {"workflow_dispatch"} and order["type"] == "string" and order["required"] is True
+    assert workflow["permissions"] == {"contents": "read"}  # each job asks for what it needs
+    save, publish = workflow["jobs"]["save"], workflow["jobs"]["publish"]
+    assert save["if"] == "github.ref == 'refs/heads/main'"
+    assert save["permissions"] == {"contents": "write"}
+    steps = {step.get("name", step.get("uses")): step for step in save["steps"]}
+    write = steps["Write the new order into config.yaml"]
+    assert write["env"] == {"ORDER": "${{ inputs.order }}"} and "${{" not in write["run"]  # the input never becomes script text
+    assert "valuation-monitor-home-order" in write["run"]
+    commit = steps["Commit the new order"]["run"]
+    assert "git add config.yaml" in commit and "git add data" not in commit and "git add -A" not in commit
+    assert "git pull --rebase origin main" in commit and "git push origin HEAD:main" in commit
+    # republished after the save, in the same group as the scheduled data workflow, without tests or a data update
+    assert publish["needs"] == "save"
+    assert publish["concurrency"] == {"group": load("pages.yml")["concurrency"]["group"], "cancel-in-progress": False}
+    assert publish["permissions"] == {"contents": "read", "pages": "write", "id-token": "write"}
+    runs = " ".join(step.get("run", "") for step in publish["steps"])
+    assert "valuation-monitor-export --offline" in runs and "pytest" not in runs and "git push" not in runs
+    assert "SEC_USER_AGENT" not in str(workflow) and "ci.yml" not in str(workflow)
+    assert [step.get("uses") for step in publish["steps"]][-2:] == ["actions/upload-pages-artifact@v3", "actions/deploy-pages@v4"]

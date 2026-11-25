@@ -178,3 +178,81 @@ def test_chart_payload_carries_the_calculation_for_the_tooltip(client):
     # the ratio recomputed in the tooltip matches the value on the trend chart
     k = n - 1
     assert charts["price"][k] / (rec["per_share"] * charts["fx"][k]) == pytest.approx(charts["values"][k], abs=0.006)
+
+
+# The home page order ("Order" panel, home_order.py)
+
+def ordered_monitor(monitor, github_repository="yun-zhsh/Watchlist-monitor"):
+    """The fixture's monitor with three stocks: JD hidden, in the order of the config."""
+    from valuation_monitor.config import parse_config
+
+    monitor.config = parse_config({
+        "github_repository": github_repository,
+        "stocks": [
+            {"symbol": "JD", "name": "JD.com (ADR)", "market": "US", "cik": 1, "hidden": True},
+            {"symbol": "0700.HK", "name": "Tencent Holdings"},
+            {"symbol": "2382.HK", "name": "Sunny Optical Technology"},
+        ],
+    })
+    columns = ["close", "source", "status", "tencent_close", "yahoo_close_unadjusted", "yahoo_factor"]
+    final = monitor.db.read_series("prices_final", {"symbol": "0700.HK"}, columns)
+    for symbol in ("JD", "2382.HK"):  # the saved data of the fixture, so that every stock has its downloads
+        monitor.db.write_series("prices_final", {"symbol": symbol}, final)
+        for table in ("periods", "ttm"):
+            monitor.db.write_frame(table, symbol, monitor.db.read_frame(table, "0700.HK"), date_format="%Y-%m-%d" if table == "ttm" else None)
+    return monitor
+
+
+def card_symbols(html):
+    import re
+
+    return re.findall(r'data-symbol="([^"]+)" data-name="[^"]+"( hidden)?>', html)
+
+
+def test_index_has_the_order_button_and_panel(client):
+    html = client.get("/").data.decode()
+    assert 'id="order-open"' in html and ">Order</button>" in html
+    assert html.index('id="years-select"') < html.index('id="order-open"')  # next to the History drop-down
+    assert '<dialog id="order-panel"' in html and ">Undo changes</button>" in html and ">Show all</button>" in html and "data-order-save" in html and "data-token-forget" in html
+    assert '"Actions": "Read and write"' in html and "static/home-order.js" in html
+    assert "Reset to default" not in html  # no fixed default order: Undo changes and Show all
+    assert view_json(html)["home_order"] == {"url": None, "repository": None, "workflow": "home-order.yml", "ref": "main"}
+
+
+def test_the_order_button_is_on_the_home_page_only(client):
+    html = client.get("/stock/0700.HK/").data.decode()
+    assert 'id="order-open"' not in html and "home-order.js" not in html and 'id="years-select"' in html
+
+
+def test_index_follows_the_config_order_and_hides_hidden_stocks(monitor):
+    from valuation_monitor.web import create_app
+
+    client = create_app(ordered_monitor(monitor)).test_client()
+    html = client.get("/").data.decode()
+    assert card_symbols(html) == [("JD", " hidden"), ("0700.HK", ""), ("2382.HK", "")]  # hidden stays in the page for the panel
+    assert view_json(html)["home_order"]["url"] == "https://yun-zhsh.github.io/Watchlist-monitor/home-order.json"
+    assert view_json(html)["home_order"]["repository"] == "yun-zhsh/Watchlist-monitor"
+    # hidden concerns the home page only: the stock page and the downloads still work
+    assert client.get("/stock/JD/").status_code == 200
+    assert client.get("/stock/JD/download/prices.csv").status_code == 200
+
+    monitor.config = type(monitor.config)(**{**monitor.config.__dict__, "stocks": monitor.config.stocks[::-1]})
+    client = create_app(monitor).test_client()
+    assert [s for s, _ in card_symbols(client.get("/").data.decode())] == ["2382.HK", "0700.HK", "JD"]
+
+
+def test_export_publishes_home_order_json(monitor, tmp_path):
+    import json
+
+    out = tmp_path / "site"
+    export_site(ordered_monitor(monitor), out, base_path="/x", offline=True)
+    assert json.loads((out / "home-order.json").read_text(encoding="utf-8")) == {"order": ["JD", "0700.HK", "2382.HK"], "hidden": ["JD"]}
+    assert card_symbols((out / "index.html").read_text(encoding="utf-8"))[0] == ("JD", " hidden")
+    assert (out / "static" / "home-order.js").exists()
+    assert monitor.offline is False  # the offline export does not leave the monitor offline
+
+
+def test_export_without_github_repository_still_publishes_the_order(monitor, tmp_path):
+    out = tmp_path / "site"
+    export_site(monitor, out)
+    assert (out / "home-order.json").read_text(encoding="utf-8").startswith('{\n  "order": [\n    "0700.HK"')

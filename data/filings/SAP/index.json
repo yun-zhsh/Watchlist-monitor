@@ -1,0 +1,723 @@
+[
+  {
+    "accession": "0001193125-14-427658",
+    "published": "2014-11-28T06:30:00",
+    "results": false
+  },
+  {
+    "accession": "0001193125-15-009922",
+    "published": "2015-01-14T06:27:59",
+    "results": false
+  },
+  {
+    "accession": "0001193125-15-015559",
+    "published": "2015-01-21T08:43:37",
+    "results": true,
+    "title": "IFRS results for the three months ended December 31, 2014",
+    "url": "https://www.sec.gov/Archives/edgar/data/1000184/000119312515015559/d854663dex991.htm",
+    "file": "2015-01-21_d854663dex991.htm"
+  },
+  {
+    "accession": "0001193125-15-052735",
+    "published": "2015-02-18T16:09:59",
+    "results": false
+  },
+  {
+    "accession": "0001193125-15-099401",
+    "published": "2015-03-20T08:40:53",
+    "results": false
+  },
+  {
+    "accession": "0001193125-15-100953",
+    "published": "2015-03-23T07:44:59",
+    "results": false
+  },
+  {
+    "accession": "0001193125-15-116801",
+    "published": "2015-04-02T06:19:36",
+    "results": false
+  },
+  {
+    "accession": "0001193125-15-117100",
+    "published": "2015-04-02T09:21:52",
+    "results": false
+  },
+  {
+    "accession": "0001193125-15-128502",
+    "published": "2015-04-14T09:13:04",
+    "results": false
+  },
+  {
+    "accession": "0001193125-15-140902",
+    "published": "2015-04-22T06:14:07",
+    "results": true,
+    "title": "IFRS results for the three months ended March 31, 2015",
+    "url": "https://www.sec.gov/Archives/edgar/data/1000184/000119312515140902/d912993dex991.htm",
+    "file": "2015-04-22_d912993dex991.htm"
+  },
+  {
+    "accession": "0001193125-15-143490",
+    "published": "2015-04-23T12:04:02",
+    "results": true,
+    "title": "IFRS results for the three months ended March 31, 2015",
+    "url": "https://www.sec.gov/Archives/edgar/data/1000184/000119312515143490/d913578dex991.htm",
+    "file": "2015-04-23_d913578dex991.htm"
+  },
+  {
+    "accession": "0001193125-15-260668",
+    "published": "2015-07-23T09:22:03",
+    "results": true,
+    "title": "IFRS results for the three months ended June 30, 2015",
+    "url": "https://www.sec.gov/Archives/edgar/data/1000184/000119312515260668/d55126dex991.htm",
+    "file": "2015-07-23_d55126dex991.htm"
+  },
+  {
+    "accession": "0001193125-15-342024",
+    "published": "2015-10-13T07:15:06",
+    "results": false
+  },
+  {
+    "accession": "0001193125-15-351472",
+    "published": "2015-10-23T10:11:38",
+    "results": true,
+    "title": "IFRS results for the three months ended September 30, 2015",
+    "url": "https://www.sec.gov/Archives/edgar/data/1000184/000119312515351472/d41809dex991.htm",
+    "file": "2015-10-23_d41809dex991.htm"
+  },
+  {
+    "accession": "0001193125-16-427377",
+    "published": "2016-01-12T08:43:59",
+    "results": false
+  },
+  {
+    "accession": "0001193125-16-436203",
+    "published": "2016-01-25T06:33:12",
+    "results": true,
+    "title": "IFRS results for the three months ended December 31, 2015",
+    "url": "https://www.sec.gov/Archives/edgar/data/1000184/000119312516436203/d123101dex991.htm",
+    "file": "2016-01-25_d123101dex991.htm"
+  },
+  {
+    "accession": "0001193125-16-470683",
+    "published": "2016-02-22T06:16:01",
+    "results": false
+  },
+  {
+    "accession": "0001193125-16-530114",
+    "published": "2016-04-05T08:33:30",
+    "results": false
+  },
+  {
+    "accession": "0001193125-16-531381",
+    "published": "2016-04-06T06:05:36",
+    "results": false
+  },
+  {
+    "accession": "0001193125-16-531477",
+    "published": "2016-04-06T07:36:16",
+    "results": false
+  },
+  {
+    "accession": "0001193125-16-537810",
+    "published": "2016-04-12T06:21:09",
+    "results": false
+  },
+  {
+    "accession": "0001193125-16-549515",
+    "published": "2016-04-21T09:45:36",
+    "results": true,
+    "title": "IFRS results for the three months ended March 31, 2016",
+    "url": "https://www.sec.gov/Archives/edgar/data/1000184/000119312516549515/d178710dex991.htm",
+    "file": "2016-04-21_d178710dex991.htm"
+  },
+  {
+    "accession": "0001193125-16-599069",
+    "published": "2016-05-23T16:25:08",
+    "results": false
+  },
+  {
+    "accession": "0001193125-16-657477",
+    "published": "2016-07-26T10:00:38",
+    "results": true,
+    "title": "IFRS results for the three months ended June 30, 2016",
+    "url": "https://www.sec.gov/Archives/edgar/data/1000184/000119312516657477/d227291dex991.htm",
+    "file": "2016-07-26_d227291dex991.htm"
+  },
+  {
+    "accession": "0001193125-16-745973",
+    "published": "2016-10-25T09:58:04",
+    "results": true,
+    "title": "IFRS results for the three months ended September 30, 2016",
+    "url": "https://www.sec.gov/Archives/edgar/data/1000184/000119312516745973/d271302dex991.htm",
+    "file": "2016-10-25_d271302dex991.htm"
+  },
+  {
+    "accession": "0001193125-17-017387",
+    "published": "2017-01-25T08:33:07",
+    "results": true,
+    "title": "IFRS results for the three months ended December 31, 2016",
+    "url": "https://www.sec.gov/Archives/edgar/data/1000184/000119312517017387/d296734dex991.htm",
+    "file": "2017-01-25_d296734dex991.htm"
+  },
+  {
+    "accession": "0001193125-17-054852",
+    "published": "2017-02-24T06:11:03",
+    "results": false
+  },
+  {
+    "accession": "0001193125-17-067542",
+    "published": "2017-03-02T15:35:07",
+    "results": false
+  },
+  {
+    "accession": "0001193125-17-109294",
+    "published": "2017-04-04T06:05:33",
+    "results": false
+  },
+  {
+    "accession": "0001193125-17-137802",
+    "published": "2017-04-26T06:10:06",
+    "results": true,
+    "title": "IFRS results for the three months ended March 31, 2017",
+    "url": "https://www.sec.gov/Archives/edgar/data/1000184/000119312517137802/d359960dex991.htm",
+    "file": "2017-04-26_d359960dex991.htm"
+  },
+  {
+    "accession": "0001193125-17-176582",
+    "published": "2017-05-19T16:04:04",
+    "results": false
+  },
+  {
+    "accession": "0001193125-17-235721",
+    "published": "2017-07-26T08:17:03",
+    "results": true,
+    "title": "IFRS results for the three months ended June 30, 2017",
+    "url": "https://www.sec.gov/Archives/edgar/data/1000184/000119312517235721/d415554dex991.htm",
+    "file": "2017-07-26_d415554dex991.htm"
+  },
+  {
+    "accession": "0001193125-17-316057",
+    "published": "2017-10-23T07:55:08",
+    "results": true,
+    "title": "IFRS results for the three months ended September 30, 2017",
+    "url": "https://www.sec.gov/Archives/edgar/data/1000184/000119312517316057/d336810dex991.htm",
+    "file": "2017-10-23_d336810dex991.htm"
+  },
+  {
+    "accession": "0001104659-18-005109",
+    "published": "2018-01-30T16:33:17",
+    "results": false
+  },
+  {
+    "accession": "0001104659-18-005283",
+    "published": "2018-01-31T07:59:03",
+    "results": true,
+    "title": "IFRS results for the three months ended December 31, 2017",
+    "url": "https://www.sec.gov/Archives/edgar/data/1000184/000110465918005283/a18-5006_1ex99d1.htm",
+    "file": "2018-01-31_a18-5006_1ex99d1.htm"
+  },
+  {
+    "accession": "0001104659-18-011197",
+    "published": "2018-02-22T06:34:45",
+    "results": false
+  },
+  {
+    "accession": "0001104659-18-013742",
+    "published": "2018-03-01T06:33:29",
+    "results": false
+  },
+  {
+    "accession": "0001104659-18-015111",
+    "published": "2018-03-06T12:30:43",
+    "results": false
+  },
+  {
+    "accession": "0001104659-18-023563",
+    "published": "2018-04-12T06:05:36",
+    "results": false
+  },
+  {
+    "accession": "0001104659-18-026372",
+    "published": "2018-04-25T07:15:16",
+    "results": true,
+    "title": "IFRS results for the three months ended March 31, 2018",
+    "url": "https://www.sec.gov/Archives/edgar/data/1000184/000110465918026372/a18-11080_1ex99d1.htm",
+    "file": "2018-04-25_a18-11080_1ex99d1.htm"
+  },
+  {
+    "accession": "0001104659-18-039396",
+    "published": "2018-06-11T16:31:35",
+    "results": false
+  },
+  {
+    "accession": "0001104659-18-046635",
+    "published": "2018-07-24T08:31:28",
+    "results": true,
+    "title": "IFRS results for the three months ended June 30, 2018",
+    "url": "https://www.sec.gov/Archives/edgar/data/1000184/000110465918046635/a18-17310_1ex99d1.htm",
+    "file": "2018-07-24_a18-17310_1ex99d1.htm"
+  },
+  {
+    "accession": "0001104659-18-062851",
+    "published": "2018-10-19T06:09:47",
+    "results": true,
+    "title": "IFRS results for the three months ended September 30, 2018",
+    "url": "https://www.sec.gov/Archives/edgar/data/1000184/000110465918062851/a18-36941_1ex99d1.htm",
+    "file": "2018-10-19_a18-36941_1ex99d1.htm"
+  },
+  {
+    "accession": "0001104659-18-067900",
+    "published": "2018-11-13T16:01:44",
+    "results": false
+  },
+  {
+    "accession": "0001104659-19-004280",
+    "published": "2019-01-30T07:09:57",
+    "results": true,
+    "title": "IFRS results for the three months ended December 31, 2018",
+    "url": "https://www.sec.gov/Archives/edgar/data/1000184/000110465919004280/a19-3658_1ex99d1.htm",
+    "file": "2019-01-30_a19-3658_1ex99d1.htm"
+  },
+  {
+    "accession": "0001104659-19-009730",
+    "published": "2019-02-21T08:02:01",
+    "results": false
+  },
+  {
+    "accession": "0001104659-19-011727",
+    "published": "2019-03-01T06:05:52",
+    "results": false
+  },
+  {
+    "accession": "0001104659-19-013502",
+    "published": "2019-03-08T06:06:08",
+    "results": false
+  },
+  {
+    "accession": "0001104659-19-020234",
+    "published": "2019-04-08T06:52:47",
+    "results": false
+  },
+  {
+    "accession": "0001104659-19-023552",
+    "published": "2019-04-25T06:16:59",
+    "results": true,
+    "title": "IFRS results for the three months ended March 31, 2019",
+    "url": "https://www.sec.gov/Archives/edgar/data/1000184/000110465919023552/a19-8816_1ex99d1.htm",
+    "file": "2019-04-25_a19-8816_1ex99d1.htm"
+  },
+  {
+    "accession": "0001104659-19-041503",
+    "published": "2019-07-24T06:02:47",
+    "results": true,
+    "title": "IFRS results for the three months ended June 30, 2019",
+    "url": "https://www.sec.gov/Archives/edgar/data/1000184/000110465919041503/a19-13044_1ex99d1.htm",
+    "file": "2019-07-24_a19-13044_1ex99d1.htm"
+  },
+  {
+    "accession": "0001104659-19-053756",
+    "published": "2019-10-11T06:41:09",
+    "results": false
+  },
+  {
+    "accession": "0001104659-19-053764",
+    "published": "2019-10-11T08:19:10",
+    "results": false
+  },
+  {
+    "accession": "0001104659-19-055402",
+    "published": "2019-10-22T08:25:30",
+    "results": true,
+    "title": "IFRS results for the three months ended September 30, 2019",
+    "url": "https://www.sec.gov/Archives/edgar/data/1000184/000110465919055402/a19-20619_1ex99d1.htm",
+    "file": "2019-10-22_a19-20619_1ex99d1.htm"
+  },
+  {
+    "accession": "0001104659-20-007820",
+    "published": "2020-01-29T06:46:27",
+    "results": true,
+    "title": "IFRS results for the three months ended December 31, 2019",
+    "url": "https://www.sec.gov/Archives/edgar/data/1000184/000110465920007820/a20-6013_1ex99d1.htm",
+    "file": "2020-01-29_a20-6013_1ex99d1.htm"
+  },
+  {
+    "accession": "0001104659-20-023043",
+    "published": "2020-02-20T06:04:02",
+    "results": false
+  },
+  {
+    "accession": "0001104659-20-023595",
+    "published": "2020-02-21T06:07:47",
+    "results": false
+  },
+  {
+    "accession": "0001104659-20-025726",
+    "published": "2020-02-27T07:49:44",
+    "results": false
+  },
+  {
+    "accession": "0001104659-20-029454",
+    "published": "2020-03-05T08:11:08",
+    "results": false
+  },
+  {
+    "accession": "0001104659-20-044848",
+    "published": "2020-04-09T07:06:00",
+    "results": false
+  },
+  {
+    "accession": "0001104659-20-045348",
+    "published": "2020-04-10T06:28:00",
+    "results": false
+  },
+  {
+    "accession": "0001104659-20-048940",
+    "published": "2020-04-21T06:10:18",
+    "results": false
+  },
+  {
+    "accession": "0001104659-20-049422",
+    "published": "2020-04-22T06:18:04",
+    "results": false
+  },
+  {
+    "accession": "0001104659-20-049620",
+    "published": "2020-04-22T11:55:21",
+    "results": false
+  },
+  {
+    "accession": "0001104659-20-056615",
+    "published": "2020-05-05T09:32:09",
+    "results": false
+  },
+  {
+    "accession": "0001104659-20-082243",
+    "published": "2020-07-09T07:30:04",
+    "results": false
+  },
+  {
+    "accession": "0001104659-20-087051",
+    "published": "2020-07-28T09:05:06",
+    "results": true,
+    "title": "IFRS results for the three months ended June 30, 2020",
+    "url": "https://www.sec.gov/Archives/edgar/data/1000184/000110465920087051/a20-25763_1ex99d1.htm",
+    "file": "2020-07-28_a20-25763_1ex99d1.htm"
+  },
+  {
+    "accession": "0001104659-20-118387",
+    "published": "2020-10-27T08:19:40",
+    "results": true,
+    "title": "IFRS results for the three months ended September 30, 2020",
+    "url": "https://www.sec.gov/Archives/edgar/data/1000184/000110465920118387/tm2034258d1_ex99-1.htm",
+    "file": "2020-10-27_tm2034258d1_ex99-1.htm"
+  },
+  {
+    "accession": "0001104659-21-004450",
+    "published": "2021-01-15T08:05:03",
+    "results": false
+  },
+  {
+    "accession": "0001104659-21-009705",
+    "published": "2021-02-01T07:50:07",
+    "results": true,
+    "title": "IFRS results for the three months ended December 31, 2020",
+    "url": "https://www.sec.gov/Archives/edgar/data/1000184/000110465921009705/tm214658d1_ex99-1.htm",
+    "file": "2021-02-01_tm214658d1_ex99-1.htm"
+  },
+  {
+    "accession": "0001104659-21-027796",
+    "published": "2021-02-25T06:37:24",
+    "results": false
+  },
+  {
+    "accession": "0001104659-21-034734",
+    "published": "2021-03-11T07:00:54",
+    "results": false
+  },
+  {
+    "accession": "0001104659-21-050009",
+    "published": "2021-04-14T08:47:02",
+    "results": false
+  },
+  {
+    "accession": "0001104659-21-054106",
+    "published": "2021-04-23T08:13:58",
+    "results": true,
+    "title": "IFRS results for the three months ended March 31, 2021",
+    "url": "https://www.sec.gov/Archives/edgar/data/1000184/000110465921054106/tm2113763d1_ex99-1.htm",
+    "file": "2021-04-23_tm2113763d1_ex99-1.htm"
+  },
+  {
+    "accession": "0001104659-21-094727",
+    "published": "2021-07-22T10:13:06",
+    "results": true,
+    "title": "IFRS results for the three months ended June 30, 2021",
+    "url": "https://www.sec.gov/Archives/edgar/data/1000184/000110465921094727/tm2122797d1_ex99-1.htm",
+    "file": "2021-07-22_tm2122797d1_ex99-1.htm"
+  },
+  {
+    "accession": "0001104659-21-125659",
+    "published": "2021-10-13T07:55:23",
+    "results": false
+  },
+  {
+    "accession": "0001104659-21-129675",
+    "published": "2021-10-26T06:00:39",
+    "results": true,
+    "title": "IFRS results for the three months ended September 30, 2021",
+    "url": "https://www.sec.gov/Archives/edgar/data/1000184/000110465921129675/tm2130746d1_ex99-1.htm",
+    "file": "2021-10-26_tm2130746d1_ex99-1.htm"
+  },
+  {
+    "accession": "0001104659-22-004251",
+    "published": "2022-01-14T09:31:34",
+    "results": false
+  },
+  {
+    "accession": "0001104659-22-008576",
+    "published": "2022-01-28T07:45:06",
+    "results": false
+  },
+  {
+    "accession": "0001104659-22-026352",
+    "published": "2022-02-24T08:06:44",
+    "results": false
+  },
+  {
+    "accession": "0001104659-22-032674",
+    "published": "2022-03-11T08:42:01",
+    "results": false
+  },
+  {
+    "accession": "0001104659-22-037478",
+    "published": "2022-03-24T16:01:21",
+    "results": false
+  },
+  {
+    "accession": "0001104659-22-049353",
+    "published": "2022-04-25T10:39:25",
+    "results": true,
+    "title": "IFRS results for the three months ended March 31, 2022",
+    "url": "https://www.sec.gov/Archives/edgar/data/1000184/000110465922049353/tm2213341d1_ex99-1.htm",
+    "file": "2022-04-25_tm2213341d1_ex99-1.htm"
+  },
+  {
+    "accession": "0001104659-22-082561",
+    "published": "2022-07-26T06:00:42",
+    "results": true,
+    "title": "IFRS results for the three months ended June 30, 2022",
+    "url": "https://www.sec.gov/Archives/edgar/data/1000184/000110465922082561/tm2221653d1_ex99-1.htm",
+    "file": "2022-07-26_tm2221653d1_ex99-1.htm"
+  },
+  {
+    "accession": "0001104659-22-096221",
+    "published": "2022-08-31T06:04:03",
+    "results": false
+  },
+  {
+    "accession": "0001104659-22-111300",
+    "published": "2022-10-26T06:01:22",
+    "results": true,
+    "title": "IFRS results for the three months ended September 30, 2022",
+    "url": "https://www.sec.gov/Archives/edgar/data/1000184/000110465922111300/tm2228876d1_ex99-1.htm",
+    "file": "2022-10-26_tm2228876d1_ex99-1.htm"
+  },
+  {
+    "accession": "0001104659-23-007144",
+    "published": "2023-01-27T06:00:23",
+    "results": true,
+    "title": "IFRS results for the three months ended December 31, 2022",
+    "url": "https://www.sec.gov/Archives/edgar/data/1000184/000110465923007144/tm234497d1_ex99-1.htm",
+    "file": "2023-01-27_tm234497d1_ex99-1.htm"
+  },
+  {
+    "accession": "0001104659-23-024509",
+    "published": "2023-02-23T07:05:04",
+    "results": false
+  },
+  {
+    "accession": "0001104659-23-024514",
+    "published": "2023-02-23T07:11:04",
+    "results": false
+  },
+  {
+    "accession": "0001104659-23-030841",
+    "published": "2023-03-10T07:02:00",
+    "results": false
+  },
+  {
+    "accession": "0001104659-23-031539",
+    "published": "2023-03-13T08:10:36",
+    "results": false
+  },
+  {
+    "accession": "0001104659-23-039660",
+    "published": "2023-03-31T08:25:25",
+    "results": false
+  },
+  {
+    "accession": "0001104659-23-048563",
+    "published": "2023-04-24T06:01:10",
+    "results": true,
+    "title": "IFRS results for the three months ended March 31, 2023",
+    "url": "https://www.sec.gov/Archives/edgar/data/1000184/000110465923048563/tm2313409d1_ex99-1.htm",
+    "file": "2023-04-24_tm2313409d1_ex99-1.htm"
+  },
+  {
+    "accession": "0001104659-23-083597",
+    "published": "2023-07-25T06:05:27",
+    "results": true,
+    "title": "IFRS results for the three months ended June 30, 2023",
+    "url": "https://www.sec.gov/Archives/edgar/data/1000184/000110465923083597/tm2321795d1_ex99-1.htm",
+    "file": "2023-07-25_tm2321795d1_ex99-1.htm"
+  },
+  {
+    "accession": "0001104659-23-110264",
+    "published": "2023-10-20T06:01:07",
+    "results": true,
+    "title": "IFRS results for the three months ended September 30, 2023",
+    "url": "https://www.sec.gov/Archives/edgar/data/1000184/000110465923110264/tm2328766d1_ex99-1.htm",
+    "file": "2023-10-20_tm2328766d1_ex99-1.htm"
+  },
+  {
+    "accession": "0001104659-24-006500",
+    "published": "2024-01-25T08:45:43",
+    "results": true,
+    "title": "IFRS results for the three months ended December 31, 2023",
+    "url": "https://www.sec.gov/Archives/edgar/data/1000184/000110465924006500/tm244006d1_ex99-1.htm",
+    "file": "2024-01-25_tm244006d1_ex99-1.htm"
+  },
+  {
+    "accession": "0001104659-24-013676",
+    "published": "2024-02-12T07:18:55",
+    "results": false
+  },
+  {
+    "accession": "0001104659-24-026342",
+    "published": "2024-02-22T08:17:07",
+    "results": false
+  },
+  {
+    "accession": "0001104659-24-032038",
+    "published": "2024-03-08T06:00:45",
+    "results": false
+  },
+  {
+    "accession": "0001104659-24-050758",
+    "published": "2024-04-24T06:01:06",
+    "results": true,
+    "title": "IFRS results for the three months ended March 31, 2024",
+    "url": "https://www.sec.gov/Archives/edgar/data/1000184/000110465924050758/tm2412483d1_ex99-1.htm",
+    "file": "2024-04-24_tm2412483d1_ex99-1.htm"
+  },
+  {
+    "accession": "0001104659-24-070118",
+    "published": "2024-06-11T06:00:22",
+    "results": false
+  },
+  {
+    "accession": "0001104659-24-082105",
+    "published": "2024-07-24T07:38:16",
+    "results": true,
+    "title": "IFRS results for the three months ended June 30, 2024",
+    "url": "https://www.sec.gov/Archives/edgar/data/1000184/000110465924082105/tm2419988d1_ex99-1.htm",
+    "file": "2024-07-24_tm2419988d1_ex99-1.htm"
+  },
+  {
+    "accession": "0001104659-24-110719",
+    "published": "2024-10-23T07:01:56",
+    "results": true,
+    "title": "IFRS results for the three months ended September 30, 2024",
+    "url": "https://www.sec.gov/Archives/edgar/data/1000184/000110465924110719/tm2426630d1_ex99-1.htm",
+    "file": "2024-10-23_tm2426630d1_ex99-1.htm"
+  },
+  {
+    "accession": "0001104659-25-006886",
+    "published": "2025-01-29T06:01:19",
+    "results": true,
+    "title": "IFRS results for the three months ended December 31, 2024",
+    "url": "https://www.sec.gov/Archives/edgar/data/1000184/000110465925006886/tm254685d1_ex99-1.htm",
+    "file": "2025-01-29_tm254685d1_ex99-1.htm"
+  },
+  {
+    "accession": "0001104659-25-021471",
+    "published": "2025-03-07T06:00:53",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-038859",
+    "published": "2025-04-25T06:00:39",
+    "results": true,
+    "title": "IFRS results for the three months ended March 31, 2025",
+    "url": "https://www.sec.gov/Archives/edgar/data/1000184/000110465925038859/tm2512979d1_ex99-1.htm",
+    "file": "2025-04-25_tm2512979d1_ex99-1.htm"
+  },
+  {
+    "accession": "0001104659-25-051206",
+    "published": "2025-05-21T06:00:31",
+    "results": false
+  },
+  {
+    "accession": "0001104659-25-070485",
+    "published": "2025-07-25T06:01:01",
+    "results": true,
+    "title": "IFRS results for the three months ended June 30, 2025",
+    "url": "https://www.sec.gov/Archives/edgar/data/1000184/000110465925070485/tm2521516d1_ex99-1.htm",
+    "file": "2025-07-25_tm2521516d1_ex99-1.htm"
+  },
+  {
+    "accession": "0001104659-25-102307",
+    "published": "2025-10-27T07:00:09",
+    "results": true,
+    "title": "IFRS results for the three months ended September 30, 2025",
+    "url": "https://www.sec.gov/Archives/edgar/data/1000184/000110465925102307/tm2529346d1_ex99-1.htm",
+    "file": "2025-10-27_tm2529346d1_ex99-1.htm"
+  },
+  {
+    "accession": "0001104659-26-009465",
+    "published": "2026-02-03T06:02:05",
+    "results": true,
+    "title": "IFRS results for the three months ended December 31, 2025",
+    "url": "https://www.sec.gov/Archives/edgar/data/1000184/000110465926009465/tm264433d1_ex99-1.htm",
+    "file": "2026-02-03_tm264433d1_ex99-1.htm"
+  },
+  {
+    "accession": "0001104659-26-024381",
+    "published": "2026-03-06T07:00:19",
+    "results": false
+  },
+  {
+    "accession": "0001104659-26-045882",
+    "published": "2026-04-21T13:00:24",
+    "results": false
+  },
+  {
+    "accession": "0001104659-26-049650",
+    "published": "2026-04-28T06:00:20",
+    "results": true,
+    "title": "IFRS results for the three months ended March 31, 2026",
+    "url": "https://www.sec.gov/Archives/edgar/data/1000184/000110465926049650/tm2612672d1_ex99-1.htm",
+    "file": "2026-04-28_tm2612672d1_ex99-1.htm"
+  },
+  {
+    "accession": "0001104659-26-057442",
+    "published": "2026-05-08T06:00:22",
+    "results": false
+  },
+  {
+    "accession": "0001104659-26-087251",
+    "published": "2026-07-28T06:00:18",
+    "results": true,
+    "title": "IFRS results for the three months ended June 30, 2026",
+    "url": "https://www.sec.gov/Archives/edgar/data/1000184/000110465926087251/tm2621275d1_ex99-1.htm",
+    "file": "2026-07-28_tm2621275d1_ex99-1.htm"
+  },
+  {
+    "accession": "0001104659-26-118617",
+    "published": "2026-10-26T08:00:25",
+    "results": true,
+    "title": "IFRS results for the three months ended September 30, 2026",
+    "url": "https://www.sec.gov/Archives/edgar/data/1000184/000110465926118617/tm2628113d1_ex99-1.htm",
+    "file": "2026-10-26_tm2628113d1_ex99-1.htm"
+  }
+]

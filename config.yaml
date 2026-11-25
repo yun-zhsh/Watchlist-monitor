@@ -57,7 +57,14 @@ freshness:
 # only (its data is still updated; its page, downloads and MCP lookups still work). The "Order" button of the home page rewrites
 # both through the workflow home-order.yml: it moves whole entries and adds or removes only the hidden: true line.
 stocks:
-  - symbol: META   # Yahoo Finance symbol
+  - symbol: GOOGL   # Yahoo Finance symbol; Class A (Class A, B and C have the same EPS)
+    name: Alphabet
+    market: US
+    cik: 1652044   # Alphabet Inc. (from the October 2015 reorganisation; its first release, the third quarter of 2015, is already Alphabet's)
+    sec_form: 8-K   # exhibit 99.1 of an 8-K with item 2.02
+    filing_format: us_press_release   # USD, US GAAP, basic EPS (the same for Class A, B and C); 20-for-1 split in July 2022
+    metrics: [pe, ps, pb]   # no pe_non_gaap: Alphabet stopped reporting a Non-GAAP EPS after its fourth-quarter 2016 release
+  - symbol: META
     name: Meta Platforms
     market: US
     cik: 1326801   # Meta Platforms (Facebook until 2022)

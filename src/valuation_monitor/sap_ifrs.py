@@ -13,6 +13,8 @@ and they are read from its text (some documents have the statements as HTML tabl
                      Revenue is "Total revenue", net profit the last "Attributable to owners of parent" row (with discontinued operations,
                      2023 and 2024, the first one is the continuing operations only), EPS "Earnings per share, basic (in EUR)" (not the row "from
                      continuing operations"). Every quarter has its own three-months statement, the fourth quarter as well.
+                     In 2023 and 2024 the non-IFRS EPS is that of the continuing operations (see below); those filings carry a note on it
+                     (Parsed.notes), which every TTM that uses one of their quarters shows next to its formula.
   balance sheet      "Equity attributable to owners of parent" at the end of this quarter and at the end of last year, followed by the non-controlling interests.
   Non-IFRS EPS       the reconciliation of the non-IFRS figures has the row "Earnings per share, basic (in EUR)" with four figures: IFRS and non-IFRS of
                      this quarter, IFRS and non-IFRS of the same quarter last year; it is the row whose IFRS figures are those of the income statement.
@@ -61,6 +63,7 @@ KEY_FACTS_ROWS = {
     "non_ifrs_eps": (r"Earnings per share, basic \(non-IFRS, in €\)", DECIMAL),
 }
 SPLIT_INITIAL_RE = re.compile(r"(?<![A-Za-z])([A-Z]) (?=[a-z]{2,})")  # "T otal revenue" -> "Total revenue"
+CONTINUING_NOTE = "non-IFRS EPS from continuing operations (excludes the Qualtrics discontinued operations)"  # shown with every TTM that uses such a quarter
 SPACED_MINUS_RE = re.compile(r"(?<= )- (?=\d)")  # the first quarter of 2015 writes "- 3,859" and "- 23"
 STATEMENT_CHARS = 6000  # the income statement before the footnote is about 2,000 characters
 
@@ -137,6 +140,7 @@ def parse_sap_statement(html: bytes) -> Parsed:
     if not non_ifrs:
         raise ValueError(f"Not found: the non-IFRS basic EPS of {period} (the reconciliation row with the IFRS EPS {ifrs})")
     values["non_ifrs_eps"] = [number(non_ifrs[0].group("n")), number(non_ifrs[0].group("nb"))]
+    notes = {"non_ifrs_eps": CONTINUING_NOTE} if continuing else {}
 
     equity = [[number(m.group("a")), number(m.group("b"))] for m in EQUITY_RE.finditer(text)]
     if not equity:
@@ -147,8 +151,10 @@ def parse_sap_statement(html: bytes) -> Parsed:
 
     facts = key_facts(text)
     for key, by_quarter in facts.items():
+        if key in notes:
+            continue  # the key facts give the total, not the continuing operations: they are not mixed in
         if period in by_quarter and by_quarter[period] != values[key][0]:
             raise ValueError(f"The key facts give {key} {by_quarter[period]} for {period}, the statements {values[key][0]}")
         if period - 1 in by_quarter:
             values[key].append(by_quarter[period - 1])  # the previous quarter, as the third figure
-    return Parsed("EUR", values, period, True)
+    return Parsed("EUR", values, period, True, notes or None)

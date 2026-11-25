@@ -239,3 +239,145 @@ def test_the_prior_year_column_agrees_with_the_quarter_a_year_earlier_except_for
                 differences.setdefault(str(period), set()).add(key)
     assert differences == RESTATED
     assert by_period[pd.Period("2023Q1")].values["non_ifrs_eps"][0] == 1.08 and by_period[pd.Period("2024Q1")].values["non_ifrs_eps"][1] == 0.75
+
+
+# ---- the note on the continuing-operations non-IFRS EPS (2023 and 2024), wherever the calculation is shown ------------------------------
+
+from valuation_monitor.sap_ifrs import CONTINUING_NOTE  # noqa: E402
+
+NOTE_QUARTERS = [str(p) for p in pd.period_range("2023Q1", "2024Q4", freq="Q")]
+
+
+def sap_announcements():
+    """A short SAP-like history: the 2023 and 2024 filings carry the note on their non-IFRS EPS, the others do not."""
+    from valuation_monitor.filings import Announcement
+
+    out = []
+    for i, p in enumerate(pd.period_range("2022Q1", "2025Q4", freq="Q")):
+        notes = {"non_ifrs_eps": CONTINUING_NOTE} if str(p) in NOTE_QUARTERS else {}
+        out.append(
+            Announcement(
+                p, (p.end_time + pd.Timedelta(days=25)).normalize() + pd.Timedelta(hours=6), f"https://filings.example/sap-{p}.htm", "EUR", True,
+                {"eps": [1.0 + i / 100, 1.0], "non_ifrs_eps": [1.5 + i / 100, 1.5], "revenue": [8000.0 + i, 7000.0], "profit": [1160.0, 1160.0],
+                 "equity": [40000.0 + i, 39000.0], "wa_shares": [1160.0, 1160.0]},
+                "US", series_notes=notes,
+            )
+        )
+    return out
+
+
+def sap_monitor(tmp_path, readonly=False):
+    from valuation_monitor.config import parse_config
+    from valuation_monitor.data import StockData
+    from valuation_monitor.filings import build_history
+    from valuation_monitor.service import Monitor
+
+    config = parse_config({"stocks": [{"symbol": "SAP", "name": "SAP (ADR)", "market": "US", "cik": 1000184, "sec_exhibit": "sap_ifrs",
+                                       "filing_format": "sap_ifrs", "metrics": ["pe", "pe_non_ifrs"]}], "lookback_options": [3, 1]})
+    days = pd.bdate_range("2022-05-02", "2026-11-20")
+    close = pd.Series([150.0 + i % 60 for i in range(len(days))], index=days)
+    final = pd.DataFrame({"close": close, "source": "yahoo", "status": "yahoo_only", "tencent_close": None, "yahoo_close_unadjusted": close, "yahoo_factor": 1.0}, index=days)
+    final.index.name = "date"
+    earnings = build_history(sap_announcements())
+    if not readonly:
+        writer = Monitor(config, data_dir=tmp_path, cache_dir=tmp_path / "cache")
+    else:
+        from valuation_monitor.db import Database
+
+        writer = None
+        Database(tmp_path / "valuation.db").write_series("prices_final", {"symbol": "SAP"}, final)
+    monitor = Monitor(config, data_dir=tmp_path, cache_dir=tmp_path / "cache", offline=True, readonly=readonly) if readonly else writer
+    if not readonly:
+        monitor.db.write_series("prices_final", {"symbol": "SAP"}, final)
+        monitor.db.write_frame("ttm", "SAP", earnings.ttm_frame(), date_format="%Y-%m-%d")
+    data = StockData(config.stocks[0], close, "USD", pd.Series(1.1, index=days), earnings.ttm, earnings)
+    monitor.loader.load = lambda stock: data
+    monitor.price_check = lambda symbol: {"yahoo_only": len(days)}
+    return monitor, earnings
+
+
+def test_the_parser_marks_only_the_filings_whose_non_ifrs_eps_is_from_continuing_operations():
+    assert parse_sap_statement(document(QUARTER, BALANCE, RECONCILIATION)).notes is None
+    quarter = table(
+        ["€ millions, unless otherwise stated", "Q1 2024", "Q1 2023", "∆ in %"],
+        ["Total revenue", "8,041", "7,441", "8"],
+        ["Attributable to owners of parent 1", "-828", "479", "N/A"],
+        ["Earnings per share, basic (in €) 2 from continuing operations", "-0.71", "0.35", "N/A"],
+        ["Earnings per share, basic (in €) 1, 2", "-0.71", "0.41", "N/A"],
+        ["Earnings per share, diluted (in €) 1, 2", "-0.70", "0.40", "N/A"],
+    ) + "<p>2 For the three months ended March 31, 2024 and 2023, the weighted average number of shares was 1,167 million (diluted 1,179 million) and 1,167 million (diluted: 1,174 million), respectively.</p>"
+    balance = table(["Equity attributable to owners of parent", "43,079", "43,157"], ["Non-controlling interests", "257", "249"])
+    reconciliation = table(["Earnings per share, basic (in €) from continuing operations", "-0.71", "0.81", "0.35", "0.75", "N/A", "8"])
+    key_facts = table(
+        ["€ millions, unless otherwise stated", "Q1 2023", "Q2 2023", "Q3 2023", "Q4 2023", "TY 2023", "Q1 2024"],
+        ["Earnings per share, basic (non-IFRS, in €)", "1.27", "3.14", "1.45", "1.41", "7.27", "0.81"],  # the total, not the continuing operations
+    )
+    p = parse_sap_statement(document(key_facts, quarter, balance, reconciliation))
+    assert p.notes == {"non_ifrs_eps": CONTINUING_NOTE}
+    assert p.values["non_ifrs_eps"] == [0.81, 0.75]  # no third figure from the key facts: they are on another basis
+
+
+def test_the_note_is_kept_with_the_saved_parse_result():
+    from valuation_monitor.filings import announcements_from_frame, announcements_to_frame
+
+    saved = announcements_from_frame(announcements_to_frame(sap_announcements(), 2))
+    assert [a.series_notes for a in saved] == [a.series_notes for a in sap_announcements()]
+    assert all(a.note == "" for a in saved)  # the publication note is not mixed up with it
+
+
+def test_every_ttm_with_such_a_quarter_says_so_in_its_formula_and_the_others_do_not(tmp_path):
+    _, earnings = sap_monitor(tmp_path)
+    frame = earnings.ttm_frame()
+    for _, row in frame.iterrows():
+        periods = [row[f"period_{k}"] for k in range(1, 5)]
+        noted = [p for p in periods if p in NOTE_QUARTERS]
+        formula = row["non_ifrs_eps_ttm_formula"]
+        if noted:
+            assert formula.endswith(f" ({', '.join(noted)}: {CONTINUING_NOTE})"), formula
+        else:
+            assert "continuing" not in formula
+        assert "continuing" not in row["eps_ttm_formula"] and "continuing" not in str(row["published_note"])
+
+
+def test_the_note_is_on_the_page_in_the_download_and_in_the_mcp_result(tmp_path):
+    import io
+
+    from valuation_monitor.mcp_server import ValuationService
+    from valuation_monitor.web import create_app
+
+    monitor, earnings = sap_monitor(tmp_path / "web")
+    client = create_app(monitor).test_client()
+    # the stock page: the tooltip lines of the Non-IFRS PE, for the record of 2023Q3 (the oldest in the three-year window) and for 2025Q4
+    import json
+    import re
+
+    html = client.get("/stock/SAP/").get_data(as_text=True)
+    view = json.loads(re.search(r'<script type="application/json" id="view-data">(.*?)</script>', html, re.S).group(1))
+    chart = next(c for c in view["charts"]["metrics"] if c["key"] == "pe_non_ifrs")
+    titles = {rec["title"].split(" ")[0]: rec["lines"] for rec in chart["records"].values()}
+    assert any(line.endswith(f"(2023Q1, 2023Q2, 2023Q3: {CONTINUING_NOTE})") for line in titles["2023Q3"]), titles["2023Q3"]
+    assert not any("continuing" in line for line in titles["2025Q4"])
+    assert not any("continuing" in line for rec in next(c for c in view["charts"]["metrics"] if c["key"] == "pe")["records"].values() for line in rec["lines"])
+
+    # the download of the per-share metrics (TTM)
+    df = pd.read_csv(io.StringIO(client.get("/stock/SAP/download/ttm.csv").data.decode("utf-8-sig")))
+    formula = df.set_index("TTM period 4")["TTM Non-IFRS/Non-GAAP basic EPS formula"]
+    assert formula["2023Q2"].endswith(f"(2023Q1, 2023Q2: {CONTINUING_NOTE})") and "continuing" not in formula["2025Q4"]
+
+    # the MCP server: the calculation text and the components
+    ro, _ = sap_monitor(tmp_path / "mcp", readonly=True)
+    service = ValuationService(ro, today=pd.Timestamp("2026-11-20").date())
+    with_note = service.valuation("SAP", "pe_non_ifrs", 1, "2023-09-29")
+    lines = with_note["calculation"]["per_share_value"]
+    assert any(line.endswith(f"(2023Q1, 2023Q2: {CONTINUING_NOTE})") for line in lines), lines
+    assert {c["period"] for c in with_note["sources"]["components"] if c.get("note") == CONTINUING_NOTE} == {"2023Q1", "2023Q2"}
+    without = service.valuation("SAP", "pe_non_ifrs", 1, "2026-05-01")
+    assert not any("continuing" in line for line in without["calculation"]["per_share_value"])
+    assert not any("note" in c for c in without["sources"]["components"])
+
+
+@saved
+def test_the_saved_2023q2_documents_carry_the_note_and_2025_ones_do_not():
+    notes = {str(p.period): p.notes for _, p in saved_statements()}
+    assert all(notes[q] == {"non_ifrs_eps": CONTINUING_NOTE} for q in NOTE_QUARTERS)
+    assert all(notes[str(q)] is None for q in pd.period_range("2025Q1", "2026Q3", freq="Q"))

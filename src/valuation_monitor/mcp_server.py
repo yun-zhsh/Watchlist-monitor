@@ -457,7 +457,7 @@ class ValuationService:
         out = []
         label_of = lambda p: period_label(p, earnings.periods_per_year)  # noqa: E731
 
-        def add(series: str, item: str, label: str, value: float | None, derived: bool = False) -> None:
+        def add(series: str, item: str, label: str, value: float | None, derived: bool = False, note: str = "") -> None:
             quarter = next((q for p, q in earnings.quarters[series].items() if label_of(p) == label), None)
             if quarter is None:
                 return
@@ -475,12 +475,13 @@ class ValuationService:
                     **({"figures_document_url": url} if url in releases else {}),
                     "confirming_filings": sum(1 for o in quarter.observations if o.url in known),
                     "derived_from_cumulative_figures": derived,
+                    **({"note": note} if note else {}),
                 }
             )
 
         for series, item in SOURCE_SERIES[column]:
             for comp in rec.get(series) or []:
-                add(series, item, comp.period, comp.value, comp.derived)
+                add(series, item, comp.period, comp.value, comp.derived, comp.note)
         latest = rec["period_label"]
         if column == "book_value_per_share":
             add("equity", "Equity attributable to owners (period end)", latest, rec.get("equity"))

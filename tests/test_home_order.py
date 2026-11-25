@@ -361,8 +361,17 @@ def test_saved_data_gives_the_same_results_in_any_order(tmp_path):
             )
         return out
 
-    first = results(config)
+    # Settle the copy under the configured order first. After a PARSER_VERSIONS bump the committed database is not settled: the
+    # run that parses again computes the ttm table from the freshly parsed values, and the next run from the saved ones, which
+    # are cut to 10 significant digits, so it rewrites a few ttm values in their last digit once. That is unrelated to the order.
     saved = dump(db)
+    for _ in range(4):
+        first = results(config)
+        settled, saved = saved, dump(db)
+        if saved == settled:
+            break
+    else:
+        pytest.fail("The saved data did not settle after four offline runs")
     second = results(reordered)
     assert list(second) == symbols[::-1]
     assert first == second

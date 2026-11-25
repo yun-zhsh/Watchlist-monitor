@@ -128,8 +128,9 @@ def test_config_has_both_pes_on_basic_eps():
     stock = next(s for s in load_config(ROOT / "config.yaml").stocks if s.symbol == "DT")
     assert stock.cik == 1773383 and stock.filing_format == "us_press_release" and stock.name == "Dynatrace"
     assert stock.metrics == ["pe", "pe_non_gaap", "ps", "pb"] and stock.eps_basis == {}
-    names = [s.name for s in load_config(ROOT / "config.yaml").stocks]
-    assert names.index("Cognizant Technology Solutions") < names.index("Amphenol") < names.index("Dynatrace") < names.index("ASML Holding (NY registry shares)")
+    # the order of the stocks is the maintainer's to change from the home page ("Order"), so only their presence is checked
+    names = {s.name for s in load_config(ROOT / "config.yaml").stocks}
+    assert {"Cognizant Technology Solutions", "Amphenol", "Dynatrace", "ASML Holding (NY registry shares)"} <= names
 
 
 saved = pytest.mark.skipif(not (DT / "index.json").exists(), reason="no saved Dynatrace filings (the scheduled update saves them)")

@@ -54,7 +54,9 @@ def test_the_real_config_names_alibabas_and_amphenols_non_gaap_pe_diluted_and_ev
     assert labels[("0700.HK", "pe_non_ifrs")] == "Basic PE Non-IFRS (TTM)"
     assert labels[("APH", "pe_non_gaap")] == "Diluted PE Non-GAAP (TTM)" and labels[("APH", "pe")] == "Basic PE (TTM)"
     assert labels[("CTSH", "pe_non_gaap")] == "Diluted PE Non-GAAP (TTM)" and labels[("XP", "pe_non_gaap")] == "Basic PE Non-GAAP (TTM)"
-    assert all(label.startswith("Basic ") for key, label in labels.items() if key not in {("BABA", "pe_non_gaap"), ("APH", "pe_non_gaap"), ("CTSH", "pe_non_gaap")})
+    assert labels[("NVDA", "pe_non_gaap")] == "Diluted PE Non-GAAP (TTM)" and labels[("NVDA", "pe")] == "Basic PE (TTM)"
+    diluted = {("BABA", "pe_non_gaap"), ("APH", "pe_non_gaap"), ("CTSH", "pe_non_gaap"), ("NVDA", "pe_non_gaap")}
+    assert all(label.startswith("Basic ") for key, label in labels.items() if key not in diluted)
 
 
 # ---- the web pages and downloads -------------------------------------------------------------------------------------------

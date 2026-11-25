@@ -64,6 +64,14 @@ stocks:
     sec_form: 8-K   # a US company: the earnings press release is exhibit 99.1 of an 8-K with item 2.02, not a 6-K
     filing_format: us_press_release   # USD, US GAAP, basic EPS
     metrics: [pe, ps, pb]   # no pe_non_gaap: Facebook stopped reporting a Non-GAAP EPS with its first-quarter 2017 release
+  - symbol: APH
+    name: Amphenol
+    market: US
+    cik: 820313   # Amphenol Corporation
+    sec_form: 8-K   # exhibit 99.1 of an 8-K with item 2.02
+    filing_format: us_press_release   # USD, US GAAP, basic EPS; 2-for-1 splits in 2014, 2021, 2024 and 2026 (the releases restate prior years; see the README)
+    metrics: [pe, pe_non_gaap, ps, pb]   # PE on basic EPS; Amphenol discloses no basic Non-GAAP EPS, so its PE Non-GAAP uses the disclosed Adjusted Diluted EPS
+    eps_basis: { pe_non_gaap: diluted }   # shown as "Diluted PE Non-GAAP (TTM)"; read from the reconciliation table (Q3 2016 on) or the first paragraph of the release
   - symbol: CTSH
     name: Cognizant Technology Solutions
     market: US
@@ -73,14 +81,6 @@ stocks:
     metrics: [pe, pe_non_gaap, ps, pb]
     eps_basis: { pe_non_gaap: diluted }   # Cognizant discloses no basic Non-GAAP EPS: "Diluted PE Non-GAAP (TTM)"
     non_gaap_changes: [2019-02-06]   # "Non-GAAP diluted EPS" (excluding stock-based compensation) until Q3 2018, "Adjusted Diluted EPS" (including it) from the Q4 2018 release
-  - symbol: APH
-    name: Amphenol
-    market: US
-    cik: 820313   # Amphenol Corporation
-    sec_form: 8-K   # exhibit 99.1 of an 8-K with item 2.02
-    filing_format: us_press_release   # USD, US GAAP, basic EPS; 2-for-1 splits in 2014, 2021, 2024 and 2026 (the releases restate prior years; see the README)
-    metrics: [pe, pe_non_gaap, ps, pb]   # PE on basic EPS; Amphenol discloses no basic Non-GAAP EPS, so its PE Non-GAAP uses the disclosed Adjusted Diluted EPS
-    eps_basis: { pe_non_gaap: diluted }   # shown as "Diluted PE Non-GAAP (TTM)"; read from the reconciliation table (Q3 2016 on) or the first paragraph of the release
   - symbol: DT
     name: Dynatrace
     market: US
@@ -166,6 +166,7 @@ stocks:
     metrics: [pe, ps, pb]
   - symbol: 601009.SS
     name: Bank of Nanjing
+    hidden: true
     market: CN   # Shanghai; Chinese periodic reports and express reports on CNINFO. A commercial bank
     filing_format: cn_report   # RMB; revenue is the operating income (net interest income included); PB uses the equity of the ordinary shareholders (without preference shares and perpetual bonds)
     metrics: [pe, ps, pb]

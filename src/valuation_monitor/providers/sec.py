@@ -56,6 +56,14 @@ RESULTS_HEADLINE_RE = re.compile(
     re.I,
 )
 
+# Microsoft's headlines name no verb like "reports": "Microsoft Cloud Strength Highlights Second Quarter Results", "Microsoft Cloud Highlights Q3 Results",
+# "Microsoft Cloud and Hardware Results Drives Fourth Quarter Performance"; tried only when RESULTS_HEADLINE_RE finds nothing, and taken only when the
+# release then says "Microsoft Corp. today announced ... for the quarter ended"
+MICROSOFT_HEADLINE_RE = re.compile(
+    r"\b(Microsoft\b.{0,100}?\b(?:(?:first|second|third|fourth) quarter|Q[1-4]) (?:results|performance))\b(?=.{0,400}?\bMicrosoft Corp\. today announced\b.{0,120}?\bfor the quarter ended\b)",
+    re.I,
+)
+
 
 class SecUserAgentMissing(RuntimeError):
     pass
@@ -188,6 +196,8 @@ def headline(html: bytes) -> str | None:
     text = EXHIBIT_LABEL_RE.sub("", text, count=1)[:1500]  # strip labels such as "EX-99.1 Exhibit 99.1" from the file header
     m = RESULTS_HEADLINE_RE.search(text)
     if not m:
+        if m := MICROSOFT_HEADLINE_RE.search(text):
+            return m.group(1)
         return None
     return text[: m.end()].strip() if m.start() <= 60 else text[m.start() - 40 : m.end()].strip()
 

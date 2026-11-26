@@ -101,7 +101,7 @@ SERIES_LABELS = {
     "equity": "Equity attributable to owners",
     "wa_shares": "Weighted average shares",
 }
-PARSER_VERSIONS = {"highlights": 5, "statements": 3, "press_release": 4, "us_press_release": 6, "us_gaap_statements": 4, "ifrs_statements": 1, "sap_ifrs": 2, "kifrs_statements": 4, "cn_report": 8}  # add 1 when the parsing rules change; saved parse results are then re-parsed automatically
+PARSER_VERSIONS = {"highlights": 5, "statements": 3, "press_release": 4, "us_press_release": 9, "us_gaap_statements": 5, "ifrs_statements": 1, "sap_ifrs": 2, "kifrs_statements": 4, "cn_report": 8}  # add 1 when the parsing rules change; saved parse results are then re-parsed automatically
 SUPPLEMENT_FORMAT = "adjusted_eps_release"  # the layout of a supplementary document (XP's press release, see release_eps.py); its parse results carry their own version
 SUPPLEMENT_PARSER_VERSION = 1  # add 1 when the rules of release_eps.py change
 SUPPLEMENT_TABLE = "supplement"  # the "table" of a supplementary document's parse result in the stored announcements
@@ -192,13 +192,30 @@ def parse_period(title: str) -> pd.Period:
     return pd.Period(year=int(m.group(3)), quarter=MONTH_TO_QUARTER[m.group(2).upper()], freq="Q")
 
 
-def period_label(p: pd.Period, periods_per_year: int) -> str:
-    """Display name of a period: 2025Q4 for quarterly reporters, 2025H2 for half-yearly reporters."""
+def period_label(p: pd.Period, periods_per_year: int, fiscal_year_end: int = 12) -> str:
+    """Display name of a period: 2025Q4 for quarterly reporters, 2025H2 for half-yearly reporters.
+
+    A company whose fiscal year ends in another month (fiscal_year_end, 1-12) is shown with its own fiscal labels, FY2025Q1, where
+    the fiscal year is named after the calendar year it ends in (Alibaba's FY2025 ends in March 2025, Microsoft's in June 2025).
+    Inside the program periods stay calendar quarters (`p`): a fiscal quarter is kept under the calendar quarter of its end, or of
+    its end minus 45 days when it ends a few weeks after a calendar quarter (NVIDIA's FY2025Q1 ended 2024-04-28: calendar 2024Q1).
+    Either way the fiscal quarter shares two of its three months with `p`, so it is the fiscal quarter that holds the middle month
+    of `p`, whatever month the fiscal year ends in.
+    """
+    if fiscal_year_end == 12:
+        if periods_per_year == 4:
+            return str(p)
+        if periods_per_year == 2:
+            return f"{p.year}H{p.quarter // 2}"
+        return f"{p.year}FY"
+    month = p.end_time.month - 1  # the middle month of the calendar quarter
+    months = (month - fiscal_year_end - 1) % 12 + 1  # months of the fiscal year up to the end of that month
+    year = p.year + (month > fiscal_year_end)
     if periods_per_year == 4:
-        return str(p)
+        return f"FY{year}Q{(months + 2) // 3}"
     if periods_per_year == 2:
-        return f"{p.year}H{p.quarter // 2}"
-    return f"{p.year}FY"
+        return f"FY{year}H{(months + 5) // 6}"
+    return f"FY{year}"
 
 
 def to_number(token: str) -> float:
@@ -563,6 +580,11 @@ class EarningsHistory:
     ttm_detail: list[dict] = field(default_factory=list)  # row by row matching ttm: how each item was calculated (see audit.py)
     shares_basis: dict[pd.Period, str] = field(default_factory=dict)  # period the disclosed weighted average shares of each period refer to (empty = this period, "full year", "year to date")
     non_gaap_changes: tuple[pd.Timestamp, ...] = ()  # when the company changed the definition of its Non-GAAP EPS (see build_history)
+    fiscal_year_end: int = 12  # the month the company's fiscal year ends; only the labels shown depend on it (period_label)
+
+    def label(self, p: pd.Period) -> str:
+        """The name a period is shown with (see period_label)."""
+        return period_label(p, self.periods_per_year, self.fiscal_year_end)
 
     @property
     def step(self) -> int:
@@ -577,12 +599,12 @@ class EarningsHistory:
                 if q.max_deviation > tolerance(series, q.value):
                     vals = ", ".join(fmt.format(o.value) + (" (derived from cumulative figures)" if o.derived else "") for o in q.observations)
                     out.append(
-                        f"{SERIES_LABELS[series]} {period_label(p, self.periods_per_year)} differs between filings (probably a restatement) [{vals}]; "
+                        f"{SERIES_LABELS[series]} {self.label(p)} differs between filings (probably a restatement) [{vals}]; "
                         f"using the first published value {fmt.format(q.value)}"
                     )
         for a in self.announcements:
             if a.provisional:
-                out.append(f"The {period_label(a.period, self.periods_per_year)} data {PROVISIONAL_NOTES.get(a.market, PROVISIONAL_NOTES['*'])}")
+                out.append(f"The {self.label(a.period)} data {PROVISIONAL_NOTES.get(a.market, PROVISIONAL_NOTES['*'])}")
         for change in self.non_gaap_changes:
             after = self.ttm[pd.to_datetime(self.ttm["published"]) >= change]
             empty = after["non_ifrs_eps_ttm"].isna()
@@ -595,7 +617,7 @@ class EarningsHistory:
             )
         shares = {p: s for p in sorted(self.quarters["eps"]) if (s := implied_shares(self.quarters, p))}
         periods = list(shares)
-        label = lambda p: period_label(p, self.periods_per_year)  # noqa: E731
+        label = self.label
         for prev, cur in zip(periods, periods[1:]):
             if cur - prev == self.step and abs(shares[cur] / shares[prev] - 1) > SHARES_CHANGE_LIMIT:
                 out.append(
@@ -607,7 +629,7 @@ class EarningsHistory:
         """Per-period detail (quarterly or half-yearly). When trading days are given, also lists the trading day each value actually starts to be used."""
         rows = []
         for p in sorted(set().union(*self.quarters.values())):
-            row = {"period": period_label(p, self.periods_per_year), "currency": self.currency}
+            row = {"period": self.label(p), "currency": self.currency}
             for series in SERIES:
                 q = self.quarters[series].get(p)
                 row[series] = round(q.value, 4) if q else None
@@ -680,7 +702,9 @@ def infer_periods_per_year(periods: list[pd.Period]) -> int:
     return 2 if 2 in quarters else 1
 
 
-def build_history(parsed: list[Announcement], splits: pd.Series | None = None, non_gaap_changes: tuple[str | pd.Timestamp, ...] = ()) -> EarningsHistory:
+def build_history(
+    parsed: list[Announcement], splits: pd.Series | None = None, non_gaap_changes: tuple[str | pd.Timestamp, ...] = (), fiscal_year_end: int = 12
+) -> EarningsHistory:
     """Arrange the parsed filings into per-period values and the data available after each filing.
 
     non_gaap_changes are the days the company changed the definition of its Non-GAAP EPS (Cognizant: 2019-02-06, from "Non-GAAP diluted EPS" to
@@ -730,7 +754,7 @@ def build_history(parsed: list[Announcement], splits: pd.Series | None = None, n
 
     def row_of(a: Announcement) -> tuple[dict, dict]:
         own = definitions.get(definition_of(a), {}) if changes else None
-        return _ttm_row(a, quarters, per_year, splits if splits is not None else pd.Series(dtype=float), shares_basis, own)
+        return _ttm_row(a, quarters, per_year, splits if splits is not None else pd.Series(dtype=float), shares_basis, own, fiscal_year_end)
 
     pending = list(supplements)
     rows_of: list[Announcement] = []  # the filing each TTM row is for
@@ -791,18 +815,23 @@ def build_history(parsed: list[Announcement], splits: pd.Series | None = None, n
     add_supplements(None)
 
     ttm = pd.DataFrame(ttm_rows, columns=TTM_COLUMNS)
-    return EarningsHistory(currencies.pop(), quarters, ttm, [*announcements.values(), *supplements], per_year, details, shares_basis, changes)
+    return EarningsHistory(currencies.pop(), quarters, ttm, [*announcements.values(), *supplements], per_year, details, shares_basis, changes, fiscal_year_end)
 
 
 def _ttm_row(
     a: Announcement, quarters: dict[str, dict[pd.Period, QuarterValue]], per_year: int, splits: pd.Series, shares_basis: dict[pd.Period, str],
-    non_gaap: dict[pd.Period, QuarterValue] | None = None,
+    non_gaap: dict[pd.Period, QuarterValue] | None = None, fiscal_year_end: int = 12,
 ) -> tuple[dict, dict]:
     """The data available after this filing is published: each TTM (sum of the periods in the last year), shares, revenue per share, book value per share.
 
     Returns (row of values, calculation). The calculation records which values of which periods add up to each TTM, for checking.
     non_gaap, when given, are the Non-GAAP EPS of the definition of this filing (see build_history), used instead of quarters["non_ifrs_eps"].
+    fiscal_year_end only changes the labels of the periods (see period_label).
     """
+
+    def label(p: pd.Period) -> str:
+        return period_label(p, per_year, fiscal_year_end)
+
     last_year = [a.period - k * (4 // per_year) for k in range(per_year)]
     periods = list(reversed(last_year))  # oldest to newest
 
@@ -815,7 +844,7 @@ def _ttm_row(
             q = qs[p]
             derived = q.observations[0].derived
             factor = q.factor if series in PER_SHARE and not derived else 1.0
-            out.append(Component(period_label(p, per_year), q.value, derived, q.value * factor if factor != 1.0 else None, q.note))
+            out.append(Component(label(p), q.value, derived, q.value * factor if factor != 1.0 else None, q.note))
         return out
 
     def total(comps: list[Component] | None) -> float | None:
@@ -835,7 +864,8 @@ def _ttm_row(
         if parts:
             shares, source = parts["shares"], "derived"
             for x in parts["parts"]:
-                x["period"] = f"{x['period'].year}Q1-Q{x['period'].quarter}" if x.get("year_to_date") else period_label(x["period"], per_year)
+                # the year to date counts from January (only companies with a December year end disclose year-to-date shares alone)
+                x["period"] = f"{x['period'].year}Q1-Q{x['period'].quarter}" if x.get("year_to_date") else label(x["period"])
         else:
             shares, source, basis = implied, "implied", ""  # the earlier periods have no disclosed shares either: fall back to implied
     revenue_ttm = total(revenue)
@@ -854,10 +884,10 @@ def _ttm_row(
     }
     profit, eps_now = quarters["profit"].get(a.period), quarters["eps"].get(a.period)
     detail = {
-        "period_label": period_label(a.period, per_year),
+        "period_label": label(a.period),
         "published": f"{a.published:%Y-%m-%d %H:%M}",
         "provisional": a.provisional,
-        "periods": [period_label(p, per_year) for p in periods],
+        "periods": [label(p) for p in periods],
         "eps": eps,
         "non_ifrs_eps": non_ifrs,
         "revenue": revenue,

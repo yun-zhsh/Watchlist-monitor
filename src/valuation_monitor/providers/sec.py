@@ -42,6 +42,10 @@ MAX_EXHIBIT_BYTES = 3_000_000
 EXHIBIT_RE = re.compile(r"ex(?:hibit)?[-_ ]?99|press ?release", re.I)
 # tried only after the names above found nothing: two Dynatrace 8-Ks name the exhibit fy21q2-earningsrelease.htm and fy20q1-earningsreleaseexhi.htm
 FALLBACK_EXHIBIT_RE = re.compile(r"earnings[-_ ]?release", re.I)
+# tried last: NVIDIA names its press release after the fiscal quarter, q3fy25pr.htm (q416pr.htm until fiscal 2016), next to q3fy25cfocommentary.htm
+QUARTER_PR_EXHIBIT_RE = re.compile(r"^q[1-4](?:fy)?\d\dpr\.html?$", re.I)
+# an 8-K with item 2.02 that only pre-announces figures is not an earnings release: "NVIDIA Announces Preliminary Financial Results" (August 2022)
+PRELIMINARY_RE = re.compile(r"\bpreliminary\b", re.I)
 # Title at the start of the press release, e.g. "JD.com Announces Second Quarter 2026 Results", "... Announces Fourth Quarter and Full Year 2025 Results"
 EXHIBIT_LABEL_RE = re.compile(r"^.*?\bExhibi?t? ?99\.\d\s+", re.I)
 # The Hong Kong-style results announcement that Alibaba files instead of a press release for the March and September quarters (since 2025), after
@@ -52,9 +56,27 @@ HK_TITLE_SEARCH_CHARS = 4000
 # IN DIVIDEND REPORTED BY AMPHENOL CORPORATION" (the passive form, with the quarter first)
 RESULTS_HEADLINE_RE = re.compile(
     r"\b(?:announces?|reports?)\b.{0,120}?\b(?:results|net income|net sales)\b|\b(?:publishes|announces|reports) its\b.{0,60}?\bresults?\b"
-    r"|\b(?:first|second|third|fourth) quarter\b.{0,80}?\bresults\b.{0,60}?\breported by \S+(?: corporation\b)?",
+    r"|\b(?:first|second|third|fourth) quarter\b.{0,80}?\bresults\b.{0,60}?\breported by \S+(?: corporation\b)?"
+    # Amazon until the fourth quarter of 2019: "AMAZON.COM ANNOUNCES THIRD QUARTER SALES UP 24% TO $ 70.0 BILLION"
+    r"|\bannounces (?:first|second|third|fourth) quarter sales (?:up|down)\b.{0,40}?\bbillion\b",
     re.I,
 )
+# Amazon's exhibits repeat their label before the headline, so a part is left after EXHIBIT_LABEL_RE: "Exhibit Exhibit 99.1 AMAZON.COM ANNOUNCES ...",
+# "Document Exhibit 99.1 ...", "AMZN-2014.12.31-EX99.1 Exhibit 99.1 ..." (only before "AMAZON.COM": Sea's titles keep their "Exhibit 99.1")
+AMAZON_LABEL_RE = re.compile(r"^(?:Exhibit |Document |AMZN-[\d.]+-EX99\.\d )?Exhibit 99\.\d (?=AMAZON\.COM )", re.I)
+
+# Microsoft's headlines name no verb like "reports": "Microsoft Cloud Strength Highlights Second Quarter Results", "Microsoft Cloud Highlights Q3 Results",
+# "Microsoft Cloud and Hardware Results Drives Fourth Quarter Performance"; tried only when RESULTS_HEADLINE_RE finds nothing, and taken only when the
+# release then says "Microsoft Corp. today announced ... for the quarter ended"
+MICROSOFT_HEADLINE_RE = re.compile(
+    r"\b(Microsoft\b.{0,100}?\b(?:(?:first|second|third|fourth) quarter|Q[1-4]) (?:results|performance))\b(?=.{0,400}?\bMicrosoft Corp\. today announced\b.{0,120}?\bfor the quarter ended\b)",
+    re.I,
+)
+
+
+# an 8-K with item 2.02 that is not a results release although its text mentions reporting results: Apple's "Letter from Tim Cook to Apple
+# Investors" of January 2, 2019 (revised guidance: "... before we complete and report our final results")
+NOT_RESULTS_RE = re.compile(r"Letter from [^.]{1,60}? to [^.]{0,40}?\bInvestors\b", re.I)
 
 
 class SecUserAgentMissing(RuntimeError):
@@ -186,8 +208,13 @@ def headline(html: bytes) -> str | None:
     if m := HK_RESULTS_TITLE_RE.search(text[:HK_TITLE_SEARCH_CHARS]):
         return m.group(0)
     text = EXHIBIT_LABEL_RE.sub("", text, count=1)[:1500]  # strip labels such as "EX-99.1 Exhibit 99.1" from the file header
+    text = AMAZON_LABEL_RE.sub("", text, count=1)
     m = RESULTS_HEADLINE_RE.search(text)
+    if m and NOT_RESULTS_RE.search(text[:200]):  # the title at the start, before the text of the letter
+        return None
     if not m:
+        if m := MICROSOFT_HEADLINE_RE.search(text):
+            return m.group(1)
         return None
     return text[: m.end()].strip() if m.start() <= 60 else text[m.start() - 40 : m.end()].strip()
 
@@ -305,6 +332,7 @@ class SecProvider:
         named = [f for f in files if EXHIBIT_RE.search(f["name"]) or (exhibit == "us_gaap_statements" and FINANCIAL_STATEMENTS_NAME_RE.search(f["name"]))]
         if exhibit == "release":
             named += [f for f in files if FALLBACK_EXHIBIT_RE.search(f["name"]) and f not in named]  # after all the usual names, so they are tried first as before
+            named += [f for f in files if QUARTER_PR_EXHIBIT_RE.search(f["name"]) and f not in named]  # NVIDIA, after all the others
         for f in named:
             size = int(f["size"] or 0)
             name = f["name"]
@@ -322,6 +350,8 @@ class SecProvider:
                 title = statements_title(html) if exhibit == "us_gaap_statements" else headline(html)
                 if title and exhibit == SUPPLEMENT_EXHIBIT and not is_results_release_title(title):
                     title = None  # a notice of the results date, or preliminary estimates ("XP INC. ANNOUNCES PRELIMINARY ESTIMATED 2Q20 FINANCIAL RESULTS")
+                if title and exhibit == "release" and PRELIMINARY_RE.search(title):
+                    title = None  # preliminary figures announced ahead of the release (NVIDIA, August 2022)
             if title:
                 file = f"{item['published']:%Y-%m-%d}_{name}"
                 folder.mkdir(parents=True, exist_ok=True)

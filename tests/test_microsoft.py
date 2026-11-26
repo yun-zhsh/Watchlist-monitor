@@ -113,7 +113,16 @@ def test_config():
     stock = next(s for s in stocks if s.symbol == "MSFT")
     assert stock.name == "Microsoft" and stock.cik == 789019 and stock.sec_form == "8-K" and stock.filing_format == "us_press_release"
     assert stock.metrics == ["pe", "ps", "pb"] and stock.eps_basis == {}
+    assert stock.fiscal_year_end == 6
     assert stocks[0].symbol == "MSFT"
+
+
+def test_fiscal_labels():
+    """The fiscal year ends June 30 and is named after the calendar year it ends in."""
+    from valuation_monitor.filings import period_label
+
+    labels = {q: period_label(pd.Period(q), 4, 6) for q in ("2026Q3", "2026Q2", "2025Q4", "2014Q4")}
+    assert labels == {"2026Q3": "FY2027Q1", "2026Q2": "FY2026Q4", "2025Q4": "FY2026Q2", "2014Q4": "FY2015Q2"}
 
 
 saved = pytest.mark.skipif(not (MSFT / "index.json").exists(), reason="no saved Microsoft filings (the scheduled update saves them)")

@@ -37,7 +37,7 @@ from valuation_monitor.analysis import BAND_PERCENTILES, evaluate
 from valuation_monitor.audit import explain, num
 from valuation_monitor.config import Config, StockConfig, load_config
 from valuation_monitor.data import StockData
-from valuation_monitor.filings import effective_day, period_label
+from valuation_monitor.filings import effective_day
 from valuation_monitor.market_calendar import get_market
 from valuation_monitor.providers.base import Release
 from valuation_monitor.metrics import METRICS
@@ -224,6 +224,8 @@ class ValuationService:
                 "market": stock.market,
                 "metrics": {key: stock.metric_label(METRICS[key]) for key in stock.metrics},
                 "eps_basis": {key: stock.basis(METRICS[key]) for key in stock.metrics if METRICS[key].eps_based},
+                # periods are named after the fiscal year (FY2025Q1) when it does not end in December
+                "fiscal_year_end_month": stock.fiscal_year_end,
             }
             try:
                 loaded = self._load(stock)
@@ -421,7 +423,7 @@ class ValuationService:
     @staticmethod
     def _filing_url(earnings, rec: dict) -> str | None:
         for a in earnings.announcements:
-            if period_label(a.period, earnings.periods_per_year) == rec["period_label"] and f"{a.published:%Y-%m-%d %H:%M}" == rec["published"]:
+            if earnings.label(a.period) == rec["period_label"] and f"{a.published:%Y-%m-%d %H:%M}" == rec["published"]:
                 return a.url
         return None
 
@@ -455,7 +457,7 @@ class ValuationService:
         """
         known = {a.url for a in earnings.announcements if a.available <= cutoff}
         out = []
-        label_of = lambda p: period_label(p, earnings.periods_per_year)  # noqa: E731
+        label_of = earnings.label
 
         def add(series: str, item: str, label: str, value: float | None, derived: bool = False, note: str = "") -> None:
             quarter = next((q for p, q in earnings.quarters[series].items() if label_of(p) == label), None)
@@ -484,7 +486,7 @@ class ValuationService:
                 add(series, item, comp.period, comp.value, comp.derived, comp.note)
         latest = rec["period_label"]
         if column == "book_value_per_share":
-            add("equity", "Equity attributable to owners (period end)", latest, rec.get("equity"))
+            add("equity", "Equity attributable to owners (period end)", latest, rec.get("equity"), note=rec.get("equity_note") or "")
         if column in ("revenue_per_share_ttm", "book_value_per_share"):
             if rec.get("shares_source") == "implied":
                 add("profit", "Net profit (used to imply the share count)", latest, rec.get("profit"))

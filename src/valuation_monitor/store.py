@@ -245,12 +245,13 @@ class EarningsStore:
         market: Market = HK,
         non_gaap: str | None = None,
         non_gaap_changes: tuple[str, ...] = (),
+        fiscal_year_end: int = 12,
     ) -> EarningsHistory:
         """Parse the filings and compute EPS. Already parsed filings read the saved result; only new filings are parsed.
 
         trading_days is used to list in the saved detail the trading day each value actually starts to be used; fmt is the layout of the filings;
         non_gaap is the EPS basis of the stock's Non-GAAP PE (None without one), passed to the parser; non_gaap_changes are the days the company
-        changed its definition (see build_history).
+        changed its definition (see build_history); fiscal_year_end is the month its fiscal year ends, used for the labels only.
         """
         version = PARSER_VERSIONS[fmt]
         saved = {}
@@ -270,7 +271,7 @@ class EarningsStore:
                 if not f.provisional:
                     raise
                 print(f"{symbol}: cannot parse the provisional data {f.url} ({e}); waiting for the official report", file=sys.stderr)
-        history = build_history(adjust_for_splits(parsed, splits), splits, non_gaap_changes)
+        history = build_history(adjust_for_splits(parsed, splits), splits, non_gaap_changes, fiscal_year_end)
 
         if not self.db.readonly:  # the saved frames are a cache of what was just computed; a read-only database (the MCP server) keeps its copy as it is
             self.db.write_frame("announcements", symbol, announcements_to_frame(parsed, version), text=True)

@@ -2,6 +2,7 @@
 home-order.yml), published as home-order.json and applied by every home page (home_order.apply, mirrored in home-order.js)."""
 
 import json
+import random
 import shutil
 import subprocess
 from dataclasses import replace
@@ -140,30 +141,78 @@ def test_invalid_requests_are_refused(text, error):
 
 # Rewriting config.yaml
 
+def current_state():
+    """The order and the hidden stocks of the real config.yaml as it is now: the maintainer changes both from the home page at any
+    time, so no test may assume a particular order or that no stock is hidden."""
+    config = real_config()
+    return [s.symbol for s in config.stocks], [s.symbol for s in config.stocks if s.hidden]
+
+
+def hidden_lines(text):
+    return [line for line in text.splitlines() if line.strip().startswith("hidden:")]
+
+
+def other_lines(text):
+    return sorted(line for line in text.splitlines() if not line.strip().startswith("hidden:"))
+
+
+def entry_line(lines, symbol):
+    return next(i for i, line in enumerate(lines) if (m := home_order.STOCK_START.match(line)) and m["symbol"] == symbol)
+
+
 def test_rewrite_moves_whole_entries_and_only_adds_hidden_lines():
     old = CONFIG.read_text(encoding="utf-8")
-    symbols = [s.symbol for s in real_config().stocks]
-    order, hidden = symbols[::-1], [symbols[0], symbols[5]]
+    symbols, hidden_now = current_state()
+    shown_now = [s for s in symbols if s not in hidden_now]
+    assert len(shown_now) >= 2
+    # reverse the order, hide two stocks that are shown now and show again every stock that is hidden now
+    order, hidden = symbols[::-1], [shown_now[-1], shown_now[0]]
     new = rewrite(old, order, hidden)
     config = check_rewrite(old, new, order, hidden)
     assert [s.symbol for s in config.stocks] == order
     assert {s.symbol for s in config.stocks if s.hidden} == set(hidden)
-    added = [line for line in new.splitlines() if line.strip().startswith("hidden:")]
-    assert added == ["    hidden: true"] * 2
-    assert sorted(old.splitlines()) == sorted(line for line in new.splitlines() if line not in added)  # nothing else changed
+    assert hidden_lines(new) == ["    hidden: true"] * 2
+    assert other_lines(old) == other_lines(new)  # nothing else changed
     head = old[: old.index("\nstocks:")]
     assert new.startswith(head)  # everything before the list stays in place
-    # the hidden line goes right after the name
     lines = new.splitlines()
-    first = next(i for i, line in enumerate(lines) if line.startswith(f"  - symbol: {symbols[0]} "))
-    assert lines[first + 1].startswith("    name:") and lines[first + 2] == "    hidden: true"
+    for symbol in hidden:  # the hidden line goes right after the name
+        first = entry_line(lines, symbol)
+        assert lines[first + 1].startswith("    name:") and lines[first + 2] == "    hidden: true"
 
 
 def test_rewrite_back_restores_the_file_byte_for_byte():
     old = CONFIG.read_text(encoding="utf-8")
-    symbols = [s.symbol for s in real_config().stocks]
-    shuffled = rewrite(old, symbols[1::2] + symbols[::2], symbols[2:6])
-    assert rewrite(shuffled, symbols, []) == old
+    symbols, hidden_now = current_state()
+    shuffled = rewrite(old, symbols[1::2] + symbols[::2], [s for s in symbols if s not in hidden_now][:4])
+    assert shuffled != old
+    assert rewrite(shuffled, symbols, hidden_now) == old
+
+
+@pytest.mark.parametrize("seed", range(8))
+def test_any_order_and_hidden_state_of_the_real_config(seed):
+    """Random orders and hidden sets of the real config.yaml: each one rewrites, passes the check, can be rewritten again,
+    and leads back to the file as it is now, byte for byte."""
+    rng = random.Random(seed)
+    old = CONFIG.read_text(encoding="utf-8")
+    symbols, hidden_now = current_state()
+
+    def random_state():
+        order = rng.sample(symbols, len(symbols))
+        hidden = set(rng.sample(symbols, rng.randint(0, len(symbols))))
+        return order, [s for s in order if s in hidden]
+
+    order, hidden = random_state()
+    state = rewrite(old, order, hidden)
+    config = check_rewrite(old, state, order, hidden)
+    assert payload(config) == {"order": order, "hidden": hidden}
+    assert parse_request(json.dumps(payload(config)), config) == (order, hidden)
+    order2, hidden2 = random_state()
+    other = rewrite(state, order2, hidden2)
+    check_rewrite(state, other, order2, hidden2)
+    assert other_lines(other) == other_lines(old) and len(hidden_lines(other)) == len(hidden2)
+    assert rewrite(other, order, hidden) == state
+    assert rewrite(state, symbols, hidden_now) == old
 
 
 SAMPLE = """# top comment
@@ -280,8 +329,9 @@ def test_order_and_hidden_change_nothing_but_order_and_hidden():
     symbols = [s.symbol for s in old.stocks]
     new_text = rewrite(CONFIG.read_text(encoding="utf-8"), symbols[::-1], symbols[:3])
     new = parse_config(yaml.safe_load(new_text))
+    assert [s.symbol for s in new.stocks if s.hidden] == symbols[:3][::-1]
     by_symbol = {s.symbol: s for s in new.stocks}
-    assert all(replace(by_symbol[s.symbol], hidden=False) == s for s in old.stocks)
+    assert all(replace(by_symbol[s.symbol], hidden=s.hidden) == s for s in old.stocks)  # whatever was hidden before
     assert replace(new, stocks=[]) == replace(old, stocks=[])  # lookbacks, levels, freshness, repository
 
 
@@ -311,8 +361,17 @@ def test_saved_data_gives_the_same_results_in_any_order(tmp_path):
             )
         return out
 
-    first = results(config)
+    # Settle the copy under the configured order first. After a PARSER_VERSIONS bump the committed database is not settled: the
+    # run that parses again computes the ttm table from the freshly parsed values, and the next run from the saved ones, which
+    # are cut to 10 significant digits, so it rewrites a few ttm values in their last digit once. That is unrelated to the order.
     saved = dump(db)
+    for _ in range(4):
+        first = results(config)
+        settled, saved = saved, dump(db)
+        if saved == settled:
+            break
+    else:
+        pytest.fail("The saved data did not settle after four offline runs")
     second = results(reordered)
     assert list(second) == symbols[::-1]
     assert first == second

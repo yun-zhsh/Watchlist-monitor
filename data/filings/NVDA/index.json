@@ -1,0 +1,396 @@
+[
+  {
+    "accession": "0001045810-15-000013",
+    "published": "2015-02-11T16:22:40",
+    "results": true,
+    "title": "Q4'15 PR FOR IMMEDIATE RELEASE: NVIDIA Announces Financial Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581015000013/q415pr.htm",
+    "file": "2015-02-11_q415pr.htm"
+  },
+  {
+    "accession": "0001045810-15-000087",
+    "published": "2015-05-07T16:29:26",
+    "results": true,
+    "title": "Q1'16 PR FOR IMMEDIATE RELEASE: NVIDIA Announces Financial Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581015000087/q116pr.htm",
+    "file": "2015-05-07_q116pr.htm"
+  },
+  {
+    "accession": "0001045810-15-000131",
+    "published": "2015-08-06T16:24:10",
+    "results": true,
+    "title": "Q2'16 PR FOR IMMEDIATE RELEASE: NVIDIA Announces Financial Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581015000131/q216pr.htm",
+    "file": "2015-08-06_q216pr.htm"
+  },
+  {
+    "accession": "0001045810-15-000165",
+    "published": "2015-11-05T16:25:11",
+    "results": true,
+    "title": "E Exhibit FOR IMMEDIATE RELEASE: NVIDIA Announces Financial Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581015000165/q316pr.htm",
+    "file": "2015-11-05_q316pr.htm"
+  },
+  {
+    "accession": "0001045810-16-000189",
+    "published": "2016-02-17T16:28:19",
+    "results": true,
+    "title": "E Exhibit FOR IMMEDIATE RELEASE: NVIDIA Announces Financial Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581016000189/q416pr.htm",
+    "file": "2016-02-17_q416pr.htm"
+  },
+  {
+    "accession": "0001045810-16-000243",
+    "published": "2016-05-12T16:39:07",
+    "results": true,
+    "title": "C Exhibit FOR IMMEDIATE RELEASE: NVIDIA Announces Financial Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581016000243/q117pr.htm",
+    "file": "2016-05-12_q117pr.htm"
+  },
+  {
+    "accession": "0001045810-16-000292",
+    "published": "2016-08-11T16:22:20",
+    "results": true,
+    "title": "E Exhibit FOR IMMEDIATE RELEASE: NVIDIA Announces Financial Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581016000292/q2fy17pr.htm",
+    "file": "2016-08-11_q2fy17pr.htm"
+  },
+  {
+    "accession": "0001045810-16-000343",
+    "published": "2016-11-10T16:21:36",
+    "results": true,
+    "title": "E Exhibit FOR IMMEDIATE RELEASE: NVIDIA Announces Financial Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581016000343/q3fy17pr.htm",
+    "file": "2016-11-10_q3fy17pr.htm"
+  },
+  {
+    "accession": "0001045810-17-000016",
+    "published": "2017-02-09T16:23:02",
+    "results": true,
+    "title": "E Exhibit FOR IMMEDIATE RELEASE: NVIDIA Announces Financial Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581017000016/q4fy17pr.htm",
+    "file": "2017-02-09_q4fy17pr.htm"
+  },
+  {
+    "accession": "0001045810-17-000068",
+    "published": "2017-05-09T16:21:40",
+    "results": true,
+    "title": "E Exhibit FOR IMMEDIATE RELEASE: NVIDIA Announces Financial Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581017000068/q1fy18pr.htm",
+    "file": "2017-05-09_q1fy18pr.htm"
+  },
+  {
+    "accession": "0001045810-17-000117",
+    "published": "2017-08-10T16:23:58",
+    "results": true,
+    "title": "E Exhibit FOR IMMEDIATE RELEASE: NVIDIA Announces Financial Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581017000117/q2fy18pr.htm",
+    "file": "2017-08-10_q2fy18pr.htm"
+  },
+  {
+    "accession": "0001045810-17-000164",
+    "published": "2017-11-09T16:23:57",
+    "results": true,
+    "title": "E Exhibit FOR IMMEDIATE RELEASE: NVIDIA Announces Financial Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581017000164/q3fy18pr.htm",
+    "file": "2017-11-09_q3fy18pr.htm"
+  },
+  {
+    "accession": "0001045810-18-000004",
+    "published": "2018-02-08T16:23:23",
+    "results": true,
+    "title": "E Exhibit FOR IMMEDIATE RELEASE: NVIDIA Announces Financial Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581018000004/q4fy18pr.htm",
+    "file": "2018-02-08_q4fy18pr.htm"
+  },
+  {
+    "accession": "0001045810-18-000052",
+    "published": "2018-05-10T16:25:11",
+    "results": true,
+    "title": "E Exhibit FOR IMMEDIATE RELEASE: NVIDIA Announces Financial Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581018000052/q1fy19pr.htm",
+    "file": "2018-05-10_q1fy19pr.htm"
+  },
+  {
+    "accession": "0001045810-18-000113",
+    "published": "2018-08-16T16:20:21",
+    "results": true,
+    "title": "E Exhibit FOR IMMEDIATE RELEASE: NVIDIA Announces Financial Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581018000113/q2fy19pr.htm",
+    "file": "2018-08-16_q2fy19pr.htm"
+  },
+  {
+    "accession": "0001045810-18-000148",
+    "published": "2018-11-15T16:21:48",
+    "results": true,
+    "title": "E Exhibit FOR IMMEDIATE RELEASE: NVIDIA Announces Financial Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581018000148/q3fy19pr.htm",
+    "file": "2018-11-15_q3fy19pr.htm"
+  },
+  {
+    "accession": "0001045810-19-000004",
+    "published": "2019-01-28T09:04:54",
+    "results": false
+  },
+  {
+    "accession": "0001045810-19-000007",
+    "published": "2019-02-14T16:23:06",
+    "results": true,
+    "title": "E Exhibit FOR IMMEDIATE RELEASE: NVIDIA Announces Financial Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581019000007/q4fy19pr.htm",
+    "file": "2019-02-14_q4fy19pr.htm"
+  },
+  {
+    "accession": "0001045810-19-000077",
+    "published": "2019-05-16T16:22:47",
+    "results": true,
+    "title": "E Exhibit FOR IMMEDIATE RELEASE: NVIDIA Announces Financial Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581019000077/q1fy20pr.htm",
+    "file": "2019-05-16_q1fy20pr.htm"
+  },
+  {
+    "accession": "0001045810-19-000140",
+    "published": "2019-08-15T16:27:50",
+    "results": true,
+    "title": "E Exhibit FOR IMMEDIATE RELEASE: NVIDIA Announces Financial Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581019000140/q2fy20pr.htm",
+    "file": "2019-08-15_q2fy20pr.htm"
+  },
+  {
+    "accession": "0001045810-19-000168",
+    "published": "2019-11-14T16:21:53",
+    "results": true,
+    "title": "E Exhibit FOR IMMEDIATE RELEASE: NVIDIA Announces Financial Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581019000168/q3fy20pr.htm",
+    "file": "2019-11-14_q3fy20pr.htm"
+  },
+  {
+    "accession": "0001045810-20-000007",
+    "published": "2020-02-13T16:21:20",
+    "results": true,
+    "title": "E Exhibit FOR IMMEDIATE RELEASE: NVIDIA Announces Financial Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581020000007/q4fy20pr.htm",
+    "file": "2020-02-13_q4fy20pr.htm"
+  },
+  {
+    "accession": "0001045810-20-000063",
+    "published": "2020-05-21T16:22:07",
+    "results": true,
+    "title": "Document FOR IMMEDIATE RELEASE: NVIDIA Announces Financial Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581020000063/q1fy21pr.htm",
+    "file": "2020-05-21_q1fy21pr.htm"
+  },
+  {
+    "accession": "0001045810-20-000145",
+    "published": "2020-08-19T16:21:46",
+    "results": true,
+    "title": "Document FOR IMMEDIATE RELEASE: NVIDIA Announces Financial Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581020000145/q2fy21pr.htm",
+    "file": "2020-08-19_q2fy21pr.htm"
+  },
+  {
+    "accession": "0001045810-20-000187",
+    "published": "2020-11-18T16:21:51",
+    "results": true,
+    "title": "Document FOR IMMEDIATE RELEASE: NVIDIA Announces Financial Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581020000187/q3fy21pr.htm",
+    "file": "2020-11-18_q3fy21pr.htm"
+  },
+  {
+    "accession": "0001045810-21-000007",
+    "published": "2021-02-24T16:22:27",
+    "results": true,
+    "title": "Document FOR IMMEDIATE RELEASE: NVIDIA Announces Financial Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581021000007/q4fy21pr.htm",
+    "file": "2021-02-24_q4fy21pr.htm"
+  },
+  {
+    "accession": "0001045810-21-000063",
+    "published": "2021-05-26T16:20:35",
+    "results": true,
+    "title": "Document FOR IMMEDIATE RELEASE: NVIDIA Announces Financial Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581021000063/q1fy22pr.htm",
+    "file": "2021-05-26_q1fy22pr.htm"
+  },
+  {
+    "accession": "0001045810-21-000128",
+    "published": "2021-08-18T16:21:07",
+    "results": true,
+    "title": "Document FOR IMMEDIATE RELEASE: NVIDIA Announces Financial Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581021000128/q2fy22pr.htm",
+    "file": "2021-08-18_q2fy22pr.htm"
+  },
+  {
+    "accession": "0001045810-21-000160",
+    "published": "2021-11-17T16:20:59",
+    "results": true,
+    "title": "Document FOR IMMEDIATE RELEASE: NVIDIA Announces Financial Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581021000160/q3fy22pr.htm",
+    "file": "2021-11-17_q3fy22pr.htm"
+  },
+  {
+    "accession": "0001045810-22-000008",
+    "published": "2022-02-16T16:21:16",
+    "results": true,
+    "title": "Document FOR IMMEDIATE RELEASE: NVIDIA Announces Financial Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581022000008/q4fy22pr.htm",
+    "file": "2022-02-16_q4fy22pr.htm"
+  },
+  {
+    "accession": "0001045810-22-000073",
+    "published": "2022-05-25T16:22:25",
+    "results": true,
+    "title": "Document FOR IMMEDIATE RELEASE: NVIDIA Announces Financial Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581022000073/q1fy23pr.htm",
+    "file": "2022-05-25_q1fy23pr.htm"
+  },
+  {
+    "accession": "0001045810-22-000133",
+    "published": "2022-08-08T09:16:50",
+    "results": false
+  },
+  {
+    "accession": "0001045810-22-000136",
+    "published": "2022-08-24T16:24:34",
+    "results": true,
+    "title": "Document FOR IMMEDIATE RELEASE: NVIDIA Announces Financial Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581022000136/q2fy23pr.htm",
+    "file": "2022-08-24_q2fy23pr.htm"
+  },
+  {
+    "accession": "0001045810-22-000163",
+    "published": "2022-11-16T16:21:18",
+    "results": true,
+    "title": "Document FOR IMMEDIATE RELEASE: NVIDIA Announces Financial Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581022000163/q3fy23pr.htm",
+    "file": "2022-11-16_q3fy23pr.htm"
+  },
+  {
+    "accession": "0001045810-23-000014",
+    "published": "2023-02-22T16:52:26",
+    "results": true,
+    "title": "Document FOR IMMEDIATE RELEASE: NVIDIA Announces Financial Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581023000014/q4fy23pr.htm",
+    "file": "2023-02-22_q4fy23pr.htm"
+  },
+  {
+    "accession": "0001045810-23-000087",
+    "published": "2023-05-24T16:22:18",
+    "results": true,
+    "title": "Document FOR IMMEDIATE RELEASE: NVIDIA Announces Financial Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581023000087/q1fy24pr.htm",
+    "file": "2023-05-24_q1fy24pr.htm"
+  },
+  {
+    "accession": "0001045810-23-000171",
+    "published": "2023-08-23T16:21:42",
+    "results": true,
+    "title": "Document FOR IMMEDIATE RELEASE: NVIDIA Announces Financial Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581023000171/q2fy24pr.htm",
+    "file": "2023-08-23_q2fy24pr.htm"
+  },
+  {
+    "accession": "0001045810-23-000225",
+    "published": "2023-11-21T16:22:00",
+    "results": true,
+    "title": "Document FOR IMMEDIATE RELEASE: NVIDIA Announces Financial Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581023000225/q3fy24pr.htm",
+    "file": "2023-11-21_q3fy24pr.htm"
+  },
+  {
+    "accession": "0001045810-24-000028",
+    "published": "2024-02-21T16:22:09",
+    "results": true,
+    "title": "Document FOR IMMEDIATE RELEASE: NVIDIA Announces Financial Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581024000028/q4fy24pr.htm",
+    "file": "2024-02-21_q4fy24pr.htm"
+  },
+  {
+    "accession": "0001045810-24-000113",
+    "published": "2024-05-22T16:21:29",
+    "results": true,
+    "title": "Document FOR IMMEDIATE RELEASE: NVIDIA Announces Financial Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581024000113/q1fy25pr.htm",
+    "file": "2024-05-22_q1fy25pr.htm"
+  },
+  {
+    "accession": "0001045810-24-000262",
+    "published": "2024-08-28T16:21:16",
+    "results": true,
+    "title": "Document FOR IMMEDIATE RELEASE: NVIDIA Announces Financial Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581024000262/q2fy25pr.htm",
+    "file": "2024-08-28_q2fy25pr.htm"
+  },
+  {
+    "accession": "0001045810-24-000315",
+    "published": "2024-11-20T16:21:20",
+    "results": true,
+    "title": "Document FOR IMMEDIATE RELEASE: NVIDIA Announces Financial Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581024000315/q3fy25pr.htm",
+    "file": "2024-11-20_q3fy25pr.htm"
+  },
+  {
+    "accession": "0001045810-25-000021",
+    "published": "2025-02-26T16:21:32",
+    "results": true,
+    "title": "Document FOR IMMEDIATE RELEASE: NVIDIA Announces Financial Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581025000021/q4fy25pr.htm",
+    "file": "2025-02-26_q4fy25pr.htm"
+  },
+  {
+    "accession": "0001045810-25-000115",
+    "published": "2025-05-28T16:21:30",
+    "results": true,
+    "title": "EX-99.1 2 q1fy26pr.htm EX-99.1 Document NVIDIA Announces Financial Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581025000115/q1fy26pr.htm",
+    "file": "2025-05-28_q1fy26pr.htm"
+  },
+  {
+    "accession": "0001045810-25-000207",
+    "published": "2025-08-27T16:22:14",
+    "results": true,
+    "title": "EX-99.1 2 q2fy26pr.htm EX-99.1 Document NVIDIA Announces Financial Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581025000207/q2fy26pr.htm",
+    "file": "2025-08-27_q2fy26pr.htm"
+  },
+  {
+    "accession": "0001045810-25-000228",
+    "published": "2025-11-19T16:20:44",
+    "results": true,
+    "title": "EX-99.1 2 q3fy26pr.htm EX-99.1 Document NVIDIA Announces Financial Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581025000228/q3fy26pr.htm",
+    "file": "2025-11-19_q3fy26pr.htm"
+  },
+  {
+    "accession": "0001045810-26-000019",
+    "published": "2026-02-25T16:31:25",
+    "results": true,
+    "title": "EX-99.1 2 q4fy26pr.htm EX-99.1 Document NVIDIA Announces Financial Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000019/q4fy26pr.htm",
+    "file": "2026-02-25_q4fy26pr.htm"
+  },
+  {
+    "accession": "0001045810-26-000051",
+    "published": "2026-05-20T16:21:19",
+    "results": true,
+    "title": "EX-99.1 2 q1fy27pr.htm EX-99.1 Document NVIDIA Announces Financial Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000051/q1fy27pr.htm",
+    "file": "2026-05-20_q1fy27pr.htm"
+  },
+  {
+    "accession": "0001045810-26-000073",
+    "published": "2026-08-26T16:21:19",
+    "results": true,
+    "title": "EX-99.1 2 q2fy27pr.htm EX-99.1 Document NVIDIA Announces Financial Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000073/q2fy27pr.htm",
+    "file": "2026-08-26_q2fy27pr.htm"
+  },
+  {
+    "accession": "0001045810-26-000088",
+    "published": "2026-11-17T16:20:51",
+    "results": true,
+    "title": "EX-99.1 2 q3fy27pr.htm EX-99.1 Document NVIDIA Announces Financial Results",
+    "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000088/q3fy27pr.htm",
+    "file": "2026-11-17_q3fy27pr.htm"
+  }
+]

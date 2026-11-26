@@ -149,11 +149,21 @@ def test_the_definition_change_makes_a_ttm_of_four_quarters_of_the_new_definitio
         ann("2026Q2", "2026-08-26 16:21", 2.47, [2.22, 1.01, 1.87]),
         ann("2026Q3", "2026-11-17 16:20", 2.71, [2.68, 1.27, 2.22]),
     ]
-    ttm = build_history(filings, non_gaap_changes=("2026-05-20",)).ttm
+    history = build_history(filings, non_gaap_changes=("2026-05-20",), fiscal_year_end=1)
+    ttm = history.ttm
     by_published = dict(zip(ttm["published"], ttm["non_ifrs_eps_ttm"]))
     assert by_published["2026-02-25 16:31"] == pytest.approx(0.81 + 1.05 + 1.30 + 1.62)  # the old definition
     assert pd.isna(by_published["2026-05-20 16:21"]) and pd.isna(by_published["2026-08-26 16:21"])
     assert by_published["2026-11-17 16:20"] == pytest.approx(1.59 + 1.87 + 2.22 + 2.68)  # 2025Q4 as restated in May 2026
+
+    # shown with NVIDIA's fiscal labels: the calendar quarter 2025Q4 is FY2026Q4, 2026Q3 (ended October 25, 2026) FY2027Q3
+    last = history.ttm_frame().iloc[-1]
+    assert [last[f"period_{k}"] for k in range(1, 5)] == ["FY2026Q4", "FY2027Q1", "FY2027Q2", "FY2027Q3"]
+    assert last["non_ifrs_eps_ttm_formula"].startswith("FY2026Q4 1.59 + FY2027Q1 1.87 + FY2027Q2 2.22 + FY2027Q3 2.68")
+    periods = list(history.periods_frame()["period"])  # from the prior-year column of FY2026Q1 (calendar 2025Q1) to FY2027Q3
+    assert periods[0] == "FY2025Q1" and periods[-1] == "FY2027Q3" and all(p.startswith("FY") for p in periods)
+    notices = " ".join(history.discrepancies())
+    assert "FY2026Q" in notices and "2025Q" not in notices.replace("FY2025Q", "").replace("FY2026Q", "")  # e.g. a restated FY2026Q1 EPS
 
 
 SUBMISSIONS = {
@@ -215,9 +225,10 @@ def test_config():
     assert stock.name == "NVIDIA" and stock.market == "US" and stock.cik == 1045810 and stock.sec_form == "8-K"
     assert stock.filing_format == "us_press_release" and stock.metrics == ["pe", "pe_non_gaap", "ps", "pb"]
     assert stock.eps_basis == {"pe_non_gaap": "diluted"} and stock.non_gaap_changes == ("2026-05-20",)
+    assert stock.fiscal_year_end == 1  # shown as FY2025Q1 ... FY2025Q4 (period_label)
     symbols = [s.symbol for s in stocks]
-    assert symbols.index("NVDA") < symbols.index("META")
-    assert PARSER_VERSIONS["us_press_release"] >= 6 and PARSER_VERSIONS["us_gaap_statements"] >= 5  # quarter_of and the NVIDIA rules
+    assert symbols.index("AAPL") < symbols.index("NVDA") < symbols.index("META")
+    assert PARSER_VERSIONS["us_press_release"] >= 8 and PARSER_VERSIONS["us_gaap_statements"] >= 5  # quarter_of and the NVIDIA rules
 
 
 saved = pytest.mark.skipif(not (NVDA / "index.json").exists(), reason="no saved NVIDIA filings (the scheduled update saves them)")

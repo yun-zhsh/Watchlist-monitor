@@ -41,6 +41,7 @@ class StockConfig:
     eps_basis: dict[str, str] = field(default_factory=dict)  # PE metric -> "diluted" where the company discloses no basic EPS (Alibaba: pe_non_gaap); others are basic
     sec_release_non_gaap: bool = False  # also read the earnings press release for its adjusted EPS, next to the statements (XP; see release_eps.py)
     non_gaap_changes: tuple[str, ...] = ()  # days (YYYY-MM-DD) the company changed the definition of its Non-GAAP EPS (Cognizant: 2019-02-06; see build_history)
+    fiscal_year_end: int = 12  # the month (1-12) the fiscal year ends; other than 12, periods are shown as FY2025Q1 (filings.period_label)
     hidden: bool = False  # left off the home page only (set by the "Order" panel there); data, the stock page, downloads and MCP are unaffected
 
     def basis(self, metric) -> str | None:
@@ -176,6 +177,7 @@ def parse_config(raw: dict) -> Config:
                 sec_release_non_gaap=sec_release_non_gaap,
                 non_gaap_changes=non_gaap_changes,
                 hidden=parse_hidden(symbol, s.get("hidden", False)),
+                fiscal_year_end=parse_fiscal_year_end(symbol, s.get("fiscal_year_end", 12)),
             )
         )
     if not stocks:
@@ -204,6 +206,13 @@ def parse_config(raw: dict) -> Config:
 
 
 GITHUB_REPOSITORY = re.compile(r"[A-Za-z0-9-]+/[A-Za-z0-9._-]+")
+
+
+def parse_fiscal_year_end(symbol: str, value) -> int:
+    """The month the fiscal year ends, a whole number from 1 (January) to 12 (December)."""
+    if isinstance(value, bool) or not isinstance(value, int) or not 1 <= value <= 12:
+        raise ValueError(f"{symbol}: fiscal_year_end is the month the fiscal year ends, 1 to 12, got {value!r}")
+    return value
 
 
 def parse_hidden(symbol: str, value) -> bool:

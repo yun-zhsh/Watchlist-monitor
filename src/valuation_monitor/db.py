@@ -61,6 +61,11 @@ def _python(value):
     return value.item() if hasattr(value, "item") else value
 
 
+def stored_text(value) -> str | None:
+    """A value as a text table (write_frame(text=True)) stores it, and read_frame(text=True) gives it back."""
+    return None if _python(value) is None else str(value)
+
+
 class Database:
     def __init__(self, path: str | Path, readonly: bool = False):
         """readonly=True opens an existing file that can only be read: SQLite itself refuses every write (used by the MCP server)."""
@@ -196,7 +201,7 @@ class Database:
         new_text = df.to_csv(index=False, date_format=date_format)
         if saved is not None and saved.to_csv(index=False, date_format=date_format) == new_text:
             return False
-        rows = [[(None if _python(v) is None else (str(v) if text else _python(v))) for v in r] for r in df.itertuples(index=False)]
+        rows = [[(stored_text(v) if text else _python(v)) for v in r] for r in df.itertuples(index=False)]
         with self._lock, self.connect() as conn:
             cols = list(df.columns)
             if self._exists(conn, table):

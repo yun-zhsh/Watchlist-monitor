@@ -4,14 +4,18 @@ The scheduled workflow commits the SQLite database (`data/valuation.db`) to git 
 This page records what a simulation predicted about the growth of the repository, what to compare with real numbers and
 when, and what to do if the repository gets too big. It is written for whoever develops this next.
 
-## What is in the repository today (measured 2026-11-03, five companies)
+## What is in the repository today (measured 2026-11-27, 24 companies)
 
 | Part | Size |
 | --- | --- |
-| A fresh clone (git pack) | 74.4 MB |
-| of which the original filings under `data/filings/` | 72.2 MB (about 14 MB per company in the pack, 21 MB per company checked out) |
-| of which the whole history of `data/valuation.db` | 1.1 MB (2 versions) |
-| `data/valuation.db` itself | 4.1 MB (about 0.8 MB per company) |
+| A fresh clone (git pack) | 203.7 MB |
+| of which the original filings under `data/filings/` | 191.7 MB (about 8 MB per company in the pack; 673.7 MB checked out, about 28 MB per company) |
+| of which the whole history of `data/valuation.db` | 9.4 MB (78 versions) |
+| `data/valuation.db` itself | 16.0 MB (about 0.7 MB per company) |
+
+The first measurement (2026-11-03, five companies): a 74.4 MB pack, 72.2 MB of it filings (about 14 MB per company in the pack,
+21 MB checked out), 1.1 MB of database history (2 versions) and a 4.1 MB database (about 0.8 MB per company). The analysis below
+was written from that first measurement.
 
 **The original filings, not the database, are what fills the repository.** They are added once per filing and never change, but
 every new company brings its whole history (about 15 MB in the pack for companies whose filings are PDFs).

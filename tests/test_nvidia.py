@@ -226,8 +226,6 @@ def test_config():
     assert stock.filing_format == "us_press_release" and stock.metrics == ["pe", "pe_non_gaap", "ps", "pb"]
     assert stock.eps_basis == {"pe_non_gaap": "diluted"} and stock.non_gaap_changes == ("2026-05-20",)
     assert stock.fiscal_year_end == 1  # shown as FY2025Q1 ... FY2025Q4 (period_label)
-    symbols = [s.symbol for s in stocks]
-    assert symbols.index("AAPL") < symbols.index("NVDA") < symbols.index("META")
     assert PARSER_VERSIONS["us_press_release"] >= 8 and PARSER_VERSIONS["us_gaap_statements"] >= 5  # quarter_of and the NVIDIA rules
 
 

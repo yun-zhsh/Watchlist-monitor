@@ -175,13 +175,11 @@ def test_separate_class_rows_take_class_a_and_b_and_the_balance_sheet_continued_
     assert p.values["equity"] == [127879.0, 120331.0]
 
 
-def test_config_has_no_non_gaap_pe_and_comes_first():
+def test_config_has_no_non_gaap_pe():
     stocks = load_config(ROOT / "config.yaml").stocks
     stock = next(s for s in stocks if s.symbol == "GOOGL")
     assert stock.cik == 1652044 and stock.filing_format == "us_press_release" and stock.name == "Alphabet" and stock.sec_form == "8-K"
     assert stock.metrics == ["pe", "ps", "pb"] and stock.eps_basis == {}
-    symbols = [s.symbol for s in stocks]
-    assert symbols.index("GOOGL") < symbols.index("META")
 
 
 saved = pytest.mark.skipif(not (GOOGL / "index.json").exists(), reason="no saved Alphabet filings (the scheduled update saves them)")

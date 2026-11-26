@@ -60,6 +60,13 @@ freshness:
 # only (its data is still updated; its page, downloads and MCP lookups still work). The "Order" button of the home page rewrites
 # both through the workflow home-order.yml: it moves whole entries and adds or removes only the hidden: true line.
 stocks:
+  - symbol: AMZN
+    name: Amazon.com
+    market: US
+    cik: 1018724   # Amazon.com, Inc.; fiscal year = calendar year
+    sec_form: 8-K   # exhibit 99.1 of an 8-K with item 2.02
+    filing_format: us_press_release   # USD, US GAAP, basic EPS; 20-for-1 split in June 2022 (the releases restate the prior-year columns; see the README)
+    metrics: [pe, ps, pb]   # no pe_non_gaap: Amazon has never published a Non-GAAP EPS (its releases give GAAP basic and diluted EPS only)
   - symbol: META   # Yahoo Finance symbol
     name: Meta Platforms
     market: US

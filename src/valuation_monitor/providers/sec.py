@@ -70,6 +70,11 @@ MICROSOFT_HEADLINE_RE = re.compile(
 )
 
 
+# an 8-K with item 2.02 that is not a results release although its text mentions reporting results: Apple's "Letter from Tim Cook to Apple
+# Investors" of January 2, 2019 (revised guidance: "... before we complete and report our final results")
+NOT_RESULTS_RE = re.compile(r"Letter from [^.]{1,60}? to [^.]{0,40}?\bInvestors\b", re.I)
+
+
 class SecUserAgentMissing(RuntimeError):
     pass
 
@@ -201,6 +206,8 @@ def headline(html: bytes) -> str | None:
     text = EXHIBIT_LABEL_RE.sub("", text, count=1)[:1500]  # strip labels such as "EX-99.1 Exhibit 99.1" from the file header
     text = AMAZON_LABEL_RE.sub("", text, count=1)
     m = RESULTS_HEADLINE_RE.search(text)
+    if m and NOT_RESULTS_RE.search(text[:200]):  # the title at the start, before the text of the letter
+        return None
     if not m:
         if m := MICROSOFT_HEADLINE_RE.search(text):
             return m.group(1)

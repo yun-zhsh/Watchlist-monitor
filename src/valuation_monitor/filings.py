@@ -51,6 +51,7 @@ from valuation_monitor.providers.base import Filing
 
 MONTH_TO_QUARTER = {"MARCH": 1, "JUNE": 2, "SEPTEMBER": 3, "DECEMBER": 4}
 PERIOD_RE = re.compile(r"ENDED (\d{1,2}) (MARCH|JUNE|SEPTEMBER|DECEMBER) (\d{4})", re.I)
+PERIOD_MONTH_FIRST_RE = re.compile(r"ENDED (MARCH|JUNE|SEPTEMBER|DECEMBER) (\d{1,2}), (\d{4})", re.I)  # TravelSky: "ENDED JUNE 30, 2026"; only read when PERIOD_RE finds nothing
 EPS_RE = re.compile(
     r"(?P<non_ifrs>Non-IFRS |Non-GAAP )?EPS[\s()\d]*\((?P<ccy>[A-Z]{3}) per share\)[\s*]*\S?[–-] ?basic (?P<body>.*?)\S?[–-] ?diluted"
 )
@@ -188,10 +189,11 @@ class QuarterValue:
 
 
 def parse_period(title: str) -> pd.Period:
-    m = PERIOD_RE.search(title)
-    if not m:
-        raise ValueError(f"Cannot tell the reporting period from the title: {title}")
-    return pd.Period(year=int(m.group(3)), quarter=MONTH_TO_QUARTER[m.group(2).upper()], freq="Q")
+    if m := PERIOD_RE.search(title):
+        return pd.Period(year=int(m.group(3)), quarter=MONTH_TO_QUARTER[m.group(2).upper()], freq="Q")
+    if m := PERIOD_MONTH_FIRST_RE.search(title):
+        return pd.Period(year=int(m.group(3)), quarter=MONTH_TO_QUARTER[m.group(1).upper()], freq="Q")
+    raise ValueError(f"Cannot tell the reporting period from the title: {title}")
 
 
 def period_label(p: pd.Period, periods_per_year: int, fiscal_year_end: int = 12) -> str:

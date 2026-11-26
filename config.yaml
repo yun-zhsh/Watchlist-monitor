@@ -34,6 +34,9 @@ freshness:
 #   pb           PB, price to book, based on equity attributable to owners at the end of the latest period
 # non_gaap_changes: the days a company changed the definition of its Non-GAAP EPS; a Non-GAAP TTM is only taken from four quarters of one
 #   definition, so it is empty until the new one has four quarters (Cognizant)
+# fiscal_year_end: the month (1-12) the company's fiscal year ends, default 12. Otherwise its periods are shown with fiscal labels,
+#   FY2025Q1, the fiscal year named after the calendar year it ends in (Alibaba's FY2025 ends in March 2025). Display only: the
+#   periods are still calendar quarters inside the program, and the fiscal quarter shown is the one holding the last month of it.
 # eps_basis: the EPS a PE metric is based on, shown in its name ("Basic PE (TTM)", "Diluted PE Non-GAAP (TTM)"). The rule: basic EPS whenever
 #   the company discloses it, diluted only when it does not. Every PE is basic unless listed here, e.g. eps_basis: { pe_non_gaap: diluted }.
 #   It names what the parser reads (the press_release parser takes the diluted Non-GAAP EPS only when a release has no basic one; the
@@ -88,6 +91,7 @@ stocks:
     sec_form: 8-K
     filing_format: us_press_release   # USD, US GAAP, basic EPS
     metrics: [pe, pe_non_gaap, ps, pb]   # the GAAP to Non-GAAP reconciliation in every release states a basic Non-GAAP EPS, so both PEs are basic
+    fiscal_year_end: 3   # the fiscal year ends on March 31: the quarter to September 2026 is shown as FY2027Q2
   - symbol: SAP
     name: SAP (ADR)
     market: US   # NYSE; one ADS = one ordinary share, so price and EPS need no ADS ratio; a foreign private issuer filing 20-F and 6-K
@@ -130,6 +134,7 @@ stocks:
     filing_format: press_release   # the price is in USD per ADS (8 ordinary shares since the 2019 subdivision; 1 before); EPS is in RMB per ADS
     metrics: [pe, pe_non_gaap, ps, pb]   # PE on basic EPS per ADS; Alibaba discloses no basic Non-GAAP EPS, so its PE Non-GAAP uses the disclosed diluted one
     eps_basis: { pe_non_gaap: diluted }   # shown as "Diluted PE Non-GAAP (TTM)"; JD's Non-GAAP EPS is basic
+    fiscal_year_end: 3   # the fiscal year ends on March 31: the quarter to September 2026 is shown as FY2027Q2
   - symbol: JD
     name: JD.com (ADR)
     market: US

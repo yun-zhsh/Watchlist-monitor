@@ -99,7 +99,8 @@ def test_fiscal_year_end_is_a_month():
 def test_alibaba_and_dynatrace_end_their_fiscal_year_in_march():
     ends = {s.symbol: s.fiscal_year_end for s in load_config(ROOT / "config.yaml").stocks}
     assert ends["BABA"] == 3 and ends["DT"] == 3
-    assert all(end == 12 for symbol, end in ends.items() if symbol not in {"BABA", "DT"})
+    assert ends["MSFT"] == 6  # Microsoft's fiscal year ends on June 30
+    assert all(end == 12 for symbol, end in ends.items() if symbol not in {"BABA", "DT", "MSFT"})
 
 
 # what is shown: the pages, the downloads and the MCP results of a March year end

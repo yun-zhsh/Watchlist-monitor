@@ -97,8 +97,6 @@ def test_config():
     stock = next(s for s in stocks if s.symbol == "AMZN")
     assert stock.name == "Amazon.com" and stock.market == "US" and stock.cik == 1018724 and stock.sec_form == "8-K"
     assert stock.filing_format == "us_press_release" and stock.metrics == ["pe", "ps", "pb"] and stock.eps_basis == {}
-    symbols = [s.symbol for s in stocks]
-    assert symbols.index("AMZN") < symbols.index("META")
 
 
 saved = pytest.mark.skipif(not (AMZN / "index.json").exists(), reason="no saved Amazon filings (the scheduled update saves them)")

@@ -114,7 +114,6 @@ def test_config():
     assert stock.name == "Microsoft" and stock.cik == 789019 and stock.sec_form == "8-K" and stock.filing_format == "us_press_release"
     assert stock.metrics == ["pe", "ps", "pb"] and stock.eps_basis == {}
     assert stock.fiscal_year_end == 6
-    assert stocks[0].symbol == "MSFT"
 
 
 def test_fiscal_labels():

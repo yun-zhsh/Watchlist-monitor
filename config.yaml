@@ -60,6 +60,14 @@ freshness:
 # only (its data is still updated; its page, downloads and MCP lookups still work). The "Order" button of the home page rewrites
 # both through the workflow home-order.yml: it moves whole entries and adds or removes only the hidden: true line.
 stocks:
+  - symbol: MSFT   # Yahoo Finance symbol
+    name: Microsoft
+    market: US
+    cik: 789019   # Microsoft Corporation; fiscal year ends June 30, results every calendar quarter
+    sec_form: 8-K   # exhibit 99.1 of an 8-K with item 2.02
+    filing_format: us_press_release   # USD, US GAAP, basic EPS; no split since 2003
+    metrics: [pe, ps, pb]   # no pe_non_gaap: Microsoft's non-GAAP EPS is diluted only, stated only in some quarters and redefined several times (see the README)
+    fiscal_year_end: 6   # the fiscal year ends on June 30: the quarter to September 2026 is shown as FY2027Q1
   - symbol: AMZN
     name: Amazon.com
     market: US
@@ -67,7 +75,7 @@ stocks:
     sec_form: 8-K   # exhibit 99.1 of an 8-K with item 2.02
     filing_format: us_press_release   # USD, US GAAP, basic EPS; 20-for-1 split in June 2022 (the releases restate the prior-year columns; see the README)
     metrics: [pe, ps, pb]   # no pe_non_gaap: Amazon has never published a Non-GAAP EPS (its releases give GAAP basic and diluted EPS only)
-  - symbol: META   # Yahoo Finance symbol
+  - symbol: META
     name: Meta Platforms
     market: US
     cik: 1326801   # Meta Platforms (Facebook until 2022)

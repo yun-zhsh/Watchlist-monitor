@@ -61,6 +61,14 @@ RESULTS_HEADLINE_RE = re.compile(
 # "Document Exhibit 99.1 ...", "AMZN-2014.12.31-EX99.1 Exhibit 99.1 ..." (only before "AMAZON.COM": Sea's titles keep their "Exhibit 99.1")
 AMAZON_LABEL_RE = re.compile(r"^(?:Exhibit |Document |AMZN-[\d.]+-EX99\.\d )?Exhibit 99\.\d (?=AMAZON\.COM )", re.I)
 
+# Microsoft's headlines name no verb like "reports": "Microsoft Cloud Strength Highlights Second Quarter Results", "Microsoft Cloud Highlights Q3 Results",
+# "Microsoft Cloud and Hardware Results Drives Fourth Quarter Performance"; tried only when RESULTS_HEADLINE_RE finds nothing, and taken only when the
+# release then says "Microsoft Corp. today announced ... for the quarter ended"
+MICROSOFT_HEADLINE_RE = re.compile(
+    r"\b(Microsoft\b.{0,100}?\b(?:(?:first|second|third|fourth) quarter|Q[1-4]) (?:results|performance))\b(?=.{0,400}?\bMicrosoft Corp\. today announced\b.{0,120}?\bfor the quarter ended\b)",
+    re.I,
+)
+
 
 class SecUserAgentMissing(RuntimeError):
     pass
@@ -194,6 +202,8 @@ def headline(html: bytes) -> str | None:
     text = AMAZON_LABEL_RE.sub("", text, count=1)
     m = RESULTS_HEADLINE_RE.search(text)
     if not m:
+        if m := MICROSOFT_HEADLINE_RE.search(text):
+            return m.group(1)
         return None
     return text[: m.end()].strip() if m.start() <= 60 else text[m.start() - 40 : m.end()].strip()
 

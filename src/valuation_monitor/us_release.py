@@ -1,5 +1,5 @@
 """Extract earnings data from condensed US GAAP income statements and balance sheets in HTML: the earnings press releases of US companies
-(exhibit 99.1 of Form 8-K; Meta Platforms, Cognizant, Amphenol, Dynatrace, Microsoft, Apple), the 6-K press releases of Sea Limited, and the US GAAP summary financial statements that ASML
+(exhibit 99.1 of Form 8-K; Meta Platforms, Cognizant, Amphenol, Dynatrace, Microsoft, Apple, NVIDIA), the 6-K press releases of Sea Limited, and the US GAAP summary financial statements that ASML
 furnishes with each quarterly 6-K (in euros).
 
 The document holds a condensed income statement and a condensed balance sheet as tables:
@@ -15,11 +15,12 @@ The document holds a condensed income statement and a condensed balance sheet as
 
   Non-GAAP EPS       only for a stock with a Non-GAAP PE (parse_us_release's non_gaap): on basic EPS, the basic row of a GAAP to Non-GAAP
                      reconciliation with the same kind of header ("Non-GAAP net income per share - basic", Dynatrace; optional per release),
-                     this period and the same period last year, as published; on diluted EPS, Amphenol's Adjusted Diluted EPS.
+                     this period and the same period last year, as published; on diluted EPS, Amphenol's Adjusted Diluted EPS, Cognizant's
+                     Non-GAAP / Adjusted Diluted EPS or NVIDIA's Non-GAAP diluted EPS (nvidia_non_gaap_eps).
 
 Amounts are converted to millions (the unit is in the table or the line before it), shares are in millions (Sea: single shares when the unit note
 says "except for number of shares", thousands when the label says so), per-share data is as published.
-ASML's fiscal quarters end on a Sunday near the calendar quarter end (for example July 3, 2022), so a date belongs to the quarter ten days before it; its dates
+ASML's fiscal quarters end on a Sunday near the calendar quarter end (for example July 3, 2022), and NVIDIA's about four weeks after it (late January, April, July, October), so a date belongs to the calendar quarter 45 days before it (quarter_of); ASML's dates
 are one per column ("Jul 4," ... "Jul 3,") and its newest releases (2025 on) have no tables at all, only the text of the statements (parse_text).
 The same value in two tables must agree and a missing value is an error: nothing is guessed.
 """
@@ -154,8 +155,13 @@ def years_in(cells: list[str]) -> list[int]:
 
 
 def quarter_of(day: pd.Timestamp) -> pd.Period:
-    """ASML's fiscal quarters end on the Sunday nearest to the calendar quarter end (July 3, 2022; January 2, 2022 for the fourth quarter of 2021)."""
-    return pd.Period(day - pd.Timedelta(days=10), freq="Q")
+    """The calendar quarter that holds most of the fiscal quarter ending on `day`: the quarter of the day 45 days before it.
+
+    ASML's fiscal quarters end on the Sunday nearest to the calendar quarter end (July 3, 2022; January 2, 2022 for the fourth quarter of 2021).
+    NVIDIA's end on the last Sunday of January, April, July and October: the quarter ended April 28, 2024 (fiscal Q1 2025, from January 29) is
+    2024Q1 and the one ended January 26, 2025 (fiscal Q4 2025) is 2024Q4, so fiscal 2025 is 2024Q1 to 2024Q4.
+    """
+    return pd.Period(day - pd.Timedelta(days=45), freq="Q")
 
 
 class Columns(NamedTuple):
@@ -538,11 +544,99 @@ def cognizant_non_gaap_row(soup, period: pd.Period) -> tuple[str, list[float]] |
     return label, list(pair)
 
 
+# NVIDIA: the reconciliation of GAAP to non-GAAP measures ends with a block "Diluted net income per share" and the rows "GAAP" and "Non-GAAP"
+# (with footnote marks: "Non-GAAP*"), one value per column: this quarter, the previous quarter and the same quarter last year, then the year to
+# date in the second to fourth quarters. The header ("Three Months Ended" / "Twelve Months Ended", a row of days, a row of years) is in the same
+# table, or in an earlier table of the reconciliation when the release splits it (2015 on). The block of the first quarter of fiscal 2026 has a
+# second, alternative row "Non-GAAP (as adjusted to exclude H20 excess inventory and purchase obligation charges)": only the row "Non-GAAP" is
+# taken. Until fiscal 2026 the measure excludes stock-based compensation; from the first quarter of fiscal 2027 (release of May 20, 2026) it
+# includes it, and the earlier columns of that release are restated (non_gaap_changes in config.yaml).
+DILUTED_BLOCK_RE = re.compile(r"^diluted net income per share(?: \([A-Z]\))?$", re.I)  # fiscal 2022: "Diluted net income per share (D)"
+NVIDIA_GAAP_ROW_RE = re.compile(r"^gaap$", re.I)
+NVIDIA_NON_GAAP_ROW_RE = re.compile(r"^non-gaap$", re.I)
+DILUTED_ROW_RE = re.compile(r"^diluted$", re.I)
+
+
+def column_dates(rows: list[list[str]]) -> list[pd.Timestamp] | None:
+    """The date of every value column of a header with a group row ("Three Months Ended", "Twelve Months Ended"), a row of days ("January 25,"
+    ...) and a row of years, one day and one year per column; None if the table has no such header."""
+    for i, row in enumerate(rows[:10]):
+        if not any(KIND_RE.match(header_cell(c)) or GROUP_RE.match(header_cell(c)) for c in row):
+            continue
+        for j in range(i + 1, min(i + 3, len(rows) - 1)):
+            days, years = days_in([header_cell(c) for c in rows[j]]), years_in(rows[j + 1])
+            if len(days) >= 2 and len(days) == len(years):
+                return [pd.Timestamp(year=y, month=m, day=d) for (m, d), y in zip(days, years)]
+    return None
+
+
+def income_diluted_eps(soup) -> dict[pd.Period, float]:
+    """The diluted EPS of the three-months columns of the income statement (the row "Diluted" under "Net income per share:"), by quarter."""
+    out: dict[pd.Period, float] = {}
+    for table in soup.find_all("table"):
+        rows = table_rows(table)
+        header = income_columns(rows) if rows else None
+        if header is None:
+            continue
+        section = ""
+        for row in rows[header.first_row :]:
+            nums = numbers(row)
+            if not nums:
+                section = "eps" if "per share" in row[0].lower() else section
+                continue
+            if section == "eps" and DILUTED_ROW_RE.match(header_cell(row[0])) and len(nums) >= header.offset + len(header.dates):
+                for d, v in zip(header.dates, nums[header.offset :]):
+                    out.setdefault(quarter_of(d), v)
+                break
+    return out
+
+
+def nvidia_non_gaap_eps(soup, period: pd.Period) -> list[float] | None:
+    """[this quarter, same quarter last year, previous quarter] of NVIDIA's Non-GAAP diluted EPS (see DILUTED_BLOCK_RE); None without the block.
+
+    The columns come from the dates of the reconciliation header; the GAAP row of the block must give the diluted EPS of the income statement
+    for this quarter and the same quarter last year, so a wrong header cannot go unnoticed. Two blocks must agree."""
+    found = []
+    dates = None
+    for table in soup.find_all("table"):
+        rows = table_rows(table)
+        dates = column_dates(rows) or dates
+        for k, row in enumerate(rows):
+            if not DILUTED_BLOCK_RE.match(header_cell(row[0])) or numbers(row):
+                continue
+            block = {}
+            for below in rows[k + 1 : k + 4]:
+                label = header_cell(below[0])
+                if NVIDIA_GAAP_ROW_RE.match(label):
+                    block.setdefault("gaap", numbers(below))
+                elif NVIDIA_NON_GAAP_ROW_RE.match(label):
+                    block.setdefault("non_gaap", numbers(below))
+            if "non_gaap" not in block:
+                continue
+            if dates is None or len(block["non_gaap"]) != len(dates) or len(block.get("gaap", [])) != len(dates):
+                raise ValueError(f"The Non-GAAP diluted EPS row has {len(block['non_gaap'])} numbers for the header dates {dates}")
+            periods = [quarter_of(d) for d in dates]
+            wanted = [q for q in (period, period - 4, period - 1) if q in periods]
+            if wanted[:2] != [period, period - 4]:
+                raise ValueError(f"The reconciliation columns {periods} do not have {period} and {period - 4}")
+            columns = [periods.index(q) for q in wanted]  # the first column of a quarter is in the three-months group
+            diluted = income_diluted_eps(soup)
+            for q in (period, period - 4):
+                if q not in diluted or not close(diluted[q], block["gaap"][periods.index(q)], "eps"):
+                    raise ValueError(f"The GAAP diluted EPS of the reconciliation for {q} does not match the income statement: {block['gaap']} {diluted}")
+            found.append([block["non_gaap"][c] for c in columns])
+    if len({tuple(f) for f in found}) > 1:
+        raise ValueError(f"The reconciliation tables in this release disagree on the Non-GAAP diluted EPS: {found}")
+    return found[0] if found else None
+
+
 def adjusted_diluted_eps(soup, period: pd.Period) -> list[float] | None:
     if (found := adjusted_eps_from_tables(soup, period) or adjusted_eps_from_text(soup, period)) is not None:  # Amphenol
         return found
     row = cognizant_non_gaap_row(soup, period)
-    return None if row is None else row[1]
+    if row is not None:
+        return row[1]
+    return nvidia_non_gaap_eps(soup, period)
 
 
 def parse_us_release(html: bytes, non_gaap: str | None = None) -> Parsed:

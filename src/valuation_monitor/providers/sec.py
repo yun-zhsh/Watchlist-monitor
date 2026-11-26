@@ -42,6 +42,10 @@ MAX_EXHIBIT_BYTES = 3_000_000
 EXHIBIT_RE = re.compile(r"ex(?:hibit)?[-_ ]?99|press ?release", re.I)
 # tried only after the names above found nothing: two Dynatrace 8-Ks name the exhibit fy21q2-earningsrelease.htm and fy20q1-earningsreleaseexhi.htm
 FALLBACK_EXHIBIT_RE = re.compile(r"earnings[-_ ]?release", re.I)
+# tried last: NVIDIA names its press release after the fiscal quarter, q3fy25pr.htm (q416pr.htm until fiscal 2016), next to q3fy25cfocommentary.htm
+QUARTER_PR_EXHIBIT_RE = re.compile(r"^q[1-4](?:fy)?\d\dpr\.html?$", re.I)
+# an 8-K with item 2.02 that only pre-announces figures is not an earnings release: "NVIDIA Announces Preliminary Financial Results" (August 2022)
+PRELIMINARY_RE = re.compile(r"\bpreliminary\b", re.I)
 # Title at the start of the press release, e.g. "JD.com Announces Second Quarter 2026 Results", "... Announces Fourth Quarter and Full Year 2025 Results"
 EXHIBIT_LABEL_RE = re.compile(r"^.*?\bExhibi?t? ?99\.\d\s+", re.I)
 # The Hong Kong-style results announcement that Alibaba files instead of a press release for the March and September quarters (since 2025), after
@@ -328,6 +332,7 @@ class SecProvider:
         named = [f for f in files if EXHIBIT_RE.search(f["name"]) or (exhibit == "us_gaap_statements" and FINANCIAL_STATEMENTS_NAME_RE.search(f["name"]))]
         if exhibit == "release":
             named += [f for f in files if FALLBACK_EXHIBIT_RE.search(f["name"]) and f not in named]  # after all the usual names, so they are tried first as before
+            named += [f for f in files if QUARTER_PR_EXHIBIT_RE.search(f["name"]) and f not in named]  # NVIDIA, after all the others
         for f in named:
             size = int(f["size"] or 0)
             name = f["name"]
@@ -345,6 +350,8 @@ class SecProvider:
                 title = statements_title(html) if exhibit == "us_gaap_statements" else headline(html)
                 if title and exhibit == SUPPLEMENT_EXHIBIT and not is_results_release_title(title):
                     title = None  # a notice of the results date, or preliminary estimates ("XP INC. ANNOUNCES PRELIMINARY ESTIMATED 2Q20 FINANCIAL RESULTS")
+                if title and exhibit == "release" and PRELIMINARY_RE.search(title):
+                    title = None  # preliminary figures announced ahead of the release (NVIDIA, August 2022)
             if title:
                 file = f"{item['published']:%Y-%m-%d}_{name}"
                 folder.mkdir(parents=True, exist_ok=True)

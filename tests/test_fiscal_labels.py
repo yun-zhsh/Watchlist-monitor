@@ -101,7 +101,8 @@ def test_alibaba_and_dynatrace_end_their_fiscal_year_in_march():
     assert ends["BABA"] == 3 and ends["DT"] == 3
     assert ends["MSFT"] == 6  # Microsoft's fiscal year ends on June 30
     assert ends["AAPL"] == 9  # Apple's fiscal year ends on the last Saturday of September
-    assert all(end == 12 for symbol, end in ends.items() if symbol not in {"BABA", "DT", "MSFT", "AAPL"})
+    assert ends["NVDA"] == 1  # NVIDIA's fiscal year ends on the last Sunday of January
+    assert all(end == 12 for symbol, end in ends.items() if symbol not in {"BABA", "DT", "MSFT", "AAPL", "NVDA"})
 
 
 # what is shown: the pages, the downloads and the MCP results of a March year end

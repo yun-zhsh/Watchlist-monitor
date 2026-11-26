@@ -108,7 +108,8 @@ def ps_lines(rec: dict) -> list[str]:
 def pb_lines(rec: dict) -> list[str]:
     return [
         f"Book value per share = {ratio_formula('equity at period end', rec.get('equity'), 'shares', rec.get('shares'), rec.get('book_value_per_share'))}",
-        f"Equity attributable to owners at the end of {rec['period_label']} (millions) = {num(rec.get('equity'))}",
+        f"Equity attributable to owners at the end of {rec['period_label']} (millions) = {num(rec.get('equity'))}"
+        + (f" ({rec['equity_note']})" if rec.get("equity_note") else ""),
         f"Shares = {shares_formula(rec)}",
     ]
 

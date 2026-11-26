@@ -8,6 +8,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
+from valuation_monitor.audit import explain
 from valuation_monitor.config import load_config
 from valuation_monitor.us_release import parse_us_release
 
@@ -53,6 +54,38 @@ def test_quarter_ended_and_year_to_date_groups_and_the_number_of_shares_row():
     assert p.values["profit"] == [26468.0, 34979.0]  # the net income row, not the one available to common stockholders
     assert p.values["eps"] == [2.14, 2.89] and p.values["wa_shares"] == [12256.0, 12086.0]
     assert p.values["equity"] == [677549.0, 415265.0]
+
+
+PREFERRED = (
+    "Series A and Series B preferred stock and additional paid-in capital, $0.001 par value per share, 100 shares authorized; 6.25% mandatory "
+    "convertible preferred stock, 0 and 19 shares issued and outstanding allocated equally between each series with a liquidation preference of $1,000 per share"
+)
+
+
+def test_pb_is_on_common_equity_the_preferred_stock_is_deducted_and_noted():
+    balance = table(
+        ["As of December 31, 2025", "As of September 30, 2026"],
+        ["Total assets", "595,281", "1,003,312"],
+        ["Stockholders' equity:"],
+        [PREFERRED, "0", "18,023"],
+        ["Retained earnings", "324,055", "516,784"],
+        ["Total stockholders' equity", "415,265", "677,549"],
+    )
+    p = parse_us_release(release(UNIT, balance, UNIT, INCOME_2026))
+    assert p.values["equity"] == [659526.0, 415265.0]
+    assert p.notes == {"equity": "equity excludes USD 18,023 million of mandatory convertible preferred stock (total stockholders' equity USD 677,549 million)"}
+    # with none outstanding at the end of the period the equity is the total, without a note
+    balance = table(["As of December 31, 2025", "As of March 31, 2026"], [PREFERRED, "0", "0"], ["Total stockholders' equity", "415,265", "478,746"])
+    p = parse_us_release(release(UNIT, balance, UNIT, INCOME_2026.replace("September", "March")))
+    assert p.values["equity"] == [478746.0, 415265.0] and p.notes is None
+
+
+def test_the_equity_note_is_shown_with_the_pb_calculation():
+    note = "equity excludes USD 18,023 million of mandatory convertible preferred stock (total stockholders' equity USD 677,549 million)"
+    rec = {"period_label": "2026Q3", "equity": 659526.0, "shares": 12256.0, "book_value_per_share": 53.8125, "equity_note": note,
+           "shares_source": "reported", "shares_label": "", "shares_basis": "", "eps": None, "non_ifrs_eps": None, "revenue": None}
+    lines = explain("book_value_per_share", rec)
+    assert lines[1] == f"Equity attributable to owners at the end of 2026Q3 (millions) = 659,526 ({note})"
 
 
 def test_a_fourth_quarter_takes_the_quarter_not_the_year_ended_group():
@@ -198,7 +231,10 @@ def test_prior_year_columns_agree_on_the_split_adjusted_basis():
 def test_alphabet_known_values():
     by_period = parsed_releases()
     _, q = by_period[pd.Period("2026Q3")]
-    assert q.values["eps"] == [2.14, 2.89] and q.values["wa_shares"] == [12256.0, 12086.0] and q.values["equity"] == [677549.0, 415265.0]
+    assert q.values["eps"] == [2.14, 2.89] and q.values["wa_shares"] == [12256.0, 12086.0]
+    assert q.values["equity"] == [659526.0, 415265.0] and "18,023" in q.notes["equity"]  # 677,549 less the preferred stock
+    _, q = by_period[pd.Period("2026Q1")]
+    assert q.values["equity"] == [478746.0, 415265.0] and q.notes is None  # no preferred stock issued yet
     _, q = by_period[pd.Period("2020Q1")]
     assert q.values["wa_shares"] == pytest.approx([686.465, 694.869])  # thousands of shares, converted
     _, q = by_period[pd.Period("2015Q3")]

@@ -63,6 +63,9 @@ BASIC_SHARES_RE = re.compile(r"^weighted[- ]average (?:number of )?(?:common |or
 # Alphabet (from the fourth quarter of 2019): "Number of shares used in basic earnings per share calculation", later "... basic net income per
 # [common] share calculation"; its releases before have no share counts at all (see parse_us_release)
 NUMBER_OF_SHARES_RE = re.compile(r"^number of shares used in basic (?:earnings|net income) per (?:common )?share calculation$", re.I)
+# Alphabet's 6.25% mandatory convertible preferred stock (issued in June 2026), a row of the stockholders' equity: "Series A and Series B preferred
+# stock and additional paid-in capital, $0.001 par value per share, 100 shares authorized; 6.25% mandatory convertible preferred stock, ..."
+PREFERRED_STOCK_RE = re.compile(r"^series a and series b preferred stock and additional paid-in capital\b", re.I)
 # Dynatrace's reconciliation of GAAP to Non-GAAP net income: "Non-GAAP net income per share - basic" (also "Non-GAAP net (loss) income per share - basic");
 # the diluted row and the summary table's "Non-GAAP net income per share" (diluted shares) are not taken
 NON_GAAP_BASIC_EPS_RE = re.compile(r"^non-gaap net (?:\((?:loss|income)\) )?(?:income|loss)(?: \((?:loss|income)\))? per (?:common |ordinary )?share\s*-\s*basic$", re.I)
@@ -586,6 +589,26 @@ def continued_balance(soup) -> list[tuple[pd.Period, list[float]]]:
     return found
 
 
+def preferred_stock(soup, period: pd.Period) -> list[float] | None:
+    """Alphabet's preferred stock in the balance sheet (millions; end of this period, end of last year), or None without that row. PB is for
+    the common stockholders, so it is deducted from the total stockholders' equity (the maintainer's decision, like the preference shares of
+    the A-share banks)."""
+    found = []
+    for table in soup.find_all("table"):
+        rows = table_rows(table)
+        dates, scale = balance_dates(rows) if rows else None, unit_scale(table, rows) if rows else None
+        row = next((r for r in rows if PREFERRED_STOCK_RE.match(r[0]) and len(numbers(r)) >= 2), None)
+        if row is None or not dates or scale is None:
+            continue
+        nums = numbers(row)[-len(dates):]  # the label holds numbers of its own (par value, shares authorized): the values are the last cells
+        order = sorted(range(len(dates)), key=lambda c: dates[c], reverse=True)
+        if len(nums) == len(dates) and quarter_of(dates[order[0]]) == period:
+            found.append([nums[c] * scale for c in order[:2]])
+    if len({tuple(f) for f in found}) > 1:
+        raise ValueError(f"The preferred stock rows in this release disagree: {found}")
+    return found[0] if found else None
+
+
 def parse_us_release(html: bytes, non_gaap: str | None = None) -> Parsed:
     """Parse a release. non_gaap is the EPS basis of the stock's Non-GAAP PE (None without one): "diluted" reads the Adjusted Diluted EPS
     (Amphenol) into non_ifrs_eps, "basic" the "Non-GAAP net income per share - basic" row of the reconciliation (Dynatrace, optional per release);
@@ -635,6 +658,15 @@ def parse_us_release(html: bytes, non_gaap: str | None = None) -> Parsed:
     equity_period, equity = balance[0]
     if equity_period != period:
         raise ValueError(f"The balance sheet is for {equity_period}, the income statement for {period}")
+    notes = {}
+    if (preferred := preferred_stock(soup, period)) is not None:
+        # Alphabet from the second quarter of 2026: the equity of the common stockholders, the total less the preferred stock
+        equity = [total - pref for total, pref in zip(equity, preferred)]
+        if preferred[0]:
+            notes["equity"] = (
+                f"equity excludes USD {preferred[0]:,.0f} million of mandatory convertible preferred stock "
+                f"(total stockholders' equity USD {equity[0] + preferred[0]:,.0f} million)"
+            )
     values = {**values, "equity": equity}
     if non_gaap == "diluted" and (adjusted := adjusted_diluted_eps(soup, period)) is not None:
         values["non_ifrs_eps"] = adjusted
@@ -642,4 +674,4 @@ def parse_us_release(html: bytes, non_gaap: str | None = None) -> Parsed:
         if any(not close(a, b, "eps") for other in found[1:] for a, b in zip(other, found[0])):
             raise ValueError(f"The basic Non-GAAP EPS in this release disagree: {found}")
         values["non_ifrs_eps"] = found[0]
-    return Parsed(currency, values, period, quarterly)
+    return Parsed(currency, values, period, quarterly, notes or None)

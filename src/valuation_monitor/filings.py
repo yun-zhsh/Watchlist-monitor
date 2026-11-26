@@ -647,7 +647,9 @@ class EarningsHistory:
         extra["revenue_per_share_formula"] = [
             _division(r["revenue_ttm"], r["shares"], r["revenue_per_share_ttm"]) for r in self.ttm_detail
         ]
-        extra["book_value_per_share_formula"] = [_division(r["equity"], r["shares"], r["book_value_per_share"]) for r in self.ttm_detail]
+        extra["book_value_per_share_formula"] = [
+            _division(r["equity"], r["shares"], r["book_value_per_share"]) + (f" ({r['equity_note']})" if r.get("equity_note") else "") for r in self.ttm_detail
+        ]
         extra["published_note"] = [r["note"] for r in self.ttm_detail]
         extra["split_note"] = [
             "; ".join(split_notes(r["eps"]) + split_notes(r["non_ifrs_eps"])) for r in self.ttm_detail
@@ -872,6 +874,7 @@ def _ttm_row(
         "shares_parts": parts,
         "shares_implied": implied,
         "equity": row["equity"],
+        "equity_note": equity.note if equity else "",  # what is special about this equity (Alphabet: the preferred stock left out)
         "revenue_per_share_ttm": row["revenue_per_share_ttm"],
         "book_value_per_share": row["book_value_per_share"],
     }

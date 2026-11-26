@@ -16,11 +16,12 @@ from pathlib import Path
 
 import pandas as pd
 
-from valuation_monitor.db import FINAL_COLUMNS, Database
+from valuation_monitor.db import FINAL_COLUMNS, Database, stored_text
 from valuation_monitor.filings import (
     PARSER_VERSIONS,
     SUPPLEMENT_PARSER_VERSION,
     SUPPLEMENT_TABLE,
+    Announcement,
     EarningsHistory,
     adjust_for_splits,
     announcements_from_frame,
@@ -223,6 +224,20 @@ class PriceStore:
         return result
 
 
+def as_saved(announcement: Announcement, parser_version: int, market: Market) -> Announcement:
+    """A freshly parsed filing exactly as the announcements table gives it back on every later run.
+
+    The table keeps each number to 10 significant digits (numbers as in the filing), while the parsers' arithmetic (year-to-date
+    differences, unit scaling) can leave a last-digit difference such as 1.7630000000000001. Computing from the stored form on the
+    run that parses as well means that run writes the periods and ttm tables later runs would write, instead of a second run
+    rewriting a few values in their last digit.
+    """
+    frame = announcements_to_frame([announcement], parser_version)
+    text = pd.DataFrame([[stored_text(v) for v in row] for row in frame.itertuples(index=False)], columns=frame.columns, dtype=object)
+    (stored,) = announcements_from_frame(text, market)
+    return stored
+
+
 class EarningsStore:
     def __init__(self, root: str | Path = "data", db: Database | None = None):
         self.db = db or Database(Path(root) / "valuation.db")
@@ -266,7 +281,7 @@ class EarningsStore:
         parsed = []
         for f in filings:
             try:
-                parsed.append(saved.get(f.url) or parse_announcement(f, fmt, market, non_gaap))
+                parsed.append(saved.get(f.url) or as_saved(parse_announcement(f, fmt, market, non_gaap), version, market))
             except Exception as e:
                 if not f.provisional:
                     raise

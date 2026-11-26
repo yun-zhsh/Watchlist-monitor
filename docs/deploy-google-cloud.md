@@ -46,8 +46,11 @@ Cloud Storage bucket:  valuation.db (object)  ---->  Cloud Run service "valuatio
   list can get in.
 - **Secrets**: `SEC_USER_AGENT` (your contact for SEC EDGAR) is kept in Secret Manager, never in the repository.
 
-Expected cost: a few cents to about one dollar a month (Cloud Run scales to zero when nobody is using it; the bucket
-holds about 100 MB). Set a budget alert (step 1) so you are told if that ever changes.
+Expected cost: a few cents to about one dollar a month (Cloud Run scales to zero when nobody is using it). The bucket holds
+the contents of `data/`: about 690 MB, measured 2026-11-27 (the original filings about 674 MB, the database about 16 MB). It also
+keeps old object versions for 30 days (step 2), and every update that changes the database leaves its previous version behind, at
+most six a day from the schedule, so they can add up to about 3 GB more. Storage costs a few US cents per GB-month, so the bucket
+stays under about 10 cents a month. Set a budget alert (step 1) so you are told if that ever changes.
 
 ## Before you start
 
@@ -315,7 +318,7 @@ gcloud run jobs executions list --job=valuation-update --region=$REGION --limit=
 To deploy only one part, use `scripts/deploy-cloud.sh job`, `scripts/deploy-cloud.sh web` or `scripts/deploy-cloud.sh mcp`.
 
 The script builds the container image **once** and deploys the update job and the web page from it (the commands of steps 5 and 6 build
-twice, one image each). It also makes rebuilds faster in two ways: `.gcloudignore` keeps `data/` (the original filings, about 70 MB) out
+twice, one image each). It also makes rebuilds faster in two ways: `.gcloudignore` keeps `data/` (the original filings and the database, about 690 MB measured 2026-11-27) out
 of the upload, and `cloudbuild.yaml` reuses the layers of the previous build while the `Dockerfile` installs the dependencies in a
 layer of their own, so a code-only change does not reinstall pandas and the rest. The first run after this change builds everything
 once, as before; later code-only builds should be clearly shorter. The script prints how long the build and the whole run took,

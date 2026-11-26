@@ -1,4 +1,5 @@
 from datetime import datetime
+from pathlib import Path
 
 import pandas as pd
 import pytest
@@ -175,3 +176,106 @@ def test_earnings_store_parses_each_filing_once(tmp_path, monkeypatch):
     assert calls == ["https://example.com/a.pdf"]
     assert second.quarters["eps"][pd.Period("2026Q2")].value == first.quarters["eps"][pd.Period("2026Q2")].value
     assert store.periods("0700.HK") is not None and store.ttm("0700.HK") is not None
+
+
+# Freshly parsed filings are used exactly as the announcements table gives them back (store.as_saved)
+
+def test_a_fresh_parse_is_used_as_it_is_stored():
+    from valuation_monitor.filings import announcements_to_frame
+    from valuation_monitor.market_calendar import get_market
+    from valuation_monitor.store import as_saved
+
+    parsed = Announcement(
+        period=pd.Period("2017Q3", freq="Q"), published=pd.Timestamp("2017-11-22 11:27"), url="https://example.com/q3.htm", currency="USD",
+        is_quarterly_table=False, values={"eps": [-0.75, 1.7630000000000001], "profit": [-132.68099999999998, 176.29999999999998]},
+        market="US", shares_basis="year to date", note="a note", series_notes={"eps": "from the year-to-date figures"},
+    )
+    stored = as_saved(parsed, 7, get_market("US"))
+    assert stored.values == {"eps": [-0.75, 1.763], "profit": [-132.681, 176.3]}  # 10 significant digits, as in the table
+    assert (stored.period, stored.published, stored.url, stored.currency, stored.is_quarterly_table, stored.market, stored.shares_basis,
+            stored.note, stored.series_notes, stored.supplement) == (parsed.period, parsed.published, parsed.url, parsed.currency, False, "US",
+                                                                    "year to date", "a note", parsed.series_notes, False)
+    assert announcements_to_frame([stored], 7).equals(announcements_to_frame([parsed], 7))  # the same row is written
+    assert as_saved(stored, 7, get_market("US")) == stored  # nothing changes a second time
+    supplement = as_saved(Announcement(pd.Period("2025Q4", freq="Q"), pd.Timestamp("2026-02-24 18:00"), "https://example.com/r.htm", "BRL", True,
+                                       {"non_ifrs_eps": [2.0300000000000002]}, "US", supplement=True), 7, get_market("US"))
+    assert supplement.supplement and supplement.values == {"non_ifrs_eps": [2.03]}
+
+
+ROOT = Path(__file__).resolve().parent.parent
+
+
+def earnings_tables(db_path):
+    """The tables the earnings store writes, as sorted rows (the row order changes when a symbol is rewritten)."""
+    import sqlite3
+
+    with sqlite3.connect(db_path) as conn:
+        return {t: sorted(conn.execute(f'SELECT * FROM "{t}"'), key=repr) for t in ("announcements", "periods", "ttm")}
+
+
+def full_dump(db_path):
+    import sqlite3
+
+    with sqlite3.connect(db_path) as conn:
+        tables = [t for (t,) in conn.execute("SELECT name FROM sqlite_master WHERE type = 'table'")]
+        return {t: sorted(conn.execute(f'SELECT * FROM "{t}"'), key=repr) for t in tables}
+
+
+def real_monitor(tmp_path, formats=None):
+    """The saved data offline, on a copy of the committed database; only the stocks with one of `formats` when given."""
+    import shutil
+
+    import yaml
+
+    from valuation_monitor.config import parse_config
+    from valuation_monitor.service import Monitor
+
+    db = tmp_path / "valuation.db"
+    shutil.copyfile(ROOT / "data" / "valuation.db", db)
+    raw = yaml.safe_load((ROOT / "config.yaml").read_text(encoding="utf-8"))
+    config = parse_config(raw)
+    if formats:
+        keep = {s.symbol for s in config.stocks if s.filing_format in formats or s.sec_release_non_gaap}
+        config = parse_config({**raw, "stocks": [s for s in raw["stocks"] if str(s["symbol"]) in keep]})
+    return lambda: Monitor(config, ROOT / "data", tmp_path / "cache", offline=True, db_path=db), db
+
+
+saved_data = pytest.mark.skipif(not (ROOT / "data" / "valuation.db").exists(), reason="no saved database")
+
+
+@saved_data
+def test_one_run_after_a_parser_bump_leaves_the_database_settled(tmp_path, monkeypatch):
+    """After a PARSER_VERSIONS bump the run that parses again writes what every later run reads: a second run writes nothing.
+    (Before store.as_saved the second run rewrote a few ttm values in their last digit, e.g. 1.7630000000000001 -> 1.763.)"""
+    from valuation_monitor import filings
+
+    monkeypatch.setitem(filings.PARSER_VERSIONS, "us_press_release", filings.PARSER_VERSIONS["us_press_release"] + 1)
+    monkeypatch.setattr(filings, "SUPPLEMENT_PARSER_VERSION", filings.SUPPLEMENT_PARSER_VERSION + 1)  # XP's press releases too
+    monkeypatch.setattr(store_module, "SUPPLEMENT_PARSER_VERSION", filings.SUPPLEMENT_PARSER_VERSION)
+    monitor, db = real_monitor(tmp_path, {"us_press_release"})
+    before = earnings_tables(db)
+    monitor().analyze_all()
+    first = full_dump(db)
+    assert earnings_tables(db)["announcements"] != before["announcements"]  # the filings were parsed again (new parser version)
+    monitor().analyze_all()
+    assert full_dump(db) == first
+
+
+@saved_data
+def test_a_run_without_new_filings_parses_nothing_and_stays_settled(tmp_path, monkeypatch):
+    """On the committed database, with no parser bump: nothing is parsed (so store.as_saved does not apply and the run is exactly
+    what it was before it), and once run, the next run rewrites nothing in the earnings tables.
+
+    The committed database itself need not be settled: a stock parsed by a scheduled run of the code before store.as_saved
+    (Tesla when it was added) keeps last-digit values in its ttm rows until the next run rewrites them once."""
+
+    def no_parse(*args, **kwargs):
+        raise AssertionError("nothing should be parsed again")
+
+    monkeypatch.setattr(store_module, "parse_announcement", no_parse)
+    monitor, db = real_monitor(tmp_path)
+    reports = monitor().analyze_all()
+    assert not [r.error for r in reports if r.error and "nothing should be parsed" in r.error]
+    settled = earnings_tables(db)
+    monitor().analyze_all()
+    assert earnings_tables(db) == settled

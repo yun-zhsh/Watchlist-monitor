@@ -486,7 +486,7 @@ class ValuationService:
                 add(series, item, comp.period, comp.value, comp.derived, comp.note)
         latest = rec["period_label"]
         if column == "book_value_per_share":
-            add("equity", "Equity attributable to owners (period end)", latest, rec.get("equity"))
+            add("equity", "Equity attributable to owners (period end)", latest, rec.get("equity"), note=rec.get("equity_note") or "")
         if column in ("revenue_per_share_ttm", "book_value_per_share"):
             if rec.get("shares_source") == "implied":
                 add("profit", "Net profit (used to imply the share count)", latest, rec.get("profit"))

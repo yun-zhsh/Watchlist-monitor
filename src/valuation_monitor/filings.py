@@ -101,7 +101,7 @@ SERIES_LABELS = {
     "equity": "Equity attributable to owners",
     "wa_shares": "Weighted average shares",
 }
-PARSER_VERSIONS = {"highlights": 5, "statements": 3, "press_release": 4, "us_press_release": 8, "us_gaap_statements": 5, "ifrs_statements": 1, "sap_ifrs": 2, "kifrs_statements": 4, "cn_report": 8}  # add 1 when the parsing rules change; saved parse results are then re-parsed automatically
+PARSER_VERSIONS = {"highlights": 5, "statements": 3, "press_release": 4, "us_press_release": 9, "us_gaap_statements": 5, "ifrs_statements": 1, "sap_ifrs": 2, "kifrs_statements": 4, "cn_report": 8}  # add 1 when the parsing rules change; saved parse results are then re-parsed automatically
 SUPPLEMENT_FORMAT = "adjusted_eps_release"  # the layout of a supplementary document (XP's press release, see release_eps.py); its parse results carry their own version
 SUPPLEMENT_PARSER_VERSION = 1  # add 1 when the rules of release_eps.py change
 SUPPLEMENT_TABLE = "supplement"  # the "table" of a supplementary document's parse result in the stored announcements
@@ -669,7 +669,9 @@ class EarningsHistory:
         extra["revenue_per_share_formula"] = [
             _division(r["revenue_ttm"], r["shares"], r["revenue_per_share_ttm"]) for r in self.ttm_detail
         ]
-        extra["book_value_per_share_formula"] = [_division(r["equity"], r["shares"], r["book_value_per_share"]) for r in self.ttm_detail]
+        extra["book_value_per_share_formula"] = [
+            _division(r["equity"], r["shares"], r["book_value_per_share"]) + (f" ({r['equity_note']})" if r.get("equity_note") else "") for r in self.ttm_detail
+        ]
         extra["published_note"] = [r["note"] for r in self.ttm_detail]
         extra["split_note"] = [
             "; ".join(split_notes(r["eps"]) + split_notes(r["non_ifrs_eps"])) for r in self.ttm_detail
@@ -902,6 +904,7 @@ def _ttm_row(
         "shares_parts": parts,
         "shares_implied": implied,
         "equity": row["equity"],
+        "equity_note": equity.note if equity else "",  # what is special about this equity (Alphabet: the preferred stock left out)
         "revenue_per_share_ttm": row["revenue_per_share_ttm"],
         "book_value_per_share": row["book_value_per_share"],
     }

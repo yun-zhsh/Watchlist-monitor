@@ -68,6 +68,13 @@ stocks:
     filing_format: us_press_release   # USD, US GAAP, basic EPS; no split since 2003
     metrics: [pe, ps, pb]   # no pe_non_gaap: Microsoft's non-GAAP EPS is diluted only, stated only in some quarters and redefined several times (see the README)
     fiscal_year_end: 6   # the fiscal year ends on June 30: the quarter to September 2026 is shown as FY2027Q1
+  - symbol: GOOGL   # Class A (Class A, B and C have the same EPS)
+    name: Alphabet
+    market: US
+    cik: 1652044   # Alphabet Inc. (from the October 2015 reorganisation; its first release, the third quarter of 2015, is already Alphabet's)
+    sec_form: 8-K   # exhibit 99.1 of an 8-K with item 2.02
+    filing_format: us_press_release   # USD, US GAAP, basic EPS (the same for Class A, B and C); 20-for-1 split in July 2022
+    metrics: [pe, ps, pb]   # no pe_non_gaap: Alphabet stopped reporting a Non-GAAP EPS after its fourth-quarter 2016 release
   - symbol: AMZN
     name: Amazon.com
     market: US

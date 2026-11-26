@@ -1,5 +1,5 @@
 """Extract earnings data from condensed US GAAP income statements and balance sheets in HTML: the earnings press releases of US companies
-(exhibit 99.1 of Form 8-K; Meta Platforms, Cognizant, Amphenol, Dynatrace, Microsoft, Apple, NVIDIA), the 6-K press releases of Sea Limited, and the US GAAP summary financial statements that ASML
+(exhibit 99.1 of Form 8-K; Alphabet, Meta Platforms, Cognizant, Amphenol, Dynatrace, Microsoft, Apple, NVIDIA), the 6-K press releases of Sea Limited, and the US GAAP summary financial statements that ASML
 furnishes with each quarterly 6-K (in euros).
 
 The document holds a condensed income statement and a condensed balance sheet as tables:
@@ -36,6 +36,9 @@ from valuation_monitor.parsed import Parsed
 from valuation_monitor.press_release import MONTHS, UNIT_RE, clean, parse_date, table_rows, to_number
 
 GROUP_RE = re.compile(r"^(?P<kind>three|six|nine|twelve) months ended (?P<month>[A-Z][a-z]+)\.? (?P<day>\d{1,2}),?$|^(?:full )?(?P<year_kind>year) ended (?P<ymonth>[A-Z][a-z]+)\.? (?P<yday>\d{1,2}),?$", re.I)
+# Alphabet (from the fourth quarter of 2019): "Quarter Ended June 30," is the three months, "Year To Date June 30," the year-to-date group;
+# a cell is tried against it only when GROUP_RE does not match it (see income_columns)
+ALPHABET_GROUP_RE = re.compile(r"^(?:(?P<quarter>quarter)|(?P<ytd>year to date)) ended (?P<month>[A-Z][a-z]+)\.? (?P<day>\d{1,2}),?$|^(?P<ytd2>year to date) (?P<month2>[A-Z][a-z]+)\.? (?P<day2>\d{1,2}),?$", re.I)
 KIND_RE = re.compile(r"^(?P<kind>three|six|nine|twelve) months ended,?$|^(?P<year>year) ended,?$", re.I)  # older releases put the date in the next row
 DAY_RE = re.compile(r"^(?P<month>[A-Z][a-z]+)\.? (?P<day>\d{1,2}),?$")
 FULL_DATE_RE = re.compile(r"^(?P<month>[A-Z][a-z]+)\.? (?P<day>\d{1,2}), (?P<year>\d{4})$")
@@ -52,7 +55,18 @@ BASIC_EPS_RE = re.compile(
     r"|^net income(?: \(loss\))?(?: attributable to (?!.*non-?controlling).+?)?(?: per (?:common |ordinary )?share)? ?[-–—] ?basic$",
     re.I,
 )
+# Alphabet: "Basic net income per share of Class A and B common stock and Class C capital stock" (2016-2017), "Basic earnings per share of Class A
+# and B common stock and Class C capital stock" (2018-2021), "Basic earnings per share of Class A, Class B, and Class C stock" (2022-2024); in 2015-2016
+# the classes have rows of their own, and the first, "Basic net income per share of Class A and B common stock", is the one taken (Class A is GOOGL).
+# The headings with a colon ("Basic net income (loss) per share of Class A and B common stock:") have no figures.
+CLASS_BASIC_EPS_RE = re.compile(r"^basic (?:net income|earnings) per share (?:of|for) class a(?: and b common stock|, class b,? and class c stock)(?: and class c capital stock)?$", re.I)
 BASIC_SHARES_RE = re.compile(r"^weighted[- ]average (?:number of )?(?:common |ordinary )?shares.*\bbasic\b", re.I)
+# Alphabet (from the fourth quarter of 2019): "Number of shares used in basic earnings per share calculation", later "... basic net income per
+# [common] share calculation"; its releases before have no share counts at all (see parse_us_release)
+NUMBER_OF_SHARES_RE = re.compile(r"^number of shares used in basic (?:earnings|net income) per (?:common )?share calculation$", re.I)
+# Alphabet's 6.25% mandatory convertible preferred stock (issued in June 2026), a row of the stockholders' equity: "Series A and Series B preferred
+# stock and additional paid-in capital, $0.001 par value per share, 100 shares authorized; 6.25% mandatory convertible preferred stock, ..."
+PREFERRED_STOCK_RE = re.compile(r"^series a and series b preferred stock and additional paid-in capital\b", re.I)
 # Dynatrace's reconciliation of GAAP to Non-GAAP net income: "Non-GAAP net income per share - basic" (also "Non-GAAP net (loss) income per share - basic");
 # the diluted row and the summary table's "Non-GAAP net income per share" (diluted shares) are not taken
 NON_GAAP_BASIC_EPS_RE = re.compile(r"^non-gaap net (?:\((?:loss|income)\) )?(?:income|loss)(?: \((?:loss|income)\))? per (?:common |ordinary )?share\s*-\s*basic$", re.I)
@@ -72,6 +86,8 @@ DOLLARS_ONLY_RE = re.compile(r"^\(?(?:unaudited\s*[-\u2013\u2014]\s*)?dollars in
 # Apple: "(In millions, except number of shares which are reflected in thousands and per share amounts)" (with commas from 2023 on): the
 # exception names the unit of the share counts, which RAW_SHARES_RE alone would read as single shares
 SHARES_IN_UNIT_RE = re.compile(r"except (?:for )?(?:the )?number of shares,? which (?:are|is) reflected in (thousands|millions)\b", re.I)
+# Alphabet from the fourth quarter of 2019 until the first quarter of 2022: "(In millions, except share amounts which are reflected in thousands and per share amounts)"
+SHARES_IN_THOUSANDS_RE = re.compile(r"except share amounts which are reflected in thousands", re.I)
 PREFIX_RE = re.compile(r"^(?:for the|as of)\s+", re.I)  # Sea: "For the Three Months ended September 30,", "As of December 31,"
 TOLERANCE = 0.001
 NOTE_SUFFIX_RE = re.compile(r"\s+\d(?:,\d)*$")  # footnote numbers after a label: "Diluted net income per ordinary share 4"
@@ -104,6 +120,8 @@ def shares_scale(table, rows: list[list[str]], scale: float | None) -> float | N
     note = unit_note(table, rows)
     if note is not None and (m := SHARES_IN_UNIT_RE.search(note)):
         return 0.001 if m.group(1).lower() == "thousands" else 1.0
+    if note is not None and SHARES_IN_THOUSANDS_RE.search(note):
+        return 0.001
     return 1e-6 if note is not None and (RAW_SHARES_RE.search(note) or DOLLARS_ONLY_RE.search(note)) else scale
 
 
@@ -164,6 +182,21 @@ def quarter_of(day: pd.Timestamp) -> pd.Period:
     return pd.Period(day - pd.Timedelta(days=45), freq="Q")
 
 
+def group_kind(m: re.Match) -> str:
+    """"three", "six", "nine", "twelve" or "year" for a match of GROUP_RE; "three" or "year to date" for one of ALPHABET_GROUP_RE."""
+    if m.re is ALPHABET_GROUP_RE:
+        return "three" if m.group("quarter") else "year to date"
+    return (m.group("kind") or "year").lower()
+
+
+def group_month(m: re.Match) -> str:
+    return (m.group("month") or m.group("month2")) if m.re is ALPHABET_GROUP_RE else (m.group("month") or m.group("ymonth"))
+
+
+def group_day(m: re.Match) -> str:
+    return (m.group("day") or m.group("day2")) if m.re is ALPHABET_GROUP_RE else (m.group("day") or m.group("yday"))
+
+
 class Columns(NamedTuple):
     first_row: int  # index of the first data row
     dates: list[pd.Timestamp]  # the period-end date of each value column of the group used
@@ -180,9 +213,9 @@ def income_columns(rows: list[list[str]]) -> Columns | None:
     """
     for i, row in enumerate(rows[:10]):
         cells = [header_cell(c) for c in row]
-        matches = [m for c in cells if (m := GROUP_RE.match(c))]
-        kinds = [(m.group("kind") or "year").lower() for m in matches]
-        group_days = [(MONTH_NUMBER[(m.group("month") or m.group("ymonth")).capitalize()], int(m.group("day") or m.group("yday"))) for m in matches]
+        matches = [m for c in cells if (m := GROUP_RE.match(c) or ALPHABET_GROUP_RE.match(c))]
+        kinds = [group_kind(m) for m in matches]
+        group_days = [(MONTH_NUMBER[group_month(m).capitalize()], int(group_day(m))) for m in matches]
         if not kinds:
             kinds = [(m.group("kind") or "year").lower() for c in cells if (m := KIND_RE.match(c))]
             group_days = []
@@ -211,8 +244,11 @@ def income_columns(rows: list[list[str]]) -> Columns | None:
     return None
 
 
-def parse_income(rows: list[list[str]], scale: float | None, share_scale: float | None = None) -> tuple[pd.Period, dict[str, list[float]], bool] | None:
-    """(period, values, quarterly): this period, the same period last year (and the previous quarter if the table has it) of each row."""
+def parse_income(
+    rows: list[list[str]], scale: float | None, share_scale: float | None = None, need_shares: bool = True
+) -> tuple[pd.Period, dict[str, list[float]], bool] | None:
+    """(period, values, quarterly): this period, the same period last year (and the previous quarter if the table has it) of each row.
+    need_shares=False also takes a statement without a share count (Alphabet until the third quarter of 2019; see parse_us_release)."""
     header = income_columns(rows)
     if header is None or scale is None:
         return None
@@ -250,10 +286,14 @@ def parse_income(rows: list[list[str]], scale: float | None, share_scale: float 
             found.setdefault("eps", mine)
         elif BASIC_SHARES_RE.match(label) or (section == "shares" and BASIC_ROW_RE.match(low)):
             found.setdefault("wa_shares", [v * shares_unit for v in mine])
+        elif CLASS_BASIC_EPS_RE.match(label):
+            found.setdefault("eps", mine)
+        elif NUMBER_OF_SHARES_RE.match(label):
+            found.setdefault("wa_shares", [v * shares_unit for v in mine])
     owners = found.pop("profit_owners", None)
     if owners is not None and ("profit" not in found or any(re.search(r"non-?controlling", r[0], re.I) for r in rows[first:])):
         found["profit"] = owners  # with non-controlling interests (Sea): the row attributable to the company's shareholders, not the total net income
-    if not {"revenue", "profit", "eps", "wa_shares"} <= found.keys():
+    if not {"revenue", "profit", "eps", "wa_shares"} <= found.keys() and (need_shares or not {"revenue", "profit", "eps"} <= found.keys()):
         return None
     periods = [quarter_of(d) for d in columns]
     period = max(periods)
@@ -304,11 +344,12 @@ def balance_dates(rows: list[list[str]]) -> list[pd.Timestamp] | None:
     return None
 
 
-def parse_balance(rows: list[list[str]], scale: float | None) -> tuple[pd.Period, list[float]] | None:
-    """Equity at the end of this period and at the end of last year."""
+def parse_balance(rows: list[list[str]], scale: float | None, dates: list[pd.Timestamp] | None = None) -> tuple[pd.Period, list[float]] | None:
+    """Equity at the end of this period and at the end of last year. `dates` are the column dates of a balance sheet whose header is in the
+    table before (see parse_us_release); without them the table's own header is read."""
     if scale is None:
         return None
-    dates = balance_dates(rows)
+    dates = dates or balance_dates(rows)
     with_numbers = [r for r in rows if len(numbers(r)) >= 2]  # older releases: "Stockholders' Equity" (the heading has no numbers)
     row = next((r for r in with_numbers if OWNERS_EQUITY_RE.match(NOTE_SUFFIX_RE.sub("", r[0])) and not EQUITY_RE.match(NOTE_SUFFIX_RE.sub("", r[0]))), None)
     row = row or next((r for r in with_numbers if EQUITY_RE.match(NOTE_SUFFIX_RE.sub("", r[0]))), None)  # the company's own shareholders first, then the total
@@ -639,6 +680,44 @@ def adjusted_diluted_eps(soup, period: pd.Period) -> list[float] | None:
     return nvidia_non_gaap_eps(soup, period)
 
 
+def continued_balance(soup) -> list[tuple[pd.Period, list[float]]]:
+    """A balance sheet split over two tables, the equity rows in a table without a header (Alphabet's releases until the fourth quarter of
+    2016): the dates are those of the nearest table before it with a balance sheet header, the unit that of that table. Used only when no
+    table has the equity row and its dates together."""
+    found = []
+    dates, scale = None, None
+    for table in soup.find_all("table"):
+        rows = table_rows(table)
+        if not rows:
+            continue
+        if (own := balance_dates(rows)) is not None:
+            dates, scale = own, unit_scale(table, rows)
+            continue
+        if dates is not None and (parsed := parse_balance(rows, unit_scale(table, rows) or scale, dates)) is not None:
+            found.append(parsed)
+    return found
+
+
+def preferred_stock(soup, period: pd.Period) -> list[float] | None:
+    """Alphabet's preferred stock in the balance sheet (millions; end of this period, end of last year), or None without that row. PB is for
+    the common stockholders, so it is deducted from the total stockholders' equity (the maintainer's decision, like the preference shares of
+    the A-share banks)."""
+    found = []
+    for table in soup.find_all("table"):
+        rows = table_rows(table)
+        dates, scale = balance_dates(rows) if rows else None, unit_scale(table, rows) if rows else None
+        row = next((r for r in rows if PREFERRED_STOCK_RE.match(r[0]) and len(numbers(r)) >= 2), None)
+        if row is None or not dates or scale is None:
+            continue
+        nums = numbers(row)[-len(dates):]  # the label holds numbers of its own (par value, shares authorized): the values are the last cells
+        order = sorted(range(len(dates)), key=lambda c: dates[c], reverse=True)
+        if len(nums) == len(dates) and quarter_of(dates[order[0]]) == period:
+            found.append([nums[c] * scale for c in order[:2]])
+    if len({tuple(f) for f in found}) > 1:
+        raise ValueError(f"The preferred stock rows in this release disagree: {found}")
+    return found[0] if found else None
+
+
 def parse_us_release(html: bytes, non_gaap: str | None = None) -> Parsed:
     """Parse a release. non_gaap is the EPS basis of the stock's Non-GAAP PE (None without one): "diluted" reads the Adjusted Diluted EPS
     (Amphenol) into non_ifrs_eps, "basic" the "Non-GAAP net income per share - basic" row of the reconciliation (Dynatrace, optional per release);
@@ -673,10 +752,20 @@ def parse_us_release(html: bytes, non_gaap: str | None = None) -> Parsed:
         if retry[0] and retry[1]:
             income, balance, non_gaap_rows = retry
     if not income:
+        # Alphabet's releases until the third quarter of 2019 state no share counts: only when no table has them, a statement without them is
+        # taken (the history then uses the shares implied by net income / basic EPS)
+        for table in soup.find_all("table"):
+            rows = table_rows(table)
+            scale = unit_scale(table, rows) if rows else None
+            if rows and (found := parse_income(rows, scale, shares_scale(table, rows, scale), need_shares=False)) is not None:
+                income.append((*found, currency_of(rows)))
+    if not income:
         if not soup.find("table") or "Net system sales" in soup.get_text(" "):
             if (parsed := parse_text(html)) is not None:
                 return parsed
         raise ValueError("Not found: the income statement (revenue, net income, basic EPS and basic shares for three months)")
+    if not balance:
+        balance = continued_balance(soup)
     if not balance:
         raise ValueError("Not found: the balance sheet (total stockholders' equity)")
     if any(quarterly for _, _, quarterly, _ in income):
@@ -690,6 +779,15 @@ def parse_us_release(html: bytes, non_gaap: str | None = None) -> Parsed:
     equity_period, equity = balance[0]
     if equity_period != period:
         raise ValueError(f"The balance sheet is for {equity_period}, the income statement for {period}")
+    notes = {}
+    if (preferred := preferred_stock(soup, period)) is not None:
+        # Alphabet from the second quarter of 2026: the equity of the common stockholders, the total less the preferred stock
+        equity = [total - pref for total, pref in zip(equity, preferred)]
+        if preferred[0]:
+            notes["equity"] = (
+                f"equity excludes USD {preferred[0]:,.0f} million of mandatory convertible preferred stock "
+                f"(total stockholders' equity USD {equity[0] + preferred[0]:,.0f} million)"
+            )
     values = {**values, "equity": equity}
     if non_gaap == "diluted" and (adjusted := adjusted_diluted_eps(soup, period)) is not None:
         values["non_ifrs_eps"] = adjusted
@@ -697,4 +795,4 @@ def parse_us_release(html: bytes, non_gaap: str | None = None) -> Parsed:
         if any(not close(a, b, "eps") for other in found[1:] for a, b in zip(other, found[0])):
             raise ValueError(f"The basic Non-GAAP EPS in this release disagree: {found}")
         values["non_ifrs_eps"] = found[0]
-    return Parsed(currency, values, period, quarterly)
+    return Parsed(currency, values, period, quarterly, notes or None)

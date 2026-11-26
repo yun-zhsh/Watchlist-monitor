@@ -335,6 +335,20 @@ Notes:
 - Other features can read the database directly; every table has a `symbol` (or `pair`) column that tells the stocks apart.
 - The schema version is kept in SQLite's `user_version`; a database written by a newer version of the program is refused instead of being damaged.
 
+**Fiscal years.** A company whose fiscal year does not end in December is shown with its own fiscal labels, `FY2025Q1`, where the
+fiscal year is named after the calendar year it ends in (the company's own convention: Alibaba's and Dynatrace's FY2025 end in
+March 2025). The month is `fiscal_year_end` in the stock's entry of `config.yaml` (1-12, default 12); Alibaba and Dynatrace have
+`fiscal_year_end: 3`, so the quarter to September 2026 is `FY2027Q2`. December year ends keep the calendar labels (`2025Q1`,
+`2025H1`). This is display only: inside the program, in the TTM sums and in the alignment of the filings the periods stay calendar
+quarters, and a fiscal quarter is the calendar quarter it shares two months with (a quarter ending a few weeks after a calendar
+quarter, like NVIDIA's on April 28, belongs to the calendar quarter of its end minus 45 days). The fiscal label is used everywhere a
+period is shown: the chart tooltips and calculation text, the `Period` columns and the period columns and formulas of `eps.csv`,
+`ttm.csv` and `valuation.csv`, the warnings, and the `period` fields of the MCP results (`list_stocks` gives `fiscal_year_end_month`).
+The column names stay the same. Two places keep the calendar quarter on purpose, because programs read them back: the `period`
+column of the saved `announcements` table (and of `announcements.csv` in the raw data download), which is the key the filings are
+stored under, and the file names of the saved filings. The labels of the `periods` and `ttm` tables of `data/valuation.db` follow
+the configuration at the next update, which rewrites the rows whose text changed; no parser version changes.
+
 ## How to check the calculation
 
 Every number can be traced back to the raw data step by step; the pages and the download files use the same formula text (`audit.py`):
@@ -539,6 +553,7 @@ All of Tencent's earnings announcements since 2014 were published between 16:00 
 
 ## Known limitations
 
+- Fiscal labels (`FY2025Q1`, see "Method") are display only. After `fiscal_year_end` is set or changed, the saved `periods` and `ttm` tables of `data/valuation.db` still carry the old labels until the next update run rewrites them; the pages, the MCP results and a freshly exported site use the new ones at once. Shares derived from a year-to-date figure count the year from January; only companies with a December year end disclose such figures.
 - A home page order saved from the "Order" panel reaches the other devices after a few minutes (the workflow run plus the GitHub Pages cache); the limits of saving are listed under "Home page order".
 - For the markets that have only Yahoo as a price source (US, Korea, China A-shares), the newest trading day can arrive late: after the close, Yahoo creates that day's daily bar with an empty close, sometimes for many hours. The program skips a bar without a close (it never saves incomplete data) and fills the day in on a later run, so those stocks can lag the real close by about half a day to a day. Hong Kong stocks are not affected, because Tencent's quote API is a second source.
 - The parsing rules were written for the filing layouts of Tencent (`highlights`), Sunny Optical (`statements`), JD and Alibaba (`press_release`), Amazon, Meta, Cognizant, Amphenol, Dynatrace and Sea (`us_press_release`), ASML (`us_gaap_statements`), XP (`ifrs_statements`), SAP (`sap_ifrs`), Samsung (`kifrs_statements`) and Hikvision, Glodon, Zhongji Innolight, China Northern Rare Earth and Bank of Nanjing (`cn_report`), and verified on all of their filings since 2014 (XP: since its listing in December 2019). Other companies' layouts may differ and need a new parse function, or a check of whether an existing layout applies (see "Extending").

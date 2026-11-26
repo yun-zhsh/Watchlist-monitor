@@ -47,6 +47,8 @@ class DataLoader:
             filings = self.sec.results_announcements(stock.symbol, stock.cik, since, stock.sec_form, stock.sec_exhibit)
             if stock.sec_release_non_gaap:  # the press release as well, for its adjusted EPS (XP)
                 filings += self.sec.results_announcements(stock.symbol, stock.cik, since, stock.sec_form, supplement=True)
+            if stock.sec_exhibit == "tesla_update":  # the Form 10-Q or 10-K of the quarters whose Update has its statements as page images only
+                filings += self.sec.results_announcements(stock.symbol, stock.cik, since, "10-Q/10-K", "periodic_report")
         elif stock.market == "KR":
             filings = self.samsung.results_announcements(stock.symbol, since)
         elif stock.market == "CN":

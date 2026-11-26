@@ -3,7 +3,8 @@
 Earnings are furnished on Form 6-K by foreign private issuers (JD, ASML) and on Form 8-K item 2.02 by US companies (Meta, Cognizant, Dynatrace);
 either way the press release is exhibit 99.1 (HTML). Two companies' press releases lack figures, so another exhibit is kept instead:
 ASML's summary US GAAP statements and XP's IFRS consolidated financial statements (see `exhibit` in results_announcements). SAP's exhibit is its
-quarterly results document, recognized by its statements rather than by a headline.
+quarterly results document, recognized by its statements rather than by a headline. Tesla's exhibit is its quarterly Update deck, recognized by
+its title; for a quarter whose deck has its statements as page images only, the Form 10-Q or 10-K is kept as well (reports.json, see PERIODIC_REPORT).
 Flow: list the 6-Ks (or the 8-Ks with item 2.02) from the submissions API -> look at the file list of each and pick the press release exhibit of a plausible size ->
 only a title like "... Announces ... Results" or "... Reports ... Results" is an earnings announcement.
 
@@ -91,6 +92,9 @@ class ArchiveNotAvailable(RuntimeError):
 # its cache for minutes ("surrogate-control: max-age=300, stale-while-revalidate=120"), so retrying a few seconds later gets the same 404, with
 # or without a query string. The filing's own index page ("<accession>-index.htm") lists the same documents with their sizes and is used instead.
 SUPPLEMENT_EXHIBIT = "supplementary_release"  # an earnings press release kept next to the results of another exhibit (see results_announcements)
+TESLA_UPDATE = "tesla_update"  # Tesla's quarterly Update deck (exhibit 99.1 of its 8-K), see tesla_update.py
+PERIODIC_REPORT = "periodic_report"  # the Form 10-Q or 10-K of a quarter whose Update has its statements as page images only (Tesla)
+IMAGES_ONLY = "images"  # the "statements" of an index entry of an Update deck whose statements are page images only
 INDEX_PAGE_NAME = "{accession}-index.htm"
 
 
@@ -200,6 +204,39 @@ def index_page_items(page: bytes) -> list[dict]:
     return sorted(items, key=lambda item: item["name"].lower())  # index.json lists them by name, ignoring case
 
 
+def tesla_update_title(html: bytes) -> str | None:
+    """The title of a Tesla Update deck ("Q3 2026 Update", "Tesla Third Quarter 2016 Update", "Tesla Motors – First Quarter 2015 Shareholder
+    Letter"); None for any other exhibit, such as the production and deliveries releases that Tesla also files under item 2.02."""
+    from bs4 import BeautifulSoup
+
+    from valuation_monitor.tesla_update import TITLE_RE
+
+    text = " ".join(BeautifulSoup(html[:200_000], "lxml").get_text(" ").split())
+    m = TITLE_RE.search(text[:TESLA_TITLE_CHARS])
+    return m.group(0) if m else None
+
+
+TESLA_EXHIBIT_RE = re.compile(r"exh?i?bit", re.I)  # "exhibit.htm" (Q2 and Q3 2024), "exhbit991.htm" (Q1 2025)
+TESLA_TITLE_CHARS = 400  # the title comes first: "EX-99.1 2 tsla-ex991_57.htm EX-99.1 tsla-ex991_57.pptx.htm Q3 2020 Update Exhibit 99.1"
+PERIODIC_COVER_CHARS = 100_000
+PERIODIC_PERIOD_RE = re.compile(r"\bfor the (quarterly period|fiscal year) ended:? ([A-Z][a-z]+ \d{1,2}, ?\d{4})", re.I)
+
+
+def periodic_report_title(html: bytes, form: str) -> str | None:
+    """"Form 10-Q for the quarterly period ended September 30, 2021" or "Form 10-K for the fiscal year ended December 31, 2020", from the cover page."""
+    import warnings
+
+    from bs4 import BeautifulSoup, XMLParsedAsHTMLWarning
+
+    with warnings.catch_warnings():  # a 10-Q or 10-K in inline XBRL is XHTML; its text is all that is needed
+        warnings.simplefilter("ignore", XMLParsedAsHTMLWarning)
+        text = " ".join(BeautifulSoup(html, "lxml").get_text(" ").split())  # inline XBRL: the hidden header with its contexts comes before the cover page
+    m = PERIODIC_PERIOD_RE.search(text[:PERIODIC_COVER_CHARS])
+    if m is None:
+        return None
+    return f"Form {form} for the {m.group(1).lower()} ended {m.group(2)}"
+
+
 def headline(html: bytes) -> str | None:
     """The title at the start of the press release; None if it is not an earnings press release."""
     from bs4 import BeautifulSoup
@@ -239,14 +276,16 @@ class SecProvider:
         if supplement:
             exhibit = SUPPLEMENT_EXHIBIT
         folder = self.archive_dir / symbol.upper()
-        index_path = folder / ("releases.json" if supplement else "index.json")
+        index_path = folder / ("releases.json" if supplement else "reports.json" if exhibit == PERIODIC_REPORT else "index.json")
         index = json.loads(index_path.read_text(encoding="utf-8")) if index_path.exists() else []
         known = {e["accession"] for e in index}
+        # the Form 10-Q or 10-K only of a quarter whose Update deck (in index.json) has its statements as page images; the others are not recorded
+        wanted = image_only_quarters(folder / "index.json") if exhibit == PERIODIC_REPORT else None
 
         try:
             if self.http is None:
                 raise SecUserAgentMissing(f"The environment variable {USER_AGENT_ENV} is not set")
-            added = self._examine_new(symbol, cik, since, folder, index, known, form, exhibit)
+            added = self._examine_new(symbol, cik, since, folder, index, known, form, exhibit, wanted)
         except Exception as e:
             if supplement and not index:  # supplementary documents are optional: without any saved, the results stand on the main filings alone
                 print(f"{symbol}: cannot reach the SEC ({e}); no press releases saved for the adjusted EPS", file=sys.stderr)
@@ -275,14 +314,19 @@ class SecProvider:
         out = []
         for b in blocks:
             items = b.get("items") or [""] * len(b["form"])
+            documents, report_dates = b.get("primaryDocument") or [""] * len(b["form"]), b.get("reportDate") or [""] * len(b["form"])
             for i, kind in enumerate(b["form"]):
-                if kind == form and (form != "8-K" or "2.02" in items[i].split(",")):  # an 8-K is an earnings release only with item 2.02 (results of operations)
+                if kind in form.split("/") and (kind != "8-K" or "2.02" in items[i].split(",")):  # an 8-K is an earnings release only with item 2.02 (results of operations)
                     out.append({"accession": b["accessionNumber"][i], "published": to_new_york(b["acceptanceDateTime"][i])})
+                    if kind in PERIODIC_FORMS:  # a 10-Q or 10-K (form "10-Q/10-K"): the report itself is the primary document
+                        out[-1].update(form=kind, document=documents[i], report_date=report_dates[i])
         return sorted(out, key=lambda x: x["published"])
 
-    def _examine_new(self, symbol, cik, since, folder, index, known, form: str = "6-K", exhibit: str = "release") -> bool:
+    def _examine_new(self, symbol, cik, since, folder, index, known, form: str = "6-K", exhibit: str = "release", wanted: set[pd.Period] | None = None) -> bool:
         added = False
         new = [item for item in self._filing_list(cik, form) if item["accession"] not in known and item["published"] >= pd.Timestamp(since)]
+        if wanted is not None:  # periodic reports: only those of the wanted quarters
+            new = [item for item in new if item.get("report_date") and pd.Period(item["report_date"], freq="Q") in wanted]
         for last_try in (False, True):
             skipped = []
             for item in new:
@@ -326,6 +370,8 @@ class SecProvider:
         accession = item["accession"]
         folder_name = accession.replace("-", "")
         entry = {"accession": accession, "published": f"{item['published']:%Y-%m-%dT%H:%M:%S}", "results": False}
+        if exhibit == PERIODIC_REPORT:
+            return self._examine_report(cik, item, folder, entry)
         files = self._listing(cik, accession)
         if exhibit == "us_gaap_statements":
             files = sorted(files, key=lambda f: not FINANCIAL_STATEMENTS_NAME_RE.search(f["name"]))  # the names say it from 2016 on (financialstatements...); before, the exhibits are numbered and are told apart by their content
@@ -333,6 +379,8 @@ class SecProvider:
         if exhibit == "release":
             named += [f for f in files if FALLBACK_EXHIBIT_RE.search(f["name"]) and f not in named]  # after all the usual names, so they are tried first as before
             named += [f for f in files if QUARTER_PR_EXHIBIT_RE.search(f["name"]) and f not in named]  # NVIDIA, after all the others
+        if exhibit == TESLA_UPDATE:
+            named += [f for f in files if TESLA_EXHIBIT_RE.search(f["name"]) and f not in named]  # Tesla's decks without "99" in the name, after the usual names
         for f in named:
             size = int(f["size"] or 0)
             name = f["name"]
@@ -342,7 +390,13 @@ class SecProvider:
                 continue
             url = ARCHIVE_URL.format(cik=cik, accession=folder_name, name=name)
             html = self._archive_get(url, cache=False)
-            if exhibit == "ifrs_statements":
+            if exhibit == TESLA_UPDATE:
+                from valuation_monitor.tesla_update import statements_in_text
+
+                title = tesla_update_title(html)
+                if title and not statements_in_text(html):  # recorded, so that the quarter's Form 10-Q or 10-K is read instead (PERIODIC_REPORT)
+                    return {**entry, "title": title, "statements": IMAGES_ONLY}
+            elif exhibit == "ifrs_statements":
                 title = ifrs_statements_title(html)
             elif exhibit == "sap_ifrs":
                 title = sap_statement_title(html)
@@ -358,3 +412,29 @@ class SecProvider:
                 (folder / file).write_bytes(html)
                 return {**entry, "results": True, "title": title, "url": url, "file": file}
         return entry
+
+    def _examine_report(self, cik: int, item: dict, folder: Path, entry: dict) -> dict:
+        """A Form 10-Q or 10-K: its primary document, kept when its cover page names the period of the report."""
+        name = item["document"]
+        url = ARCHIVE_URL.format(cik=cik, accession=item["accession"].replace("-", ""), name=name)
+        html = self._archive_get(url, cache=False)
+        title = periodic_report_title(html, item["form"])
+        if title is None:
+            return entry
+        file = f"{item['published']:%Y-%m-%d}_{name}"
+        folder.mkdir(parents=True, exist_ok=True)
+        (folder / file).write_bytes(html)
+        return {**entry, "results": True, "title": title, "url": url, "file": file}
+
+
+PERIODIC_FORMS = ("10-Q", "10-K")
+
+
+def image_only_quarters(index_path: Path) -> set[pd.Period]:
+    """The quarters whose Update deck in this index.json has its statements as page images only (Tesla; see TESLA_UPDATE)."""
+    from valuation_monitor.tesla_update import title_quarter
+
+    if not index_path.exists():
+        return set()
+    index = json.loads(index_path.read_text(encoding="utf-8"))
+    return {title_quarter(e["title"]) for e in index if e.get("statements") == IMAGES_ONLY}

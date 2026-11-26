@@ -57,7 +57,7 @@ def release(income_note=SHARES_NOTE, balance_note="(In millions, except number o
 @pytest.mark.parametrize("note", [SHARES_NOTE, OLD_SHARES_NOTE])
 def test_shares_in_thousands_under_a_note_that_excepts_them_from_the_unit(note):
     p = parse_us_release(release(note))
-    assert p.period == pd.Period("2026Q3") and p.quarterly and p.currency == "USD"  # September 26 is the third calendar quarter
+    assert p.period == pd.Period("2026Q3") and p.quarterly and p.currency == "USD"  # September 26: kept as calendar 2026Q3, shown as FY2026Q4
     assert p.values["revenue"] == [114477.0, 102466.0] and p.values["profit"] == [30711.0, 27466.0]
     assert p.values["eps"] == [2.11, 1.85]  # basic, not diluted
     assert p.values["wa_shares"] == pytest.approx([14570.0, 14815.0])  # millions, not 14.57 (single shares)
@@ -85,6 +85,18 @@ def test_config():
     stock = next(s for s in load_config(ROOT / "config.yaml").stocks if s.symbol == "AAPL")
     assert stock.name == "Apple" and stock.market == "US" and stock.cik == 320193 and stock.sec_form == "8-K"
     assert stock.filing_format == "us_press_release" and stock.metrics == ["pe", "ps", "pb"] and stock.eps_basis == {}
+    assert stock.fiscal_year_end == 9
+
+
+@pytest.mark.parametrize("end,label", [("2026-09-26", "FY2026Q4"), ("2025-12-27", "FY2026Q1"), ("2026-03-28", "FY2026Q2"), ("2026-06-27", "FY2026Q3"),
+                                       ("2022-12-31", "FY2023Q1"), ("2023-09-30", "FY2023Q4"), ("2022-09-24", "FY2022Q4")])
+def test_fiscal_labels_of_apple_quarters_by_their_end_dates(end, label):
+    """A quarter that ends on a Saturday near the calendar quarter end is kept under the calendar quarter ten days before it (quarter_of),
+    and shown with Apple's fiscal label; the 14-week quarter to December 31, 2022 and the year ends of September 24 and 30 included."""
+    from valuation_monitor.filings import period_label
+    from valuation_monitor.us_release import quarter_of
+
+    assert period_label(quarter_of(pd.Timestamp(end)), 4, 9) == label
 
 
 saved = pytest.mark.skipif(not (AAPL / "index.json").exists(), reason="no saved Apple filings (the scheduled update saves them)")

@@ -52,7 +52,20 @@ HK_TITLE_SEARCH_CHARS = 4000
 # IN DIVIDEND REPORTED BY AMPHENOL CORPORATION" (the passive form, with the quarter first)
 RESULTS_HEADLINE_RE = re.compile(
     r"\b(?:announces?|reports?)\b.{0,120}?\b(?:results|net income|net sales)\b|\b(?:publishes|announces|reports) its\b.{0,60}?\bresults?\b"
-    r"|\b(?:first|second|third|fourth) quarter\b.{0,80}?\bresults\b.{0,60}?\breported by \S+(?: corporation\b)?",
+    r"|\b(?:first|second|third|fourth) quarter\b.{0,80}?\bresults\b.{0,60}?\breported by \S+(?: corporation\b)?"
+    # Amazon until the fourth quarter of 2019: "AMAZON.COM ANNOUNCES THIRD QUARTER SALES UP 24% TO $ 70.0 BILLION"
+    r"|\bannounces (?:first|second|third|fourth) quarter sales (?:up|down)\b.{0,40}?\bbillion\b",
+    re.I,
+)
+# Amazon's exhibits repeat their label before the headline, so a part is left after EXHIBIT_LABEL_RE: "Exhibit Exhibit 99.1 AMAZON.COM ANNOUNCES ...",
+# "Document Exhibit 99.1 ...", "AMZN-2014.12.31-EX99.1 Exhibit 99.1 ..." (only before "AMAZON.COM": Sea's titles keep their "Exhibit 99.1")
+AMAZON_LABEL_RE = re.compile(r"^(?:Exhibit |Document |AMZN-[\d.]+-EX99\.\d )?Exhibit 99\.\d (?=AMAZON\.COM )", re.I)
+
+# Microsoft's headlines name no verb like "reports": "Microsoft Cloud Strength Highlights Second Quarter Results", "Microsoft Cloud Highlights Q3 Results",
+# "Microsoft Cloud and Hardware Results Drives Fourth Quarter Performance"; tried only when RESULTS_HEADLINE_RE finds nothing, and taken only when the
+# release then says "Microsoft Corp. today announced ... for the quarter ended"
+MICROSOFT_HEADLINE_RE = re.compile(
+    r"\b(Microsoft\b.{0,100}?\b(?:(?:first|second|third|fourth) quarter|Q[1-4]) (?:results|performance))\b(?=.{0,400}?\bMicrosoft Corp\. today announced\b.{0,120}?\bfor the quarter ended\b)",
     re.I,
 )
 
@@ -191,10 +204,13 @@ def headline(html: bytes) -> str | None:
     if m := HK_RESULTS_TITLE_RE.search(text[:HK_TITLE_SEARCH_CHARS]):
         return m.group(0)
     text = EXHIBIT_LABEL_RE.sub("", text, count=1)[:1500]  # strip labels such as "EX-99.1 Exhibit 99.1" from the file header
+    text = AMAZON_LABEL_RE.sub("", text, count=1)
     m = RESULTS_HEADLINE_RE.search(text)
     if m and NOT_RESULTS_RE.search(text[:200]):  # the title at the start, before the text of the letter
         return None
     if not m:
+        if m := MICROSOFT_HEADLINE_RE.search(text):
+            return m.group(1)
         return None
     return text[: m.end()].strip() if m.start() <= 60 else text[m.start() - 40 : m.end()].strip()
 

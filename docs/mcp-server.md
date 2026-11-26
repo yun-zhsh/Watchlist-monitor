@@ -54,7 +54,7 @@ gcloud run services remove-iam-policy-binding valuation-mcp --region=$REGION --m
 
 | Tool | Use |
 | --- | --- |
-| `list_stocks` | Symbols, metrics (a PE is named with its EPS basis, e.g. "Basic PE (TTM)", and `eps_basis` gives it per PE metric), how far the saved data reaches and how old the newest price is, the valuation levels. |
+| `list_stocks` | Symbols, metrics (a PE is named with its EPS basis, e.g. "Basic PE (TTM)", and `eps_basis` gives it per PE metric), the month the fiscal year ends (`fiscal_year_end_month`: other than 12, every `period` of the results is a fiscal label such as `FY2027Q2`, see "Method" in the README), how far the saved data reaches and how old the newest price is, the valuation levels. |
 | `get_valuation(symbol, metric, years, as_of)` | The value, its percentile and level, the statistics of the window, sources and calculation, and **warnings**. For a PE, `metric.eps_basis` is `basic`, or `diluted` where the company discloses no basic figure (Alibaba's Non-GAAP EPS); `get_history` gives it too. |
 | `get_history(symbol, metric, years, as_of, points)` | Values over the window, thinned to at most 240 dates, with the minimum and maximum **and the days they happened** (thinning can skip a peak). |
 | `get_filings(symbol, as_of, limit)` | The earnings filings in effect on that day, newest first, with publication time, effective trading day and link. |

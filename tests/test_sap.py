@@ -160,8 +160,9 @@ def test_the_config_takes_the_sap_layout_for_us_stocks_only():
     assert (parsed.filing_format, parsed.sec_exhibit, parsed.sec_form, parsed.eps_basis) == ("sap_ifrs", "sap_ifrs", "6-K", {})
     with pytest.raises(ValueError, match="does not match market"):
         parse_config({"stocks": [{**stock, "symbol": "0001.HK", "market": "HK"}]})
-    names = [s.name for s in load_config(ROOT / "config.yaml").stocks]
-    assert names.index("SAP (ADR)") + 1 == names.index("ASML Holding (NY registry shares)")  # just before ASML on the home page
+    # the order of the stocks is the maintainer's to change from the home page ("Order"), so only their presence is checked
+    names = {s.name for s in load_config(ROOT / "config.yaml").stocks}
+    assert {"SAP (ADR)", "ASML Holding (NY registry shares)"} <= names
 
 
 # ---- the saved documents (data/filings/SAP, written by the scheduled update) -------------------------------------------------------------

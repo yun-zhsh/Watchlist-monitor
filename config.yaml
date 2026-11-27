@@ -139,15 +139,6 @@ stocks:
     filing_format: us_press_release   # USD, US GAAP, basic EPS; 2-for-1 splits in 2014, 2021, 2024 and 2026 (the releases restate prior years; see the README)
     metrics: [pe, pe_non_gaap, ps, pb]   # PE on basic EPS; Amphenol discloses no basic Non-GAAP EPS, so its PE Non-GAAP uses the disclosed Adjusted Diluted EPS
     eps_basis: { pe_non_gaap: diluted }   # shown as "Diluted PE Non-GAAP (TTM)"; read from the reconciliation table (Q3 2016 on) or the first paragraph of the release
-  - symbol: CTSH
-    name: Cognizant Technology Solutions
-    market: US
-    cik: 1058290
-    sec_form: 8-K
-    filing_format: us_press_release
-    metrics: [pe, pe_non_gaap, ps, pb]
-    eps_basis: { pe_non_gaap: diluted }   # Cognizant discloses no basic Non-GAAP EPS: "Diluted PE Non-GAAP (TTM)"
-    non_gaap_changes: [2019-02-06]   # "Non-GAAP diluted EPS" (excluding stock-based compensation) until Q3 2018, "Adjusted Diluted EPS" (including it) from the Q4 2018 release
   - symbol: DT
     name: Dynatrace
     market: US
@@ -163,11 +154,31 @@ stocks:
     sec_exhibit: sap_ifrs   # the 6-K exhibit with SAP's quarterly results and its IFRS statements (press release or quarterly statement)
     filing_format: sap_ifrs   # price in USD per ADS, earnings in EUR (IFRS): converted with the EURUSD rate of each day
     metrics: [pe, pe_non_ifrs, ps, pb]   # PE Non-IFRS on SAP's basic non-IFRS EPS (from continuing operations in 2023 and 2024)
+  - symbol: CTSH
+    name: Cognizant Technology Solutions
+    market: US
+    cik: 1058290
+    sec_form: 8-K
+    filing_format: us_press_release
+    metrics: [pe, pe_non_gaap, ps, pb]
+    eps_basis: { pe_non_gaap: diluted }   # Cognizant discloses no basic Non-GAAP EPS: "Diluted PE Non-GAAP (TTM)"
+    non_gaap_changes: [2019-02-06]   # "Non-GAAP diluted EPS" (excluding stock-based compensation) until Q3 2018, "Adjusted Diluted EPS" (including it) from the Q4 2018 release
 
+  - symbol: 3697.T
+    name: SHIFT
+    market: JP   # Tokyo Stock Exchange Prime; Japanese Kessan Tanshin from the company's IR library on Xj-Storage (as filed on TDnet)
+    filing_format: jp_tanshin   # JPY, Japanese GAAP, basic EPS; splits 5-for-1 (February 2015) and 15-for-1 (January 2025)
+    metrics: [pe, ps, pb]
+    fiscal_year_end: 8   # the fiscal year ends on August 31: the quarter to November 2025 is shown as FY2026Q1
   - symbol: 005930.KS
     name: Samsung Electronics
     market: KR   # earnings come from the English consolidated financial statements (K-IFRS) on the Samsung IR website, every quarter
     filing_format: kifrs_statements   # EPS is the basic EPS of common stock (KRW); the Yahoo price is in KRW too, so no FX rate is needed
+    metrics: [pe, ps, pb]
+  - symbol: 2395.TW
+    name: Advantech
+    market: TW   # Taiwan Stock Exchange; English consolidated financial statements on the company IR website (MOPS refuses cloud networks)
+    filing_format: tifrs_statements   # TWD, Taiwan-IFRS; basic and diluted EPS disclosed, no non-IFRS EPS; 10% stock dividends in 2014, 2017, 2020 and 2023
     metrics: [pe, ps, pb]
   - symbol: XP
     name: XP Inc.
@@ -201,6 +212,10 @@ stocks:
     name: Tencent Holdings
     filing_format: highlights
     metrics: [pe, pe_non_ifrs, ps, pb]
+  - symbol: 0696.HK
+    name: TravelSky Technology
+    filing_format: travelsky_statements   # RMB; H shares in HKD; basic EPS (equal to diluted); never a Non-IFRS EPS, so no pe_non_ifrs
+    metrics: [pe, ps, pb]
   - symbol: 2382.HK
     name: Sunny Optical Technology
     filing_format: statements   # Sunny only discloses HKFRS figures, no Non-IFRS, so pe_non_ifrs is not configured
@@ -230,19 +245,4 @@ stocks:
     hidden: true
     market: CN   # Shanghai; Chinese periodic reports and express reports on CNINFO. A commercial bank
     filing_format: cn_report   # RMB; revenue is the operating income (net interest income included); PB uses the equity of the ordinary shareholders (without preference shares and perpetual bonds)
-    metrics: [pe, ps, pb]
-  - symbol: 0696.HK
-    name: TravelSky Technology
-    filing_format: travelsky_statements   # RMB; H shares in HKD; basic EPS (equal to diluted); never a Non-IFRS EPS, so no pe_non_ifrs
-    metrics: [pe, ps, pb]
-  - symbol: 3697.T
-    name: SHIFT
-    market: JP   # Tokyo Stock Exchange Prime; Japanese Kessan Tanshin from the company's IR library on Xj-Storage (as filed on TDnet)
-    filing_format: jp_tanshin   # JPY, Japanese GAAP, basic EPS; splits 5-for-1 (February 2015) and 15-for-1 (January 2025)
-    metrics: [pe, ps, pb]
-    fiscal_year_end: 8   # the fiscal year ends on August 31: the quarter to November 2025 is shown as FY2026Q1
-  - symbol: 2395.TW
-    name: Advantech
-    market: TW   # Taiwan Stock Exchange; English consolidated financial statements on the company IR website (MOPS refuses cloud networks)
-    filing_format: tifrs_statements   # TWD, Taiwan-IFRS; basic and diluted EPS disclosed, no non-IFRS EPS; 10% stock dividends in 2014, 2017, 2020 and 2023
     metrics: [pe, ps, pb]

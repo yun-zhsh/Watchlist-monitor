@@ -59,3 +59,28 @@ def test_korean_market_closes_at_1530_without_half_days():
     assert KR.available_date(pd.Timestamp("2026-10-29 15:29")) == pd.Timestamp("2026-10-29")
     assert KR.available_date(pd.Timestamp("2026-10-29 15:30")) == pd.Timestamp("2026-10-30")
     assert not KR.is_half_day(pd.Timestamp("2025-12-24"))
+
+
+def test_tokyo_close_moved_from_1500_to_1530_on_2024_11_05():
+    from valuation_monitor.market_calendar import JP
+
+    assert JP.close_time(pd.Timestamp("2024-11-01")) == pd.Timestamp("15:00").time()  # the last trading day with the 15:00 close
+    assert JP.close_time(pd.Timestamp("2024-11-05")) == pd.Timestamp("15:30").time()
+    assert JP.available_date(pd.Timestamp("2016-04-14 13:00")) == pd.Timestamp("2016-04-14")  # during trading hours
+    assert JP.available_date(pd.Timestamp("2024-10-10 15:00")) == pd.Timestamp("2024-10-11")  # at the close then
+    assert JP.available_date(pd.Timestamp("2024-10-10 15:15")) == pd.Timestamp("2024-10-11")
+    assert JP.available_date(pd.Timestamp("2025-01-14 15:15")) == pd.Timestamp("2025-01-14")  # before the new close
+    assert JP.available_date(pd.Timestamp("2025-01-14 15:30")) == pd.Timestamp("2025-01-15")
+    assert not any(JP.is_half_day(d) for d in pd.date_range("2014-01-01", "2026-12-31"))
+
+
+@pytest.mark.parametrize("key", ["HK", "US", "KR", "CN"])
+def test_other_markets_have_one_fixed_full_day_close(key):
+    """close_changes is only used by JP: every other market closes as it always did, on any day."""
+    from valuation_monitor.market_calendar import MARKETS
+
+    market = MARKETS[key]
+    assert market.close_changes == ()
+    for day in pd.date_range("2014-01-01", "2026-12-31", freq="7D"):
+        assert market.full_day_close(day) == market.full_close
+        assert market.close_time(day) == (market.half_close if market.is_half_day(day) else market.full_close)

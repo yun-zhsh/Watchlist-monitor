@@ -103,7 +103,7 @@ def test_an_old_filing_is_only_a_warning(db, capsys):
 
 def test_freshness_limits_are_validated():
     with pytest.raises(ValueError, match="unknown market"):
-        config(max_price_age_days={"JP": 5})
+        config(max_price_age_days={"XX": 5})
     with pytest.raises(ValueError, match="positive"):
         config(max_fx_age_days=0)
     assert config().freshness.max_price_age_days == DEFAULT_MAX_PRICE_AGE_DAYS

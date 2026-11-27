@@ -17,7 +17,8 @@ equity attributable to owners (millions), shares disclosed in the filing (millio
   press_release (JD, Alibaba; HTML) is in press_release.py; us_press_release and us_gaap_statements (Meta, Cognizant, Dynatrace, Sea, ASML) in us_release.py;
   ifrs_statements (XP, HTML) in ifrs.py; sap_ifrs (SAP, HTML) in sap_ifrs.py; kifrs_statements (Samsung, PDF) in kifrs.py;
   cn_report (Hikvision, Glodon, PDF) in cn_report.py; tesla_update (Tesla's Update decks, and the Form 10-Q or 10-K of a quarter whose deck has
-  its statements as page images only) in tesla_update.py. These parse functions return the common Parsed (see parsed.py).
+  its statements as page images only) in tesla_update.py; jp_tanshin (SHIFT's Japanese Kessan Tanshin, PDF) in jp_tanshin.py. These parse
+  functions return the common Parsed (see parsed.py).
 
 A company may publish results every quarter (4 periods a year) or only interim and annual (2 periods a year; the second half is obtained as full year minus first half).
 The number of periods is inferred from the existing filings, and the TTM is the sum of the periods in the last year (4 quarters or 2 half years).
@@ -42,6 +43,7 @@ from valuation_monitor.market_calendar import HK, Market, effective_trading_day,
 from valuation_monitor.cn_report import parse_cn_express, parse_cn_report
 from valuation_monitor.audit import Component, num, shares_formula, split_notes, sum_formula
 from valuation_monitor.ifrs import parse_ifrs_statements
+from valuation_monitor.jp_tanshin import parse_jp_tanshin
 from valuation_monitor.kifrs import parse_kifrs, parse_kifrs_deck
 from valuation_monitor.press_release import parse_press_release
 from valuation_monitor.release_eps import parse_adjusted_eps_release
@@ -106,10 +108,11 @@ SERIES_LABELS = {
     "equity": "Equity attributable to owners",
     "wa_shares": "Weighted average shares",
 }
-PARSER_VERSIONS = {"highlights": 5, "statements": 3, "press_release": 4, "us_press_release": 9, "us_gaap_statements": 5, "ifrs_statements": 1, "sap_ifrs": 2, "kifrs_statements": 4, "cn_report": 8, "tesla_update": 1, "travelsky_statements": 1}  # add 1 when the parsing rules change; saved parse results are then re-parsed automatically
+PARSER_VERSIONS = {"highlights": 5, "statements": 3, "press_release": 4, "us_press_release": 9, "us_gaap_statements": 5, "ifrs_statements": 1, "sap_ifrs": 2, "kifrs_statements": 4, "cn_report": 8, "tesla_update": 1, "jp_tanshin": 1, "travelsky_statements": 1}  # add 1 when the parsing rules change; saved parse results are then re-parsed automatically
 SUPPLEMENT_FORMAT = "adjusted_eps_release"  # the layout of a supplementary document (XP's press release, see release_eps.py); its parse results carry their own version
 SUPPLEMENT_PARSER_VERSION = 1  # add 1 when the rules of release_eps.py change
 SUPPLEMENT_TABLE = "supplement"  # the "table" of a supplementary document's parse result in the stored announcements
+CORRECTION_TABLE_SUFFIX = " correction"  # the "table" of a correction's parse result: "cumulative correction" or "quarterly correction"
 PER_SHARE_TOLERANCE = 0.005  # allowed difference of the same value between filings: per-share data (rounding, subtraction of cumulative figures)
 PER_SHARE_RELATIVE_TOLERANCE = 5e-4
 AMOUNT_TOLERANCE = 0.001  # amounts: relative difference
@@ -162,6 +165,7 @@ class Announcement:
     series_notes: dict[str, str] = field(default_factory=dict)  # series -> note on its figures in this filing (Parsed.notes), carried to each period value
     per_share_factors: tuple[float, float] = (1.0, 1.0)  # set by adjust_for_splits: what per-share figures were divided by (this and the previous period; prior year)
     supplement: bool = False  # a supplementary document of the results (XP's press release): it only adds its Non-GAAP EPS for its own quarter, see build_history
+    correction: bool = False  # a corrected reissue of an earlier filing of the same period: its figures replace the original's from its own publication on, see build_history
 
     @property
     def available(self) -> pd.Timestamp:
@@ -361,7 +365,7 @@ def parse_statements(pages: Pages) -> tuple[str, dict[str, list[float]]]:
 
 
 FORMATS = {"highlights": parse_highlights, "statements": parse_statements, "travelsky_statements": parse_travelsky_statements}  # HKEX PDF announcements; travelsky_statements also returns series notes
-FILING_FORMATS = {*FORMATS, "press_release", "us_press_release", "us_gaap_statements", "ifrs_statements", "sap_ifrs", "kifrs_statements", "cn_report", "tesla_update"}  # plus US HTML press releases (6-K of JD; 8-K of US companies), IFRS statements (6-K of XP and SAP), Samsung English financial statements, A-share reports and Tesla's Update decks
+FILING_FORMATS = {*FORMATS, "press_release", "us_press_release", "us_gaap_statements", "ifrs_statements", "sap_ifrs", "kifrs_statements", "cn_report", "tesla_update", "jp_tanshin"}  # plus US HTML press releases (6-K of JD; 8-K of US companies), IFRS statements (6-K of XP and SAP), Samsung English financial statements, A-share reports and Tesla's Update decks
 
 
 def parse_announcement(filing: Filing, fmt: str = "highlights", market: Market = HK, non_gaap: str | None = None) -> Announcement:
@@ -376,6 +380,12 @@ def parse_announcement(filing: Filing, fmt: str = "highlights", market: Market =
         return Announcement(
             parsed.period, filing.published, filing.url, parsed.currency, parsed.quarterly, parsed.values, market.key,
             filing.provisional, "", PERIOD_END_SHARES, filing.note,
+        )
+    if fmt == "jp_tanshin":  # Japan: Kessan Tanshin (year to date after the first quarter), or a correction of one
+        parsed = parse_jp_tanshin(filing.title, filing.content)
+        return Announcement(
+            parsed.period, filing.published, filing.url, parsed.currency, parsed.quarterly, parsed.values, market.key,
+            filing.provisional, "", PERIOD_END_SHARES, filing.note, correction=filing.correction,
         )
     if fmt in ("press_release", "us_press_release", "us_gaap_statements", "ifrs_statements", "sap_ifrs", "kifrs_statements", "tesla_update"):  # the parse result carries its own reporting period and whether it is a single quarter
         if fmt == "tesla_update":
@@ -532,7 +542,7 @@ def announcements_to_frame(announcements: list[Announcement], parser_version: in
         {
             "published": f"{a.published:%Y-%m-%d %H:%M}",
             "period": str(a.period),
-            "table": SUPPLEMENT_TABLE if a.supplement else "quarterly" if a.is_quarterly_table else "cumulative",
+            "table": SUPPLEMENT_TABLE if a.supplement else ("quarterly" if a.is_quarterly_table else "cumulative") + (CORRECTION_TABLE_SUFFIX if a.correction else ""),
             "currency": a.currency,
             **{s: ";".join(f"{v:.10g}" for v in a.values[s]) if s in a.values else "" for s in SERIES},
             "url": a.url,
@@ -556,7 +566,7 @@ def announcements_from_frame(df: pd.DataFrame, market: Market = HK) -> list[Anno
                 published=pd.Timestamp(r["published"]),
                 url=r["url"],
                 currency=r["currency"],
-                is_quarterly_table=r["table"] in ("quarterly", SUPPLEMENT_TABLE),
+                is_quarterly_table=r["table"] in ("quarterly", SUPPLEMENT_TABLE, "quarterly" + CORRECTION_TABLE_SUFFIX),
                 values={s: [float(v) for v in str(r[s]).split(";")] for s in SERIES if str(r.get(s, ""))},
                 market=market.key,
                 provisional=str(r.get("provisional", "")) == "1",
@@ -565,6 +575,7 @@ def announcements_from_frame(df: pd.DataFrame, market: Market = HK) -> list[Anno
                 note="; ".join(x for x in str(r.get("note", "")).split("; ") if x and not _series_note(x)),
                 series_notes=dict(n for x in str(r.get("note", "")).split("; ") if (n := _series_note(x))),
                 supplement=r["table"] == SUPPLEMENT_TABLE,
+                correction=str(r["table"]).endswith(CORRECTION_TABLE_SUFFIX),
             )
         )
     return out
@@ -588,7 +599,7 @@ class EarningsHistory:
     ttm_detail: list[dict] = field(default_factory=list)  # row by row matching ttm: how each item was calculated (see audit.py)
     shares_basis: dict[pd.Period, str] = field(default_factory=dict)  # period the disclosed weighted average shares of each period refer to (empty = this period, "full year", "year to date")
     non_gaap_changes: tuple[pd.Timestamp, ...] = ()  # when the company changed the definition of its Non-GAAP EPS (see build_history)
-    fiscal_year_end: int = 12  # the month the company's fiscal year ends; only the labels shown depend on it (period_label)
+    fiscal_year_end: int = 12  # the month the company's fiscal year ends: the labels shown (period_label) and where year-to-date figures start (fiscal_quarter)
 
     def label(self, p: pd.Period) -> str:
         """The name a period is shown with (see period_label)."""
@@ -725,9 +736,17 @@ def build_history(
     publication time. One published on the day its quarter's TTM row becomes available (before or after the statements) completes that row; one that
     becomes available later adds a row of its own, a copy of the latest row with the Non-GAAP EPS TTM brought up to date. A supplement without a
     value, or for a quarter that has no filing, changes nothing. Without supplements the result is exactly what it was before they existed.
+
+    Corrections (a Japanese company's corrected Kessan Tanshin) reissue an earlier filing of the same period with corrected figures. The original's
+    figures are used until the correction is available; from then on its figures replace them (a year-to-date figure: the single period derived
+    from it), each replaced value noting the correction, and a row of its own repeats the latest row with them, from the day the correction can
+    be used. A correction that changes no figure adds nothing. Without corrections the result is exactly what it was before they existed.
+
+    fiscal_year_end is the month the company's fiscal year ends: year-to-date figures run from the start of the fiscal year (see fiscal_quarter).
     """
     supplements = sorted((a for a in parsed if a.supplement), key=lambda x: (x.available, x.published))
-    parsed = [a for a in parsed if not a.supplement]
+    corrections = sorted((a for a in parsed if a.correction and not a.supplement), key=lambda x: (x.available, x.published))
+    parsed = [a for a in parsed if not a.supplement and not a.correction]
     announcements: dict[pd.Period, Announcement] = {}
     for a in sorted(parsed, key=lambda x: x.available):
         announcements.setdefault(a.period, a)  # for duplicate filings of the same reporting period only the earliest is taken
@@ -790,8 +809,53 @@ def build_history(
                 details.append(detail)
                 rows_of.append(latest)
 
+    pending_corrections = list(corrections)
+    processed: list[pd.Period] = []  # the periods of the filings recorded so far
+
+    def apply_corrections(until: pd.Timestamp | None) -> None:
+        """Replace the figures of the corrections available before `until` (all when None); add a row with them."""
+        while pending_corrections and (until is None or pending_corrections[0].available < until):
+            c = pending_corrections.pop(0)
+            original = announcements.get(c.period)
+            if original is None or original.published >= c.published:
+                raise ValueError(f"{c.url}: a correction of the {c.period} filing, which was not published before it")
+            later = {c.period + k for k in range(1, 4 - fiscal_quarter(c.period, fiscal_year_end) + 1)}
+            if later & set(processed):
+                raise ValueError(f"{c.url}: a correction published after a later quarter of the same fiscal year is not supported")
+            changed = False
+            for series, vals in c.values.items():
+                value, derived = vals[0], False
+                if series in FLOWS and not c.is_quarterly_table:
+                    ytd[series][c.period] = vals[0]
+                    earlier = _earlier_periods(c.period, step, fiscal_year_end)
+                    if earlier and (c.period - step) in ytd[series]:
+                        value, derived = vals[0] - ytd[series][c.period - step], True
+                    elif earlier and all(e in quarters[series] for e in earlier):
+                        value, derived = vals[0] - sum(quarters[series][e].value for e in earlier), True
+                    elif earlier:
+                        continue
+                old = quarters[series].get(c.period)
+                if old is not None and abs(old.value - value) <= 1e-9 * max(1.0, abs(value)):
+                    continue
+                factor = c.per_share_factors[0] if series in PER_SHARE else 1.0
+                note = f"corrected by the filing published {c.published:%Y-%m-%d %H:%M}" + (f"; first published as {num(old.value)}" if old else "")
+                q = QuarterValue(value, c.available, c.published, factor=factor, note=note)
+                q.observations.append(Observation(value, c.url, derived))
+                quarters[series][c.period] = q
+                changed = True
+            if not changed or not rows_of or not 0 <= (rows_of[-1].period - c.period).n < 4:
+                continue
+            latest = rows_of[-1]
+            row, detail = row_of(latest)
+            row = {**row, "published": f"{c.published:%Y-%m-%d %H:%M}", "available_date": c.available}
+            detail = {**detail, "published": row["published"], "note": "; ".join(x for x in (detail["note"], c.note) if x)}
+            ttm_rows.append(row)
+            details.append(detail)
+            rows_of.append(latest)
+
     for a in sorted(announcements.values(), key=lambda x: x.available):
         add_supplements(a.available)
+        apply_corrections(a.available)
         for series, vals in a.values.items():
             touched: list[tuple[pd.Period, float]] = []  # the year-to-date cumulative figures in this filing
             if series in BALANCES:
@@ -812,18 +876,23 @@ def build_history(
                     ytd[series].setdefault(period, value)
                     touched.append((period, value))
             if series in FLOWS:
-                _derive_from_ytd(series, quarters[series], ytd[series], a, record, step)
-                _cross_check_ytd(quarters[series], touched, a, step)
+                _derive_from_ytd(series, quarters[series], ytd[series], a, record, step, fiscal_year_end)
+                _cross_check_ytd(quarters[series], touched, a, step, fiscal_year_end)
 
+        processed.append(a.period)
         row, detail = row_of(a)
         ttm_rows.append(row)
         details.append(detail)
         rows_of.append(a)
         add_supplements(a.available + pd.Timedelta(days=1))  # those of the same day complete this row
+        apply_corrections(a.available + pd.Timedelta(days=1))
     add_supplements(None)
+    apply_corrections(None)
 
     ttm = pd.DataFrame(ttm_rows, columns=TTM_COLUMNS)
-    return EarningsHistory(currencies.pop(), quarters, ttm, [*announcements.values(), *supplements], per_year, details, shares_basis, changes, fiscal_year_end)
+    return EarningsHistory(
+        currencies.pop(), quarters, ttm, [*announcements.values(), *corrections, *supplements], per_year, details, shares_basis, changes, fiscal_year_end
+    )
 
 
 def _ttm_row(
@@ -958,12 +1027,20 @@ def _ytd_days(p: pd.Period) -> int:
     return (p.end_time.normalize() - pd.Timestamp(year=p.year, month=1, day=1)).days + 1
 
 
-def _earlier_periods(p: pd.Period, step: int) -> list[pd.Period]:
-    """The periods of the same year before p. step is the number of quarters between adjacent periods."""
-    return [p - j * step for j in range(1, p.quarter // step)]
+def fiscal_quarter(p: pd.Period, fiscal_year_end: int = 12) -> int:
+    """The quarter of its fiscal year (1-4) that a calendar quarter is kept for (see period_label); p.quarter for a December year end."""
+    if fiscal_year_end == 12:
+        return p.quarter
+    months = (p.end_time.month - 1 - fiscal_year_end - 1) % 12 + 1  # months of the fiscal year up to the middle month of p
+    return (months + 2) // 3
 
 
-def _derive_from_ytd(series, quarters, ytd, a, record, step: int) -> None:
+def _earlier_periods(p: pd.Period, step: int, fiscal_year_end: int = 12) -> list[pd.Period]:
+    """The periods of the same (fiscal) year before p. step is the number of quarters between adjacent periods."""
+    return [p - j * step for j in range(1, fiscal_quarter(p, fiscal_year_end) // step)]
+
+
+def _derive_from_ytd(series, quarters, ytd, a, record, step: int, fiscal_year_end: int = 12) -> None:
     """Derive a single-period value not yet known from year-to-date cumulative figures: this period = cumulative(this period) - cumulative(previous period), or - the sum of the earlier periods of the year.
 
     For quarterly reporters the periods within a year are quarters; for half-yearly reporters the cumulative first-half figure is the first half itself,
@@ -975,7 +1052,7 @@ def _derive_from_ytd(series, quarters, ytd, a, record, step: int) -> None:
         for p, total in ytd.items():
             if p in quarters:
                 continue
-            earlier = _earlier_periods(p, step)
+            earlier = _earlier_periods(p, step, fiscal_year_end)
             if not earlier:
                 value = total
             elif (p - step) in ytd:
@@ -988,11 +1065,11 @@ def _derive_from_ytd(series, quarters, ytd, a, record, step: int) -> None:
             changed = True
 
 
-def _cross_check_ytd(quarters, touched, a, step: int) -> None:
+def _cross_check_ytd(quarters, touched, a, step: int, fiscal_year_end: int = 12) -> None:
     """The cumulative figures in this filing (including the same period last year) can also give the values of periods; used as another source of the existing values, for cross-checking."""
     for p, total in touched:
         q = quarters.get(p)
-        earlier = _earlier_periods(p, step)
+        earlier = _earlier_periods(p, step, fiscal_year_end)
         if q is None or any(o.url == a.url for o in q.observations) or not all(e in quarters for e in earlier):
             continue
         q.observations.append(Observation(total - sum(quarters[e].value for e in earlier), a.url, True))

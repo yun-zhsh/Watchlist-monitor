@@ -112,7 +112,7 @@ def test_parse_config_us_stock():
     with pytest.raises(ValueError, match="does not match"):
         parse_config({"stocks": [{"symbol": "0700.HK", "filing_format": "press_release"}]})
     with pytest.raises(ValueError, match="unknown market"):
-        parse_config({"stocks": [{"symbol": "X", "market": "JP"}]})
+        parse_config({"stocks": [{"symbol": "X", "market": "XX"}]})
 
 
 def test_non_gaap_pe_uses_non_gaap_eps():

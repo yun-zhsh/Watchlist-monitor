@@ -400,3 +400,66 @@ def test_the_split_rule_needs_a_share_count_that_fits_another_split_factor():
     odd = announcement("2020Q2", "2020-07-31 13:30", [3.205, 2.71], [2307.6, 1892.289], [720.0, 699.076])  # 6.6% below on the usual basis, 2.8% above with the other factor
     out = adjust_for_splits([q1, odd], SPLITS)
     assert out[1].values["wa_shares"][0] == pytest.approx(720.0 * 1.0998772) and "before the split" not in out[1].note
+
+
+# --- encrypted reports, and a report that fails among others ---
+
+
+def encrypted(pdf: bytes, user_password: str = "") -> bytes:
+    """The PDF encrypted with AES-128, as Advantech's 2017 shareholder annual report is (an empty user password opens it)."""
+    writer = PdfWriter(clone_from=PdfReader(io.BytesIO(pdf)))
+    writer.encrypt(user_password=user_password, owner_password="owner", algorithm="AES-128")
+    out = io.BytesIO()
+    writer.write(out)
+    return out.getvalue()
+
+
+def test_the_declared_dependencies_decrypt_an_aes_encrypted_report():
+    pyproject = (Path(__file__).parent.parent / "pyproject.toml").read_text(encoding="utf-8")
+    assert '"pypdf[crypto]' in pyproject.split("[project.optional-dependencies]")[0]  # a base dependency: the scheduled workflow installs no extras
+    pdf = encrypted(report_pdf(2017, 3, "October 31, 2017"))
+    assert PdfReader(io.BytesIO(pdf)).is_encrypted
+    assert "Board of Directors on October 31, 2017" in page_texts(pdf)[3]
+    assert parse_tifrs("Advantech 2017 Q3 consolidated financial statements", pdf).values["eps"] == [7.15, 3.2]
+
+
+def test_an_encrypted_report_is_saved_as_an_unencrypted_excerpt(tmp_path):
+    url = BASE + "Shareholder-Annual-Report/107/1-en.pdf"  # ROC year 107 (2018) covers 2017
+    found = AdvantechIrProvider(FakeHttp({url: encrypted(report_pdf(2017, 4, "March 2, 2018"))}), tmp_path).results_announcements("2395.TW", datetime(2015, 1, 1))
+    assert [f.published for f in found] == [pd.Timestamp("2018-03-02 13:30")]
+    saved = PdfReader(io.BytesIO(found[0].content))
+    assert not saved.is_encrypted and len(saved.pages) == 6
+
+
+def test_a_report_that_cannot_be_read_does_not_lose_the_others(tmp_path, capsys):
+    q1, q2, q3 = (BASE + f"Quarterly/2017_Q{q}_Consolidated-English.pdf" for q in (1, 2, 3))
+    http = FakeHttp({
+        q1: report_pdf(2017, 1, "April 28, 2017"),
+        q2: encrypted(report_pdf(2017, 2, "July 27, 2017"), user_password="secret"),  # cannot be opened without the password
+        q3: report_pdf(2017, 3, "October 31, 2017"),
+    })
+    found = AdvantechIrProvider(http, tmp_path).results_announcements("2395.TW", datetime(2015, 1, 1))
+    assert [f.url for f in found] == [q1, q3]  # the reports before and after the failing one are kept
+    err = capsys.readouterr().err
+    assert f"ERROR 2395.TW: 2017Q2 ({q2}) cannot be read" in err and "tried again on the next update" in err
+    index = json.loads((tmp_path / "2395.TW" / "index.json").read_text(encoding="utf-8"))
+    assert [(e["year"], e["quarter"]) for e in index] == [(2017, 1), (2017, 3)]  # recorded, so the next run does not fetch them again
+    # the next run tries only the failing report again; once it can be read it is added
+    http.reports[q2] = report_pdf(2017, 2, "July 27, 2017")
+    http.requests.clear()
+    found = AdvantechIrProvider(http, tmp_path).results_announcements("2395.TW", datetime(2015, 1, 1))
+    assert [f.url for f in found] == [q1, q2, q3] and q1 not in http.requests and q3 not in http.requests
+
+
+def test_reports_fetched_before_the_website_fails_are_recorded(tmp_path):
+    q1, q2 = (BASE + f"Quarterly/2017_Q{q}_Consolidated-English.pdf" for q in (1, 2))
+
+    class FailsAfterTheFirstReport(FakeHttp):
+        def get_bytes(self, url, **kwargs):
+            if url == q2:
+                raise ConnectionError("the website went down")
+            return super().get_bytes(url, **kwargs)
+
+    http = FailsAfterTheFirstReport({q1: report_pdf(2017, 1, "April 28, 2017"), q2: b""})
+    assert [f.url for f in AdvantechIrProvider(http, tmp_path).results_announcements("2395.TW", datetime(2015, 1, 1))] == [q1]
+    assert len(json.loads((tmp_path / "2395.TW" / "index.json").read_text(encoding="utf-8"))) == 1

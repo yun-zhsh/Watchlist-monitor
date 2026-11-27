@@ -7,6 +7,7 @@ CN (A-shares): closes at 15:00 (Beijing time), no half days.
 JP (Tokyo Stock Exchange): closes at 15:00 (Tokyo time) up to 2024-11-04 and at 15:30 from 2024-11-05, when the TSE extended
 its afternoon session; no half days.
 TW (Taiwan Stock Exchange): closes at 13:30 (Taipei time), no half days.
+BR (B3, Sao Paulo): taken as closing at 17:00 (Brasilia time), no half days; see BR below.
 US (NYSE/Nasdaq): regular close 16:00 (New York time); the day after Thanksgiving, 3 July (Mon-Thu) and
 Christmas Eve (Mon-Thu) close early at 13:00.
 
@@ -101,7 +102,13 @@ CN = Market("CN", "Asia/Shanghai", time(15, 0), time(15, 0), lambda day: False)
 JP = Market("JP", "Asia/Tokyo", time(15, 0), time(15, 0), lambda day: False, close_changes=(("2024-11-05", time(15, 30)),))
 # Taiwan Stock Exchange: closes at 13:30, no half days (closure days are decided by the price data)
 TW = Market("TW", "Asia/Taipei", time(13, 30), time(13, 30), lambda day: False)
-MARKETS = {m.key: m for m in (HK, US, KR, CN, JP, TW)}
+# B3 (Brazil): the regular session of the cash equities market closes at 17:00 while the US is on daylight saving time and at about
+# 18:00 (17:55 plus the closing call) while it is not; B3 moves it twice a year to stay aligned with New York, and before 2019 Brazil's own
+# daylight saving time moved it too. That seasonal schedule is not modelled: 17:00, the earliest of these closes, is used all year, so a
+# filing delivered between 17:00 and 18:00 in the US winter counts from the next trading day though the market was still open (it can be
+# a day late, never too early). TOTVS delivers its statements after 18:00, so its figures are not affected. Ash Wednesday opens at 13:00.
+BR = Market("BR", "America/Sao_Paulo", time(17, 0), time(17, 0), lambda day: False)
+MARKETS = {m.key: m for m in (HK, US, KR, CN, JP, TW, BR)}
 
 
 def get_market(key: str) -> Market:

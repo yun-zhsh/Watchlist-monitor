@@ -394,7 +394,8 @@ def parse_announcement(filing: Filing, fmt: str = "highlights", market: Market =
         parsed = parse_cvm_statements(filing.content)
         return Announcement(
             parsed.period, filing.published, filing.url, parsed.currency, parsed.quarterly, parsed.values, market.key,
-            filing.provisional, "" if parsed.quarterly else "full year", PERIOD_END_SHARES, filing.note, correction=filing.correction,
+            filing.provisional, "", PERIOD_END_SHARES, filing.note, series_notes=dict(parsed.notes or {}),
+            correction=filing.correction,
         )
     if fmt in ("press_release", "us_press_release", "us_gaap_statements", "ifrs_statements", "sap_ifrs", "kifrs_statements", "tesla_update", "tifrs_statements"):  # the parse result carries its own reporting period and whether it is a single quarter
         if fmt == "tesla_update":

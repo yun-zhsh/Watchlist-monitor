@@ -4,6 +4,10 @@ ITR and DFP documents from 2013 on).
 The statements are read by CVM's standard account codes, never by their (Portuguese) labels. From the consolidated statements:
   3.01        revenue (net revenue from sales and services)
   3.11.01     net income attributable to the owners of the parent
+  3.09, 3.10  net income from continuing and from discontinued operations: a period with discontinued operations is annotated (series
+              note on its EPS), because its disclosed basic EPS may be that of continuing operations only (TOTVS's 1Q19 ITR: 0.2680 on
+              BRL 43.8 million from continuing operations and 163.5 million shares, while the net income of BRL 12.1 million includes the
+              discontinued hardware business); the EPS is used as disclosed
   3.99.01.01  basic EPS of the ordinary shares (BRL per share); a company with preferred shares has more lines under 3.99.01 and is
               refused, its EPS per class being something this program does not model
   2.03        total equity (consolidated, including non-controlling interests), less
@@ -42,6 +46,7 @@ from valuation_monitor.parsed import Parsed
 
 STATEMENTS = {"income_statement": "DRE", "balance_sheet": "BPP"}  # extract key -> CVM's name of the statement (income statement; liabilities and equity)
 REVENUE, PROFIT, EPS_PARENT, EPS = "3.01", "3.11.01", "3.99.01", "3.99.01.01"
+CONTINUING, DISCONTINUED, MINORITY_PROFIT = "3.09", "3.10", "3.11.02"  # net income from continuing operations; from discontinued operations; to non-controlling interests
 EQUITY, MINORITY = "2.03", "2.03.09"
 CURRENCIES = {"REAL": "BRL"}  # CVM's currency name -> ISO code
 SCALES = {"MIL": 1000, "UNIDADE": 1}  # CVM's unit of the amounts -> multiplier (thousands; units)
@@ -51,9 +56,10 @@ TITLE_RE = re.compile(r"^(?P<kind>ITR|DFP) (?:(?P<q>[1-3])Q(?P<qy>\d{2})|(?P<y>\
 
 
 def wanted_code(part: str, code: str) -> bool:
-    """Whether an account is kept in the extract: revenue, net income and EPS lines; total equity and non-controlling interests."""
+    """Whether an account is kept in the extract: revenue, net income from continuing and discontinued operations, net income and EPS
+    lines; total equity and non-controlling interests."""
     if part == "income_statement":
-        return code == REVENUE or code == "3.11" or code.startswith("3.11.") or code == "3.99" or code.startswith("3.99.")
+        return code in (REVENUE, CONTINUING) or any(code == top or code.startswith(top + ".") for top in (DISCONTINUED, "3.11", "3.99"))
     return code in (EQUITY, MINORITY)
 
 
@@ -281,4 +287,14 @@ def parse_cvm_statements(content: bytes) -> Parsed:
         if shares.get("preferred"):
             raise ValueError("the company has preferred shares, which this program does not model")
         values["wa_shares"] = [(shares["ordinary"] - shares["ordinary_treasury"]) / MILLION]
-    return Parsed(data["currency"], values, period, quarterly=kind == "ITR")
+    notes = {}
+    discontinued = _value(income, DISCONTINUED, *reversed(spans[0]))
+    if discontinued:
+        continuing = (_value(income, CONTINUING, *reversed(spans[0])) or 0.0) - (_value(income, MINORITY_PROFIT, *reversed(spans[0])) or 0.0)
+        eps = values["eps"][0]
+        notes["eps"] = (
+            f"the period has discontinued operations (BRL {discontinued * unit:,.1f} million of the consolidated net income); the basic EPS "
+            f"{eps:g} is the disclosed figure: net income / EPS = {values['profit'][0] / eps:,.1f} million shares, net income from continuing "
+            f"operations less non-controlling interests / EPS = {continuing * unit / eps:,.1f} million shares"
+        )
+    return Parsed(data["currency"], values, period, quarterly=kind == "ITR", notes=notes or None)

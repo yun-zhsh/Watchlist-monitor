@@ -296,6 +296,23 @@ def test_partial_failure_saves_what_was_fetched_and_retries_the_rest(tmp_path, c
     assert [url for url, _ in http.calls] == [cvm.DATASETS["DFP"], cvm.DATASETS["ITR"], cvm.DATASETS["ITR"] + "itr_cia_aberta_2025.zip"]
 
 
+def test_the_share_capital_missing_from_the_open_data_is_read_from_the_document(tmp_path):
+    responses = provider_responses()
+    data = itr_2025_zip()
+    with zipfile.ZipFile(io.BytesIO(data)) as z:  # the same file without the share capital of the second quarter
+        files = {n: z.read(n) for n in z.namelist()}
+    out = io.BytesIO()
+    with zipfile.ZipFile(out, "w") as z:
+        for n, b in files.items():
+            z.writestr(n, b"\n".join(line for line in b.split(b"\n") if not (b"composicao" in n.encode() and b"2025-06-30" in line)))
+    responses[cvm.DATASETS["ITR"] + "itr_cia_aberta_2025.zip"] = out.getvalue()
+    responses[link(150669).replace("http://", "https://")] = new_layout_document()
+    CvmProvider(FakeHttp(responses), tmp_path).results_announcements("TOTS3.SA", datetime(2024, 1, 1), now=datetime(2026, 11, 27))
+    entry = next(e for e in json.loads((tmp_path / "TOTS3.SA" / "index.json").read_text()) if e["document_id"] == 150669)
+    saved = json.loads((tmp_path / "TOTS3.SA" / entry["file"]).read_text())
+    assert saved["shares"]["ordinary"] == 599401581 and saved["values_from"] == "CVM open data; the share capital from the delivered document"
+
+
 def test_closed_years_are_read_once_and_cached_as_immutable(tmp_path):
     http = FakeHttp(provider_responses())
     provider = CvmProvider(http, tmp_path)
@@ -384,8 +401,10 @@ def test_every_saved_extract_parses_and_profit_over_eps_agrees_with_the_shares()
         assert str(p.period.end_time.date()) == e["reference_date"]
         implied = p.values["profit"][0] / p.values["eps"][0]
         shares = p.values["wa_shares"][0] if "wa_shares" in p.values else None
-        if shares is not None and pd.Timestamp(e["reference_date"]) != pd.Timestamp("2020-03-31"):
-            assert implied == pytest.approx(shares, rel=0.06), e["title"]  # weighted average (EPS) vs period-end shares
+        assert shares is not None, e["title"]  # from the open data, or (before 2020) from the delivered document
+        if not p.notes:  # 1Q19: the EPS of continuing operations (annotated)
+            # weighted average (EPS) vs period-end shares: TOTVS issued 31 million shares in the third quarter of 2021 (6.5% apart then)
+            assert implied == pytest.approx(shares, rel=0.07), e["title"]
 
 
 @saved
@@ -397,3 +416,19 @@ def test_the_saved_history_builds():
     splits = pd.Series([5.0, 3.0], index=pd.to_datetime(["2011-03-22", "2020-05-04"]))
     history = build_history(adjust_for_splits(parsed, splits))
     assert history.currency == "BRL" and len(history.ttm) > 40
+
+
+def test_a_period_with_discontinued_operations_is_annotated():
+    """TOTVS's 1Q19 ITR: its basic EPS is that of continuing operations, its net income includes the discontinued hardware business."""
+    doc = read_dataset(itr_2025_zip(), "ITR", 2025, COMPANY)[1]
+    rows = [r for r in doc["extract"]["income_statement"] if r["code"] not in ("3.01", "3.11.01", "3.99.01.01") or r["start"] == "2024-01-01"]
+    rows += [{"code": c, "start": "2025-01-01", "end": "2025-03-31", "value": v} for c, v in [
+        ("3.01", 563587.0), ("3.09", 43862.0), ("3.10", -31744.0), ("3.11.01", 12082.0), ("3.11.02", 36.0), ("3.99.01.01", 0.268)]]
+    p = cs.parse_cvm_statements(extract_content({**doc, "extract": {**doc["extract"], "income_statement": rows}}))
+    assert p.values["eps"][0] == 0.268 and p.values["profit"][0] == pytest.approx(12.082)  # used as disclosed
+    assert p.notes == {"eps": "the period has discontinued operations (BRL -31.7 million of the consolidated net income); the basic EPS 0.268 is the disclosed "
+                              "figure: net income / EPS = 45.1 million shares, net income from continuing operations less non-controlling interests / EPS = "
+                              "163.5 million shares"}
+    assert cs.parse_cvm_statements(extract_content(doc)).notes is None
+    filing = Filing(title="ITR 1Q19", published=pd.Timestamp("2019-05-08 17:52"), url="u", content=extract_content({**doc, "extract": {**doc["extract"], "income_statement": rows}}))
+    assert parse_announcement(filing, "cvm_statements", BR).series_notes == p.notes

@@ -230,6 +230,9 @@ class CvmProvider:
         if extract is None:  # a version replaced later: the open data keeps only the latest figures
             extract = cs.read_document(document, doc["kind"], pd.Timestamp(doc["reference_date"]))
             source = "the delivered document"
+        elif extract["shares"] is None:  # the open data has no share capital for TOTVS before 2020: the delivered document has it
+            extract = {**extract, "shares": cs.read_document(document, doc["kind"], pd.Timestamp(doc["reference_date"]))["shares"]}
+            source = "CVM open data; the share capital from the delivered document"
         content = cs.make_extract(doc, published, source, extract)
         title = cs.english_title(doc["kind"], pd.Timestamp(doc["reference_date"]), doc["version"])
         name = f"{doc['reference_date']}_{doc['kind']}_v{doc['version']}_{doc['document_id']}.json"

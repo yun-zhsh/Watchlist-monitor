@@ -54,12 +54,20 @@ def sum_formula(components: list[Component] | None, total: float | None) -> str:
 SHARES_UNIT = "millions of shares; millions of ADS for ADRs"
 
 
+DILUTED_SHARES_LABEL = "diluted EPS weighted average shares"  # the shares of a filing that discloses only diluted EPS (TSMC): its EPS is diluted
+
+
+def eps_kind(rec: dict) -> str:
+    """"diluted" when the record's EPS is diluted (its filing discloses diluted EPS only and says so in the shares label), else "basic"."""
+    return "diluted" if rec.get("shares_label") == DILUTED_SHARES_LABEL else "basic"
+
+
 def shares_formula(rec: dict) -> str:
     """Where the share count comes from: the number disclosed in the filing first; implied (profit / basic EPS) only if none is disclosed."""
     if rec.get("shares") is None:
         return ""
     implied = rec.get("shares_implied")
-    check = f"; cross-check: net profit {num(rec['profit'])} / basic EPS {num(rec['eps_latest'])} implies {num(implied)}" if implied else ""
+    check = f"; cross-check: net profit {num(rec['profit'])} / {eps_kind(rec)} EPS {num(rec['eps_latest'])} implies {num(implied)}" if implied else ""
     parts = rec.get("shares_parts")
     if rec.get("shares_source") == "derived" and parts:
         earlier = " + ".join(f"{x['period']} {num(x['shares'])} x {x['days']} days" for x in parts["parts"])
@@ -76,7 +84,7 @@ def shares_formula(rec: dict) -> str:
     if implied is None:
         return ""
     return (
-        f"The filing does not disclose the share count; implied from net profit {num(rec['profit'])} / basic EPS {num(rec['eps_latest'])} "
+        f"The filing does not disclose the share count; implied from net profit {num(rec['profit'])} / {eps_kind(rec)} EPS {num(rec['eps_latest'])} "
         f"= {num(rec['shares'])} ({rec['period_label']}, {SHARES_UNIT})"
     )
 
@@ -115,7 +123,7 @@ def pb_lines(rec: dict) -> list[str]:
 
 
 EXPLAINERS = {
-    "eps_ttm": lambda rec: eps_lines(rec, "eps", "TTM EPS (sum of the basic EPS of each period)"),
+    "eps_ttm": lambda rec: eps_lines(rec, "eps", f"TTM EPS (sum of the {eps_kind(rec)} EPS of each period)"),
     "non_ifrs_eps_ttm": lambda rec: eps_lines(rec, "non_ifrs_eps", "TTM Non-IFRS/Non-GAAP EPS (sum of each period)"),
     "revenue_per_share_ttm": ps_lines,
     "book_value_per_share": pb_lines,

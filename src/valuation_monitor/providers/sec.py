@@ -96,6 +96,12 @@ TESLA_UPDATE = "tesla_update"  # Tesla's quarterly Update deck (exhibit 99.1 of 
 PERIODIC_REPORT = "periodic_report"  # the Form 10-Q or 10-K of a quarter whose Update has its statements as page images only (Tesla)
 IMAGES_ONLY = "images"  # the "statements" of an index entry of an Update deck whose statements are page images only
 INDEX_PAGE_NAME = "{accession}-index.htm"
+# TSMC: the earnings release and the earnings conference slides, in the same 6-K (from the third quarter of 2019) or the slides in a 6-K of their
+# own the next morning (until the second quarter of 2019); the documents have no telling names ("a3q26e_withguidancexfinal.htm", "d256764d6k.htm")
+# and the slides are small (6-45 KB), so every HTML document of a 6-K is looked at (see tsmc_release.py and _examine_tsmc)
+TSMC_RELEASE = "tsmc_release"
+TSMC_MIN_BYTES = 1_000
+SLIDES_NOTE = "earnings conference slides"  # Filing.note of a 6-K with only the slides: what its equity comes from (see build_history)
 # Infosys: the IFRS USD press release on the day of the results and, 4-7 days later, a 6-K with the IFRS statements in US dollars (and the same
 # press release again); the exhibits are named by their number only ("exv99w02.htm"), tried after the usual names (see infosys.py and _examine_infosys)
 INFOSYS_IFRS = "infosys_ifrs"
@@ -305,6 +311,9 @@ class SecProvider:
             save_index(index_path, index)
 
         since_ts = pd.Timestamp(since)
+        if exhibit == TSMC_RELEASE:
+            statements = self._tsmc_statements(symbol, cik, since_ts, folder, index)
+            return tsmc_filings(index, folder, since_ts) + statements
         if exhibit == INFOSYS_IFRS:
             return infosys_filings(index, folder, since_ts)
         return [
@@ -381,6 +390,8 @@ class SecProvider:
         entry = {"accession": accession, "published": f"{item['published']:%Y-%m-%dT%H:%M:%S}", "results": False}
         if exhibit == PERIODIC_REPORT:
             return self._examine_report(cik, item, folder, entry)
+        if exhibit == TSMC_RELEASE:
+            return self._examine_tsmc(cik, item, folder, entry)
         files = self._listing(cik, accession)
         if exhibit == "us_gaap_statements":
             files = sorted(files, key=lambda f: not FINANCIAL_STATEMENTS_NAME_RE.search(f["name"]))  # the names say it from 2016 on (financialstatements...); before, the exhibits are numbered and are told apart by their content
@@ -474,6 +485,123 @@ class SecProvider:
         folder.mkdir(parents=True, exist_ok=True)
         (folder / file).write_bytes(html)
         return {**entry, "results": True, "title": title, "url": url, "file": file}
+
+
+    def _examine_tsmc(self, cik: int, item: dict, folder: Path, entry: dict) -> dict:
+        """A TSMC 6-K: its earnings release ("TSMC Reports ... Quarter EPS of NT$...") and its earnings conference slides with a text balance
+        sheet, whichever it has. The slides are recorded as "slides_file" next to the release, or alone (results false) when the 6-K has only them."""
+        from valuation_monitor.tsmc_release import has_text_balance_sheet, slides_title, title as release_title
+
+        accession = item["accession"]
+        folder_name = accession.replace("-", "")
+        found: dict[str, str] = {}
+        for f in self._listing(cik, accession):
+            name, size = f["name"], int(f["size"] or 0)
+            if not name.lower().endswith((".htm", ".html")) or name.endswith("-index.htm") or name.endswith("-index-headers.html"):
+                continue
+            if not TSMC_MIN_BYTES <= size <= MAX_EXHIBIT_BYTES:
+                continue
+            url = ARCHIVE_URL.format(cik=cik, accession=folder_name, name=name)
+            html = self._archive_get(url, cache=False)
+            file = f"{item['published']:%Y-%m-%d}_{name}"
+            if "file" not in found and (title := release_title(html)):
+                found.update(title=title, url=url, file=file)
+            elif "slides_file" not in found and (title := slides_title(html)) and has_text_balance_sheet(html):
+                found.update(slides_title=title, slides_url=url, slides_file=file)
+            else:
+                continue
+            folder.mkdir(parents=True, exist_ok=True)
+            (folder / file).write_bytes(html)
+        return {**entry, "results": "file" in found, **found}
+
+
+    def _tsmc_statements(self, symbol: str, cik: int, since: pd.Timestamp, folder: Path, index: list[dict]) -> list[Filing]:
+        """TSMC's consolidated financial statements of the quarters whose slides have no text balance sheet (see tsmc_equity_gaps), as
+        supplementary documents for their equity, from statements.json next to index.json. The 6-Ks published 15-100 days after the end of
+        such a quarter are looked at, each recorded in statements.json as it is checked (the index is saved whenever it grew); a 6-K that
+        cannot be read is reported and tried again on the next run, and the others go on."""
+        from valuation_monitor.tsmc_release import STATEMENTS_NOTE, statements_excerpt, statements_period, statements_title
+
+        path = folder / "statements.json"
+        saved = json.loads(path.read_text(encoding="utf-8")) if path.exists() else []
+        wanted = {q for q in tsmc_equity_gaps(index, folder) if q.end_time >= since} - {statements_period(e["title"]) for e in saved if e["results"]}
+        if wanted and self.http is not None:
+            known = {e["accession"] for e in saved}
+            try:
+                candidates = [
+                    item for item in self._filing_list(cik, "6-K")
+                    if item["accession"] not in known and any(STATEMENTS_WINDOW_DAYS[0] <= (item["published"] - q.end_time.normalize()).days <= STATEMENTS_WINDOW_DAYS[1] for q in wanted)
+                ]
+            except Exception as e:  # noqa: BLE001 - the saved statements are used
+                print(f"{symbol}: cannot reach the SEC ({e}); using the {sum(x['results'] for x in saved)} saved financial statements", file=sys.stderr)
+                candidates = []
+            for item in candidates:
+                entry = {"accession": item["accession"], "published": f"{item['published']:%Y-%m-%dT%H:%M:%S}", "results": False}
+                try:
+                    for f in self._listing(cik, item["accession"]):
+                        name, size = f["name"], int(f["size"] or 0)
+                        if not name.lower().endswith((".htm", ".html")) or not STATEMENTS_MIN_BYTES <= size <= STATEMENTS_MAX_BYTES:
+                            continue
+                        url = ARCHIVE_URL.format(cik=cik, accession=item["accession"].replace("-", ""), name=name)
+                        html = self._archive_get(url, cache=False)
+                        title = statements_title(html)
+                        if title is None or statements_period(title) not in wanted:
+                            continue
+                        file = f"{item['published']:%Y-%m-%d}_{name}"
+                        folder.mkdir(parents=True, exist_ok=True)
+                        (folder / file).write_bytes(statements_excerpt(html))
+                        entry.update(results=True, title=title, url=url, file=file)
+                        wanted.discard(statements_period(title))
+                        print(f"{symbol}: new consolidated financial statements {entry['published']} {title}", file=sys.stderr)
+                        break
+                except Exception as e:  # noqa: BLE001 - this 6-K only; not recorded, so the next run checks it again
+                    print(f"{symbol}: ERROR reading the 6-K {item['accession']} for financial statements ({e}); skipped for this run", file=sys.stderr)
+                    continue
+                saved.append(entry)
+                saved.sort(key=lambda e: e["published"])
+                save_index(path, saved)
+                if not wanted:
+                    break
+        return [
+            Filing(e["title"], pd.Timestamp(e["published"]), e["url"], (folder / e["file"]).read_bytes(), note=STATEMENTS_NOTE, supplement=True)
+            for e in saved
+            if e["results"] and pd.Timestamp(e["published"]) >= since
+        ]
+
+
+STATEMENTS_WINDOW_DAYS = (15, 100)  # TSMC furnishes its consolidated financial statements 4-8 weeks after the quarter end
+STATEMENTS_MIN_BYTES = 1_000_000  # the statements with their notes are 1.5-12 MB; the 6-K cover and the notices are far smaller
+STATEMENTS_MAX_BYTES = 20_000_000
+
+
+def tsmc_equity_gaps(index: list[dict], folder: Path) -> set[pd.Period]:
+    """The quarters of TSMC's earnings releases (index.json) whose equity is in no text balance sheet: neither slides of the same 6-K, nor
+    slides in a 6-K of their own, nor the release document itself (its quarter: 45 days before its publication, as us_release.quarter_of)."""
+    from valuation_monitor.tsmc_release import has_text_balance_sheet
+
+    def quarter(e: dict) -> pd.Period:
+        return (pd.Timestamp(e["published"]) - pd.Timedelta(days=45)).to_period("Q")
+
+    covered = {quarter(e) for e in index if e.get("slides_file")}
+    return {
+        quarter(e) for e in index
+        if e["results"] and quarter(e) not in covered and not has_text_balance_sheet((folder / e["file"]).read_bytes())
+    }
+
+
+def tsmc_filings(index: list[dict], folder: Path, since: pd.Timestamp) -> list[Filing]:
+    """TSMC's filings from index.json: each earnings release, with the slides of the same 6-K as the attachment "slides", and each 6-K that has
+    only the slides as a supplementary document (its equity is used from its own publication time, see build_history)."""
+    out = []
+    for e in index:
+        if pd.Timestamp(e["published"]) < since:
+            continue
+        if e["results"]:
+            attachments = {"slides": (folder / e["slides_file"]).read_bytes()} if e.get("slides_file") else {}
+            out.append(Filing(e["title"], pd.Timestamp(e["published"]), e["url"], (folder / e["file"]).read_bytes(), attachments))
+        elif e.get("slides_file"):
+            out.append(Filing(e["slides_title"], pd.Timestamp(e["published"]), e["slides_url"], (folder / e["slides_file"]).read_bytes(), note=SLIDES_NOTE, supplement=True))
+    return out
 
 
 PERIODIC_FORMS = ("10-Q", "10-K")

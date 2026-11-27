@@ -61,9 +61,12 @@ freshness:
 #   cn_report         periodic reports (Q1, half-year, Q3, annual) and annual express reports of A-share companies on CNINFO (Chinese originals); market CN
 #   jp_tanshin        Kessan Tanshin (summaries of consolidated results, Japanese GAAP; Japanese originals) and their corrections, from the
 #                     company's IR library on Xj-Storage, every quarter (year to date after the first quarter); market JP
+#   cvm_statements    the ITR (quarterly) and DFP (annual) statements Brazilian companies deliver to CVM, read by CVM's account codes from
+#                     its open data, with each version's delivery time from the delivered document (a later version restates an earlier
+#                     one from its own delivery time); saved as extracts of codes and values; market BR
 # market: HK (HKEXnews; default for symbols ending in .HK), US (SEC EDGAR), KR (the IR website of a Korean company; default for
 # symbols ending in .KS), CN (A-shares, CNINFO; default for symbols ending in .SZ or .SS) or JP (Tokyo Stock Exchange, the company's IR
-# library on Xj-Storage; default for symbols ending in .T).
+# library on Xj-Storage; default for symbols ending in .T) or BR (B3, Sao Paulo; CVM; default for symbols ending in .SA).
 # Accessing EDGAR requires identifying yourself: before running, set the environment variable
 # SEC_USER_AGENT="valuation-monitor your-email" (see the README).
 # The order below is the order of the stocks on the home page and in the reports. hidden: true leaves a stock off the home page
@@ -257,3 +260,8 @@ stocks:
     sec_exhibit: tsmc_release   # for the quarters whose slides have no text balance sheet, the equity comes from the consolidated financial statements 6-K (statements.json)
     metrics: [pe, ps, pb]   # TSMC has never published a Non-GAAP EPS; PB on total equity including non-controlling interests (the slides give no other)
     eps_basis: { pe: diluted }   # the release gives diluted EPS only: "Diluted PE (TTM)"
+  - symbol: TOTS3.SA
+    name: TOTVS
+    market: BR   # B3 (Novo Mercado); the statements delivered to CVM (ITR every quarter, DFP for the year), CVM company code 019992
+    filing_format: cvm_statements   # price and financials both in BRL (IFRS); ordinary shares only
+    metrics: [pe, ps, pb]   # no pe_non_gaap: the only adjusted per-share figure, "EPS (LTM)" (since 1Q25), is a trailing-twelve-months figure on period-end shares

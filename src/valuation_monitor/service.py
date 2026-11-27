@@ -19,6 +19,7 @@ from valuation_monitor.providers.http import HttpClient
 from valuation_monitor.providers.samsung import SamsungIrProvider
 from valuation_monitor.providers.sec import SecProvider, SecUserAgentMissing, make_http_client
 from valuation_monitor.providers.tencent import TencentQuoteProvider
+from valuation_monitor.providers.xj_storage import XjStorageProvider
 from valuation_monitor.providers.yahoo import YahooProvider
 from valuation_monitor.store import EarningsStore, PriceStore
 
@@ -102,6 +103,7 @@ class Monitor:
             SamsungIrProvider(http, self.data_dir / "filings"),
             CninfoProvider(cninfo_http, self.data_dir / "filings"),
             self.earnings,
+            XjStorageProvider(http, self.data_dir / "filings"),
         )
 
     @property

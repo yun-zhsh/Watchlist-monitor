@@ -1,9 +1,10 @@
 """The project is English-only: users never see Chinese (or any other CJK text), including stock names, and developers
 see English only in code comments, docstrings, tests and documentation.
 
-The only places allowed to contain Chinese are string literals that *read* Chinese-language filings of A-share
-companies: src/valuation_monitor/cn_patterns.py and the fixtures in tests/test_cn.py. Their comments and docstrings
-must still be English.
+The only places allowed to contain Chinese or Japanese are string literals that *read* the original filings: those of
+A-share companies in src/valuation_monitor/cn_patterns.py and the fixtures in tests/test_cn.py, those of Japanese companies
+(Kessan Tanshin) in src/valuation_monitor/jp_patterns.py and the fixtures in tests/test_jp.py. Their comments and
+docstrings must still be English.
 """
 
 import ast
@@ -19,8 +20,8 @@ from valuation_monitor.web import export_site
 ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / "src" / "valuation_monitor"
 CJK = re.compile("[\u3000-\u303f\u3040-\u30ff\u3400-\u9fff\uac00-\ud7af\uff00-\uffef]")
-ALLOWED_PYTHON = {SRC / "cn_patterns.py"}
-ALLOWED_LITERALS = ALLOWED_PYTHON | {ROOT / "tests" / "test_cn.py"}  # Chinese string fixtures of the source filings
+ALLOWED_PYTHON = {SRC / "cn_patterns.py", SRC / "jp_patterns.py"}
+ALLOWED_LITERALS = ALLOWED_PYTHON | {ROOT / "tests" / "test_cn.py", ROOT / "tests" / "test_jp.py"}  # Chinese and Japanese string fixtures of the source filings
 
 
 def docstring_nodes_of(tree):

@@ -402,9 +402,13 @@ def test_every_saved_extract_parses_and_profit_over_eps_agrees_with_the_shares()
         implied = p.values["profit"][0] / p.values["eps"][0]
         shares = p.values["wa_shares"][0] if "wa_shares" in p.values else None
         assert shares is not None, e["title"]  # from the open data, or (before 2020) from the delivered document
-        if not p.notes:  # 1Q19: the EPS of continuing operations (annotated)
-            # weighted average (EPS) vs period-end shares: TOTVS issued 31 million shares in the third quarter of 2021 (6.5% apart then)
-            assert implied == pytest.approx(shares, rel=0.07), e["title"]
+        # weighted average (EPS) vs period-end shares: within 2%, except where TOTVS issued many shares during the period (27 million in the
+        # second quarter of 2019, 39 million in the third quarter of 2021) and 1Q19, whose EPS is that of continuing operations (annotated)
+        if e["reference_date"] == "2019-03-31":
+            assert "continuing operations" in p.notes["eps"]
+        else:
+            issued = e["reference_date"] in ("2019-06-30", "2019-12-31", "2021-09-30", "2021-12-31")
+            assert implied == pytest.approx(shares, rel=0.12 if issued else 0.02), e["title"]
 
 
 @saved

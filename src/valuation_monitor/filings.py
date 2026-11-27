@@ -16,7 +16,7 @@ equity attributable to owners (millions), shares disclosed in the filing (millio
   travelsky_statements (TravelSky, PDF; IFRS until the 2020 interim results, CASBE from the 2020 annual results) is in travelsky.py.
   press_release (JD, Alibaba; HTML) is in press_release.py; us_press_release and us_gaap_statements (Meta, Cognizant, Dynatrace, Sea, ASML) in us_release.py;
   ifrs_statements (XP, HTML) in ifrs.py; sap_ifrs (SAP, HTML) in sap_ifrs.py; kifrs_statements (Samsung, PDF) in kifrs.py;
-  cn_report (Hikvision, Glodon, PDF) in cn_report.py; tesla_update (Tesla's Update decks, and the Form 10-Q or 10-K of a quarter whose deck has
+  cn_report (Hikvision, Glodon, PDF) in cn_report.py; tifrs_statements (Advantech, PDF) in tifrs.py; tesla_update (Tesla's Update decks, and the Form 10-Q or 10-K of a quarter whose deck has
   its statements as page images only) in tesla_update.py; jp_tanshin (SHIFT's Japanese Kessan Tanshin, PDF) in jp_tanshin.py. These parse
   functions return the common Parsed (see parsed.py).
 
@@ -49,6 +49,7 @@ from valuation_monitor.press_release import parse_press_release
 from valuation_monitor.release_eps import parse_adjusted_eps_release
 from valuation_monitor.sap_ifrs import parse_sap_statement
 from valuation_monitor.tesla_update import parse_tesla_filing
+from valuation_monitor.tifrs import parse_tifrs
 from valuation_monitor.travelsky import parse_travelsky_statements
 from valuation_monitor.us_release import parse_us_release
 from valuation_monitor.providers.base import Filing
@@ -108,7 +109,7 @@ SERIES_LABELS = {
     "equity": "Equity attributable to owners",
     "wa_shares": "Weighted average shares",
 }
-PARSER_VERSIONS = {"highlights": 5, "statements": 3, "press_release": 4, "us_press_release": 9, "us_gaap_statements": 5, "ifrs_statements": 1, "sap_ifrs": 2, "kifrs_statements": 4, "cn_report": 8, "tesla_update": 1, "jp_tanshin": 1, "travelsky_statements": 1}  # add 1 when the parsing rules change; saved parse results are then re-parsed automatically
+PARSER_VERSIONS = {"highlights": 5, "statements": 3, "press_release": 4, "us_press_release": 9, "us_gaap_statements": 5, "ifrs_statements": 1, "sap_ifrs": 2, "kifrs_statements": 4, "cn_report": 8, "tesla_update": 1, "jp_tanshin": 1, "travelsky_statements": 1, "tifrs_statements": 1}  # add 1 when the parsing rules change; saved parse results are then re-parsed automatically
 SUPPLEMENT_FORMAT = "adjusted_eps_release"  # the layout of a supplementary document (XP's press release, see release_eps.py); its parse results carry their own version
 SUPPLEMENT_PARSER_VERSION = 1  # add 1 when the rules of release_eps.py change
 SUPPLEMENT_TABLE = "supplement"  # the "table" of a supplementary document's parse result in the stored announcements
@@ -365,7 +366,7 @@ def parse_statements(pages: Pages) -> tuple[str, dict[str, list[float]]]:
 
 
 FORMATS = {"highlights": parse_highlights, "statements": parse_statements, "travelsky_statements": parse_travelsky_statements}  # HKEX PDF announcements; travelsky_statements also returns series notes
-FILING_FORMATS = {*FORMATS, "press_release", "us_press_release", "us_gaap_statements", "ifrs_statements", "sap_ifrs", "kifrs_statements", "cn_report", "tesla_update", "jp_tanshin"}  # plus US HTML press releases (6-K of JD; 8-K of US companies), IFRS statements (6-K of XP and SAP), Samsung English financial statements, A-share reports and Tesla's Update decks
+FILING_FORMATS = {*FORMATS, "press_release", "us_press_release", "us_gaap_statements", "ifrs_statements", "sap_ifrs", "kifrs_statements", "cn_report", "tesla_update", "jp_tanshin", "tifrs_statements"}  # plus US HTML press releases (6-K of JD; 8-K of US companies), IFRS statements (6-K of XP and SAP), Samsung English financial statements, A-share reports and Tesla's Update decks; Advantech's Taiwan-IFRS statements
 
 
 def parse_announcement(filing: Filing, fmt: str = "highlights", market: Market = HK, non_gaap: str | None = None) -> Announcement:
@@ -387,7 +388,7 @@ def parse_announcement(filing: Filing, fmt: str = "highlights", market: Market =
             parsed.period, filing.published, filing.url, parsed.currency, parsed.quarterly, parsed.values, market.key,
             filing.provisional, "", PERIOD_END_SHARES, filing.note, correction=filing.correction,
         )
-    if fmt in ("press_release", "us_press_release", "us_gaap_statements", "ifrs_statements", "sap_ifrs", "kifrs_statements", "tesla_update"):  # the parse result carries its own reporting period and whether it is a single quarter
+    if fmt in ("press_release", "us_press_release", "us_gaap_statements", "ifrs_statements", "sap_ifrs", "kifrs_statements", "tesla_update", "tifrs_statements"):  # the parse result carries its own reporting period and whether it is a single quarter
         if fmt == "tesla_update":
             parsed = parse_tesla_filing(filing, non_gaap)
         elif fmt == "press_release":
@@ -400,6 +401,8 @@ def parse_announcement(filing: Filing, fmt: str = "highlights", market: Market =
             parsed = parse_ifrs_statements(filing.content)
         elif fmt == "sap_ifrs":
             parsed = parse_sap_statement(filing.content)
+        elif fmt == "tifrs_statements":
+            parsed = parse_tifrs(filing.title, filing.content)
         elif filing.provisional:
             parsed = parse_kifrs_deck(filing.title, filing.content, filing.attachments["previous_bs"])
         else:
@@ -504,6 +507,44 @@ def per_share_basis(a: Announcement, earlier: list[Announcement], splits: pd.Ser
     return current, prior, note
 
 
+SPLIT_SHARES_JUMP = SHARES_CHANGE_LIMIT  # a disclosed share count this far from the previous filing's, across a split, may be on the old basis
+SPLIT_SHARES_FIT = 0.02  # ... and it is when another split factor brings it this close
+
+
+def shares_before_split(
+    a: Announcement, earlier: list[tuple[pd.Timestamp, str, float]], splits: pd.Series, shares_factor: float, current: float
+) -> tuple[float, str] | None:
+    """A rule appended to per_share_basis, used only when that keeps the usual factor of a filing published while a split took effect.
+
+    per_share_basis compares the filing's EPS with its own share count; when both are still on the shares before the split, they agree
+    with each other and the split looks already reflected. Advantech's statements for the second quarter of 2020 were approved on
+    2020-07-31, the ex-rights day of its 2020 stock dividend, before the bonus shares were issued: EPS 3.29 on 700.9 million shares,
+    restated to 2.99 a year later. Then the share count, on the current basis, falls short of the previous filing's (published earlier)
+    by about the split. Returns the split factor that brings it back (within SPLIT_SHARES_FIT) and a note, or None.
+    """
+    usual = split_factor(a.published, splits)
+    shares = (a.values.get("wa_shares") or [None])[0]
+    if splits.empty or not shares or a.supplement or a.shares_label == PERIOD_END_SHARES or current != usual or shares_factor != usual:
+        return None
+    span_start = a.period.start_time - pd.DateOffset(months=9)
+    during = splits[(splits.index > span_start) & (splits.index <= a.published.normalize())]
+    previous = [(published, s) for published, label, s in earlier if published < a.published and label == a.shares_label]
+    if during.empty or not previous:
+        return None
+    before = max(previous)[1]  # the latest filing published before this one
+    if abs(shares * usual / before - 1) <= SPLIT_SHARES_JUMP:
+        return None
+    candidates = {split_factor(t, splits) for t in [span_start, *during.index, a.published]} - {usual}
+    fits = [c for c in candidates if abs(shares * c / before - 1) <= SPLIT_SHARES_FIT]
+    if not fits:
+        return None
+    factor = min(fits, key=lambda c: abs(shares * c / before - 1))
+    return factor, (
+        f"the filing's EPS and weighted average shares ({shares:,.1f} million) are on the shares before the split (on the current basis they would be "
+        f"{shares * usual:,.1f} million against {before:,.1f} million in the previous filing), so they are adjusted by a further {num(factor / usual)}"
+    )
+
+
 def adjust_for_splits(announcements: list[Announcement], splits: pd.Series) -> list[Announcement]:
     """Convert per-share data and share counts to the current share basis (consistent with split-adjusted prices); amounts are not affected by splits.
 
@@ -511,9 +552,18 @@ def adjust_for_splits(announcements: list[Announcement], splits: pd.Series) -> l
     period-end total shares of A-share companies are on the basis of the period end. Per-share figures: see per_share_basis.
     """
     out = []
+    adjusted_shares: list[tuple[pd.Timestamp, str, float]] = []  # (publication, share count label, first share count on the current basis) of the filings so far
     for a in announcements:
         shares_factor = split_factor(a.period.end_time if a.shares_label == PERIOD_END_SHARES else a.published, splits)
         current, prior, note = per_share_basis(a, announcements, splits, shares_factor)
+        if fix := shares_before_split(a, adjusted_shares, splits, shares_factor, current):
+            factor, fix_note = fix
+            # the existing rule found nothing on the current figure, so its note can only be about the prior-year EPS: dropped when that is now on the same basis
+            prior, note = (factor, "") if prior in (current, factor) else (prior, note)
+            current = shares_factor = factor
+            note = "Split basis: " + "; ".join(x for x in (fix_note, note.removeprefix("Split basis: ")) if x)
+        if (a.values.get("wa_shares") or [None])[0] and not a.supplement:
+            adjusted_shares.append((a.published, a.shares_label, a.values["wa_shares"][0] * shares_factor))
         factors = [current, prior, current]  # this period, same period last year, previous period
         values = {
             k: [v / f for v, f in zip(vs, factors)] if k in PER_SHARE else [v * shares_factor for v in vs] if k in SHARE_COUNTS else vs

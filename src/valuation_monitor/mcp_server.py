@@ -174,7 +174,7 @@ class ValuationService:
 
     def _release_info(self, stock: StockConfig) -> dict[str, Release]:
         loader = self.monitor.loader
-        provider = {"CN": loader.cninfo, "KR": loader.samsung, "JP": loader.xj_storage}.get(stock.market)
+        provider = {"CN": loader.cninfo, "KR": loader.samsung, "JP": loader.xj_storage, "TW": loader.advantech}.get(stock.market)
         return provider.release_info(stock.symbol) if provider is not None else {}
 
     @staticmethod

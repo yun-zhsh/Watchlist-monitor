@@ -241,3 +241,8 @@ stocks:
     filing_format: jp_tanshin   # JPY, Japanese GAAP, basic EPS; splits 5-for-1 (February 2015) and 15-for-1 (January 2025)
     metrics: [pe, ps, pb]
     fiscal_year_end: 8   # the fiscal year ends on August 31: the quarter to November 2025 is shown as FY2026Q1
+  - symbol: 2395.TW
+    name: Advantech
+    market: TW   # Taiwan Stock Exchange; English consolidated financial statements on the company IR website (MOPS refuses cloud networks)
+    filing_format: tifrs_statements   # TWD, Taiwan-IFRS; basic and diluted EPS disclosed, no non-IFRS EPS; 10% stock dividends in 2014, 2017, 2020 and 2023
+    metrics: [pe, ps, pb]

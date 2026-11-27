@@ -6,6 +6,7 @@ KR: closes at 15:30 (Seoul time), no half days.
 CN (A-shares): closes at 15:00 (Beijing time), no half days.
 JP (Tokyo Stock Exchange): closes at 15:00 (Tokyo time) up to 2024-11-04 and at 15:30 from 2024-11-05, when the TSE extended
 its afternoon session; no half days.
+TW (Taiwan Stock Exchange): closes at 13:30 (Taipei time), no half days.
 US (NYSE/Nasdaq): regular close 16:00 (New York time); the day after Thanksgiving, 3 July (Mon-Thu) and
 Christmas Eve (Mon-Thu) close early at 13:00.
 
@@ -98,7 +99,9 @@ KR = Market("KR", "Asia/Seoul", time(15, 30), time(15, 30), lambda day: False)
 CN = Market("CN", "Asia/Shanghai", time(15, 0), time(15, 0), lambda day: False)
 # Tokyo Stock Exchange: closed at 15:00 until the afternoon session was extended to 15:30 on 2024-11-05; no half days
 JP = Market("JP", "Asia/Tokyo", time(15, 0), time(15, 0), lambda day: False, close_changes=(("2024-11-05", time(15, 30)),))
-MARKETS = {m.key: m for m in (HK, US, KR, CN, JP)}
+# Taiwan Stock Exchange: closes at 13:30, no half days (closure days are decided by the price data)
+TW = Market("TW", "Asia/Taipei", time(13, 30), time(13, 30), lambda day: False)
+MARKETS = {m.key: m for m in (HK, US, KR, CN, JP, TW)}
 
 
 def get_market(key: str) -> Market:

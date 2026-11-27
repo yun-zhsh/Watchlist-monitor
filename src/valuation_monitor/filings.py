@@ -13,6 +13,7 @@ equity attributable to owners (millions), shares disclosed in the filing (millio
     - Consolidated income statement: revenue, net profit attributable to owners, basic EPS (unit "RMB cents"), each with two numbers:
       this period to date, same period last year to date; amounts are in thousands and converted to millions when read.
     - Balance sheet: same as above. EPS note: weighted average shares.
+  travelsky_statements (TravelSky, PDF; IFRS until the 2020 interim results, CASBE from the 2020 annual results) is in travelsky.py.
   press_release (JD, Alibaba; HTML) is in press_release.py; us_press_release and us_gaap_statements (Meta, Cognizant, Dynatrace, Sea, ASML) in us_release.py;
   ifrs_statements (XP, HTML) in ifrs.py; sap_ifrs (SAP, HTML) in sap_ifrs.py; kifrs_statements (Samsung, PDF) in kifrs.py;
   cn_report (Hikvision, Glodon, PDF) in cn_report.py; tifrs_statements (Advantech, PDF) in tifrs.py; tesla_update (Tesla's Update decks, and the Form 10-Q or 10-K of a quarter whose deck has
@@ -49,11 +50,13 @@ from valuation_monitor.release_eps import parse_adjusted_eps_release
 from valuation_monitor.sap_ifrs import parse_sap_statement
 from valuation_monitor.tesla_update import parse_tesla_filing
 from valuation_monitor.tifrs import parse_tifrs
+from valuation_monitor.travelsky import parse_travelsky_statements
 from valuation_monitor.us_release import parse_us_release
 from valuation_monitor.providers.base import Filing
 
 MONTH_TO_QUARTER = {"MARCH": 1, "JUNE": 2, "SEPTEMBER": 3, "DECEMBER": 4}
 PERIOD_RE = re.compile(r"ENDED (\d{1,2}) (MARCH|JUNE|SEPTEMBER|DECEMBER) (\d{4})", re.I)
+PERIOD_MONTH_FIRST_RE = re.compile(r"ENDED (MARCH|JUNE|SEPTEMBER|DECEMBER) (\d{1,2}), (\d{4})", re.I)  # TravelSky: "ENDED JUNE 30, 2026"; only read when PERIOD_RE finds nothing
 EPS_RE = re.compile(
     r"(?P<non_ifrs>Non-IFRS |Non-GAAP )?EPS[\s()\d]*\((?P<ccy>[A-Z]{3}) per share\)[\s*]*\S?[–-] ?basic (?P<body>.*?)\S?[–-] ?diluted"
 )
@@ -106,7 +109,7 @@ SERIES_LABELS = {
     "equity": "Equity attributable to owners",
     "wa_shares": "Weighted average shares",
 }
-PARSER_VERSIONS = {"highlights": 5, "statements": 3, "press_release": 4, "us_press_release": 9, "us_gaap_statements": 5, "ifrs_statements": 1, "sap_ifrs": 2, "kifrs_statements": 4, "cn_report": 8, "tesla_update": 1, "jp_tanshin": 1, "tifrs_statements": 1}  # add 1 when the parsing rules change; saved parse results are then re-parsed automatically
+PARSER_VERSIONS = {"highlights": 5, "statements": 3, "press_release": 4, "us_press_release": 9, "us_gaap_statements": 5, "ifrs_statements": 1, "sap_ifrs": 2, "kifrs_statements": 4, "cn_report": 8, "tesla_update": 1, "jp_tanshin": 1, "travelsky_statements": 1, "tifrs_statements": 1}  # add 1 when the parsing rules change; saved parse results are then re-parsed automatically
 SUPPLEMENT_FORMAT = "adjusted_eps_release"  # the layout of a supplementary document (XP's press release, see release_eps.py); its parse results carry their own version
 SUPPLEMENT_PARSER_VERSION = 1  # add 1 when the rules of release_eps.py change
 SUPPLEMENT_TABLE = "supplement"  # the "table" of a supplementary document's parse result in the stored announcements
@@ -193,10 +196,11 @@ class QuarterValue:
 
 
 def parse_period(title: str) -> pd.Period:
-    m = PERIOD_RE.search(title)
-    if not m:
-        raise ValueError(f"Cannot tell the reporting period from the title: {title}")
-    return pd.Period(year=int(m.group(3)), quarter=MONTH_TO_QUARTER[m.group(2).upper()], freq="Q")
+    if m := PERIOD_RE.search(title):
+        return pd.Period(year=int(m.group(3)), quarter=MONTH_TO_QUARTER[m.group(2).upper()], freq="Q")
+    if m := PERIOD_MONTH_FIRST_RE.search(title):
+        return pd.Period(year=int(m.group(3)), quarter=MONTH_TO_QUARTER[m.group(1).upper()], freq="Q")
+    raise ValueError(f"Cannot tell the reporting period from the title: {title}")
 
 
 def period_label(p: pd.Period, periods_per_year: int, fiscal_year_end: int = 12) -> str:
@@ -361,7 +365,7 @@ def parse_statements(pages: Pages) -> tuple[str, dict[str, list[float]]]:
     return currency, values
 
 
-FORMATS = {"highlights": parse_highlights, "statements": parse_statements}  # HKEX PDF announcements
+FORMATS = {"highlights": parse_highlights, "statements": parse_statements, "travelsky_statements": parse_travelsky_statements}  # HKEX PDF announcements; travelsky_statements also returns series notes
 FILING_FORMATS = {*FORMATS, "press_release", "us_press_release", "us_gaap_statements", "ifrs_statements", "sap_ifrs", "kifrs_statements", "cn_report", "tesla_update", "jp_tanshin", "tifrs_statements"}  # plus US HTML press releases (6-K of JD; 8-K of US companies), IFRS statements (6-K of XP and SAP), Samsung English financial statements, A-share reports and Tesla's Update decks; Advantech's Taiwan-IFRS statements
 
 
@@ -409,7 +413,7 @@ def parse_announcement(filing: Filing, fmt: str = "highlights", market: Market =
             filing.provisional, basis, series_notes=dict(parsed.notes or {}),
         )
     period = parse_period(filing.title)
-    currency, values = FORMATS[fmt](Pages(filing.content))
+    currency, values, *notes = FORMATS[fmt](Pages(filing.content))  # (currency, values) or, for travelsky_statements, (currency, values, series notes)
     shares = values.pop("wa_shares", None)
     counts = {len(values[k]) for k in FLOWS if k in values}
     if counts == {3}:
@@ -424,7 +428,7 @@ def parse_announcement(filing: Filing, fmt: str = "highlights", market: Market =
         # only two numbers means Q1 (three months) or the full year (the Q4 filing does not list Q4 shares separately)
         basis = "full year" if period.quarter == 4 and (len(shares) == 2 or fmt == "statements") else ""
         values["wa_shares"] = shares[:2]
-    return Announcement(period, filing.published, filing.url, currency, quarterly, values, market.key, False, basis)
+    return Announcement(period, filing.published, filing.url, currency, quarterly, values, market.key, False, basis, series_notes=dict(notes[0]) if notes else {})
 
 
 PERIOD_END_SHARES = "period-end total shares"

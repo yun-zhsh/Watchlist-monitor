@@ -22,7 +22,8 @@ BASE_URL = "https://www1.hkexnews.hk"
 # Titles of earnings announcements differ by company, e.g. "ANNOUNCEMENT OF THE RESULTS FOR THE THREE MONTHS ENDED 31 MARCH 2026",
 # "INTERIM RESULTS ANNOUNCEMENT FOR THE SIX MONTHS ENDED 30 JUNE 2026"; what they share is RESULTS followed by "ENDED <date>".
 # Poll results of shareholder meetings (POLL RESULTS OF ...) have no "ENDED <date>" and are excluded as well.
-RESULTS_TITLE_RE = re.compile(r"\bRESULTS\b.*\bENDED \d{1,2} [A-Z]+ \d{4}", re.I)
+# TravelSky writes the date month first, "ANNOUNCEMENT OF RESULTS FOR THE SIX MONTHS ENDED JUNE 30, 2026"; that spelling is the second alternative.
+RESULTS_TITLE_RE = re.compile(r"\bRESULTS\b.*\bENDED (?:\d{1,2} [A-Z]+ \d{4}|[A-Z]+ \d{1,2}, \d{4})", re.I)
 
 
 def stock_code(symbol: str) -> str:

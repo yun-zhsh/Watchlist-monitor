@@ -49,7 +49,7 @@ CALL_TIMES_COLUMNS = ["fiscal_year", "quarter", "date", "time", "time_zone", "so
 SEOUL = ZoneInfo("Asia/Seoul")
 DATE_ONLY_TIME = "15:30"  # the close of the Korea Exchange: published at the close counts from the next trading day
 STATEMENTS_LAG_DAYS = 120  # the English reports have been seen 3 to 8 weeks after the call; after this many days they are taken to be public
-SCANNED_TEXT_LIMIT = 2000  # characters of text in the whole report: below this it is a scanned image without a text layer
+SCANNED_TEXT_LIMIT = 2000  # characters of text in the whole report: below this, and with no statement found, it is a scanned image without a text layer
 CALL_RE = re.compile(r"(?P<date>[A-Z][a-z]{2,8} \d{1,2}, 20\d\d)(?: ?/ ?(?P<hour>\d{1,2}):(?P<minute>\d\d) ?(?P<ampm>AM|PM) KST)?")
 TITLE_RE = re.compile(r"FY(?P<year>20\d\d) Q(?P<q>[1-4]) Earnings? Results")
 NOTES = {
@@ -254,10 +254,10 @@ class SkHynixIrProvider:
         if report is not None:
             pdf = self.http.get_bytes(report, cache=False)
             texts = page_texts(pdf)
-            if sum(len(t) for t in texts) < SCANNED_TEXT_LIMIT:
+            pages = statement_pages(texts)
+            if sum(len(t) for t in texts) < SCANNED_TEXT_LIMIT and not pages:
                 scanned = True
             else:
-                pages = statement_pages(texts)
                 parse_report_texts(title, [texts[i] for i in pages])  # raises on a layout the parser cannot read: nothing is saved
                 name = f"{year}Q{quarter}_report.pdf"
                 folder.mkdir(parents=True, exist_ok=True)

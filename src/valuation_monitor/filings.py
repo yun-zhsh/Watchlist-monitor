@@ -145,7 +145,7 @@ PROVISIONAL_NOTES = {
     "*": "is preliminary and is replaced automatically when the official report is out",
 }
 PROVISIONAL_FORMAT_NOTES = {  # a layout whose preliminary data differs from that of the other stocks of its market; used instead of PROVISIONAL_NOTES
-    "skhynix_statements": "comes from the earnings presentation (before the auditors' review; revenue and net profit in KRW billions, net profit including non-controlling interests, no equity); it is replaced automatically when the English report is on the IR website",
+    "skhynix_statements": "comes from the earnings presentation (before the auditors' review; revenue, net profit and equity in KRW billions, net profit and equity including non-controlling interests); it is replaced automatically when the English report is on the IR website",
 }
 
 

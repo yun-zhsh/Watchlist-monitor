@@ -15,7 +15,8 @@ Layout skhynix_statements. Two kinds of document, both from the company IR websi
           It is used for the latest quarter until its report is on the website (provisional, replaced afterwards), and for the quarters whose
           report on the website is a scanned image without a text layer. Its figures are in billions of KRW (rounded); net profit and shareholders'
           equity include non-controlling interests (small: about 0.1% of equity), which is noted with every figure taken from it (DECK_NOTES).
-          The fourth quarter's presentation gives the quarter, not the full year: its quarterly figures are used as they are.
+          Only the quarter's own figures are read (not the comparison columns). The fourth quarter's presentation gives the quarter, not the full year:
+          its quarterly figures are used as they are.
 SK Hynix has ordinary shares only (no preferred shares).
 """
 
@@ -233,8 +234,12 @@ def parse_deck(title: str, pdf: bytes) -> Parsed:
 
 
 def parse_deck_texts(title: str, texts: list[str]) -> Parsed:
-    """The quarter's results in the earnings presentation (see the module docstring): revenue, net profit, basic EPS and shares for this quarter, the
-    same quarter last year and the previous quarter; shareholders' equity at the end of the quarter when the presentation gives it (not since 2020)."""
+    """The quarter's results in the earnings presentation (see the module docstring): revenue, net profit, basic EPS and shares of this quarter, and
+    shareholders' equity at its end when the presentation gives it.
+
+    Only this quarter's figures are taken. The columns of the previous quarter and of the same quarter last year are checked to be there (they tell the
+    layout is the expected one) but not read: those quarters have reports with exact figures, and the rounded figures of the presentation (net profit
+    including non-controlling interests; quarterly share counts where the full-year report gives the full year's) would only differ from them."""
     year, quarter = period_of(title)
     income = next((t for t in texts if is_deck_income(t)), None)
     if income is None:
@@ -245,16 +250,14 @@ def parse_deck_texts(title: str, texts: list[str]) -> Parsed:
     columns = list(COLUMN_RE.finditer(header.group(0)))
     positions = {quarter_name(c.group("quarter")) for c in columns if c.group("quarter")}
     this = pd.Period(year=year, quarter=quarter, freq="Q")
-    wanted = [this, this - 4, this - 1]  # this quarter, same quarter last year, previous quarter
-    missing = [p for p in wanted if (p.year, p.quarter) not in positions]
+    missing = [p for p in (this, this - 4, this - 1) if (p.year, p.quarter) not in positions]
     if missing or columns[0].group("quarter") is None or quarter_name(columns[0].group("quarter")) != (year, quarter):
         raise ValueError(f"The earnings presentation is not for {year} Q{quarter} or lacks the columns {[str(p) for p in missing]} (the layout may have changed)")
     body = income[header.end():]
     order = [quarter_name(c.group("quarter")) for c in columns if c.group("quarter")]  # the quarters of the value columns, in their order
     values = {}
     for series, label in DECK_ROWS.items():
-        row_values = dict(zip(order, deck_row(body, label, series, len(order))))
-        values[series] = [row_values[(p.year, p.quarter)] for p in wanted]
+        values[series] = [dict(zip(order, deck_row(body, label, series, len(order))))[(year, quarter)]]
     for series in ("revenue", "profit"):
         values[series] = [v * BILLION for v in values[series]]
     notes = {k: v for k, v in DECK_NOTES.items() if k != "equity"}

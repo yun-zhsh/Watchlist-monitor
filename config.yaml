@@ -246,3 +246,8 @@ stocks:
     market: CN   # Shanghai; Chinese periodic reports and express reports on CNINFO. A commercial bank
     filing_format: cn_report   # RMB; revenue is the operating income (net interest income included); PB uses the equity of the ordinary shareholders (without preference shares and perpetual bonds)
     metrics: [pe, ps, pb]
+  - symbol: 000660.KS
+    name: SK Hynix
+    market: KR   # KOSPI; English consolidated financial statements and earnings presentations on the SK Hynix IR website, every quarter
+    filing_format: skhynix_statements   # KRW, K-IFRS; basic EPS of ordinary shares (no preferred shares), no non-GAAP EPS
+    metrics: [pe, ps, pb]

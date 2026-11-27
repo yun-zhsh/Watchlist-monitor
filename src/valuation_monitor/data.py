@@ -14,6 +14,7 @@ from valuation_monitor.providers.advantech import AdvantechIrProvider
 from valuation_monitor.providers.cninfo import CninfoProvider
 from valuation_monitor.providers.hkex import HkexProvider
 from valuation_monitor.providers.samsung import SamsungIrProvider
+from valuation_monitor.providers.skhynix import SkHynixIrProvider
 from valuation_monitor.providers.sec import SecProvider
 from valuation_monitor.providers.xj_storage import XjStorageProvider
 from valuation_monitor.store import EarningsStore, PriceStore
@@ -32,7 +33,7 @@ class StockData:
 class DataLoader:
     def __init__(
         self, config: Config, prices: PriceStore, hkex: HkexProvider, sec: SecProvider, samsung: SamsungIrProvider, cninfo: CninfoProvider, earnings: EarningsStore,
-        xj_storage: XjStorageProvider | None = None, advantech: AdvantechIrProvider | None = None,
+        xj_storage: XjStorageProvider | None = None, advantech: AdvantechIrProvider | None = None, skhynix: SkHynixIrProvider | None = None,
     ):
         self.config = config
         self.prices = prices
@@ -43,6 +44,7 @@ class DataLoader:
         self.earnings = earnings
         self.xj_storage = xj_storage
         self.advantech = advantech
+        self.skhynix = skhynix
 
     def load(self, stock: StockConfig) -> StockData:
         # fetch one extra year of prices and two extra years of filings so the start of the lookback window already has 4 quarters for the TTM
@@ -56,6 +58,8 @@ class DataLoader:
                 filings += self.sec.results_announcements(stock.symbol, stock.cik, since, stock.sec_form, supplement=True)
             if stock.sec_exhibit == "tesla_update":  # the Form 10-Q or 10-K of the quarters whose Update has its statements as page images only
                 filings += self.sec.results_announcements(stock.symbol, stock.cik, since, "10-Q/10-K", "periodic_report")
+        elif stock.filing_format == "skhynix_statements":  # a KR stock whose filings come from its own IR website, not Samsung's
+            filings = self.skhynix.results_announcements(stock.symbol, since)
         elif stock.market == "KR":
             filings = self.samsung.results_announcements(stock.symbol, since)
         elif stock.market == "CN":

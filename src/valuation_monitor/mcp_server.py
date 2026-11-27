@@ -175,6 +175,7 @@ class ValuationService:
     def _release_info(self, stock: StockConfig) -> dict[str, Release]:
         loader = self.monitor.loader
         provider = {"CN": loader.cninfo, "KR": loader.samsung, "JP": loader.xj_storage, "TW": loader.advantech}.get(stock.market)
+        provider = {"skhynix_statements": loader.skhynix}.get(stock.filing_format, provider)  # a layout with its own provider in a market
         return provider.release_info(stock.symbol) if provider is not None else {}
 
     @staticmethod

@@ -40,6 +40,7 @@ where = ["src"]
 [tool.setuptools.package-data]
 "valuation_monitor" = ["cmaps/*"]  # Adobe CID-to-Unicode tables (see cmaps/NOTICE)
 "valuation_monitor.web" = ["templates/*.html", "static/*"]
+"valuation_monitor.providers" = ["skhynix_call_times.csv"]  # earnings call times of SK Hynix supplied by the maintainer (providers/skhynix.py)
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

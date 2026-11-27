@@ -25,6 +25,9 @@ FILING_SOURCES = {
     "JP": "the company's IR library on Xj-Storage (Japanese Kessan Tanshin as filed on TDnet)",
     "TW": "Advantech IR website (English financial statements)",
 }
+FORMAT_SOURCES = {  # a layout whose filings come from elsewhere than FILING_SOURCES of its market
+    "skhynix_statements": "SK Hynix IR website (English financial statements and earnings presentations)",
+}
 
 
 EPS_BASES = ("basic", "diluted")  # the EPS a PE metric is based on: basic whenever the company discloses it, diluted only when it does not
@@ -57,7 +60,7 @@ class StockConfig:
 
     @property
     def filing_source(self) -> str:
-        return FILING_SOURCES[self.market]
+        return FORMAT_SOURCES.get(self.filing_format, FILING_SOURCES[self.market])
 
     @property
     def cross_checks_prices(self) -> bool:
@@ -140,7 +143,7 @@ def parse_config(raw: dict) -> Config:
         filing_format = str(s.get("filing_format", default_format))
         if filing_format not in FILING_FORMATS:
             raise ValueError(f"{symbol}: unknown filing format {filing_format}; available formats: {sorted(FILING_FORMATS)}")
-        foreign_formats = {"press_release": "US", "us_press_release": "US", "us_gaap_statements": "US", "ifrs_statements": "US", "sap_ifrs": "US", "kifrs_statements": "KR", "cn_report": "CN", "tesla_update": "US", "jp_tanshin": "JP", "tifrs_statements": "TW"}  # non-HK formats only apply to their own market
+        foreign_formats = {"press_release": "US", "us_press_release": "US", "us_gaap_statements": "US", "ifrs_statements": "US", "sap_ifrs": "US", "kifrs_statements": "KR", "cn_report": "CN", "tesla_update": "US", "jp_tanshin": "JP", "tifrs_statements": "TW", "skhynix_statements": "KR"}  # non-HK formats only apply to their own market
         if foreign_formats.get(filing_format, "HK" if market == "HK" else None) != market:
             raise ValueError(f"{symbol}: filing format {filing_format} does not match market {market}")
         cik = int(s["cik"]) if s.get("cik") is not None else None

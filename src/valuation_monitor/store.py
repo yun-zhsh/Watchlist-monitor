@@ -30,6 +30,7 @@ from valuation_monitor.filings import (
     parse_announcement,
 )
 from valuation_monitor.market_calendar import HK, Market
+from valuation_monitor.parsed import NoStatements
 from valuation_monitor.prices import consolidate
 from valuation_monitor.providers.base import Filing
 from valuation_monitor.providers.tencent import TencentQuoteProvider
@@ -282,6 +283,8 @@ class EarningsStore:
         for f in filings:
             try:
                 parsed.append(saved.get(f.url) or as_saved(parse_announcement(f, fmt, market, non_gaap), version, market))
+            except NoStatements as e:  # a results filing without its statements (Baidu, fourth quarter of 2020): its quarter comes from a later filing
+                print(f"{symbol}: no financial statements in {f.url} ({e}); the figures of its period come from a later filing", file=sys.stderr)
             except Exception as e:
                 if not f.provisional:
                     raise

@@ -493,6 +493,44 @@ def per_share_basis(a: Announcement, earlier: list[Announcement], splits: pd.Ser
     return current, prior, note
 
 
+SPLIT_SHARES_JUMP = SHARES_CHANGE_LIMIT  # a disclosed share count this far from the previous filing's, across a split, may be on the old basis
+SPLIT_SHARES_FIT = 0.02  # ... and it is when another split factor brings it this close
+
+
+def shares_before_split(
+    a: Announcement, earlier: list[tuple[pd.Timestamp, str, float]], splits: pd.Series, shares_factor: float, current: float
+) -> tuple[float, str] | None:
+    """A rule appended to per_share_basis, used only when that keeps the usual factor of a filing published while a split took effect.
+
+    per_share_basis compares the filing's EPS with its own share count; when both are still on the shares before the split, they agree
+    with each other and the split looks already reflected. Advantech's statements for the second quarter of 2020 were approved on
+    2020-07-31, the ex-rights day of its 2020 stock dividend, before the bonus shares were issued: EPS 3.29 on 700.9 million shares,
+    restated to 2.99 a year later. Then the share count, on the current basis, falls short of the previous filing's (published earlier)
+    by about the split. Returns the split factor that brings it back (within SPLIT_SHARES_FIT) and a note, or None.
+    """
+    usual = split_factor(a.published, splits)
+    shares = (a.values.get("wa_shares") or [None])[0]
+    if splits.empty or not shares or a.supplement or a.shares_label == PERIOD_END_SHARES or current != usual or shares_factor != usual:
+        return None
+    span_start = a.period.start_time - pd.DateOffset(months=9)
+    during = splits[(splits.index > span_start) & (splits.index <= a.published.normalize())]
+    previous = [(published, s) for published, label, s in earlier if published < a.published and label == a.shares_label]
+    if during.empty or not previous:
+        return None
+    before = max(previous)[1]  # the latest filing published before this one
+    if abs(shares * usual / before - 1) <= SPLIT_SHARES_JUMP:
+        return None
+    candidates = {split_factor(t, splits) for t in [span_start, *during.index, a.published]} - {usual}
+    fits = [c for c in candidates if abs(shares * c / before - 1) <= SPLIT_SHARES_FIT]
+    if not fits:
+        return None
+    factor = min(fits, key=lambda c: abs(shares * c / before - 1))
+    return factor, (
+        f"the filing's EPS and weighted average shares ({shares:,.1f} million) are on the shares before the split (on the current basis they would be "
+        f"{shares * usual:,.1f} million against {before:,.1f} million in the previous filing), so they are adjusted by a further {num(factor / usual)}"
+    )
+
+
 def adjust_for_splits(announcements: list[Announcement], splits: pd.Series) -> list[Announcement]:
     """Convert per-share data and share counts to the current share basis (consistent with split-adjusted prices); amounts are not affected by splits.
 
@@ -500,9 +538,18 @@ def adjust_for_splits(announcements: list[Announcement], splits: pd.Series) -> l
     period-end total shares of A-share companies are on the basis of the period end. Per-share figures: see per_share_basis.
     """
     out = []
+    adjusted_shares: list[tuple[pd.Timestamp, str, float]] = []  # (publication, share count label, first share count on the current basis) of the filings so far
     for a in announcements:
         shares_factor = split_factor(a.period.end_time if a.shares_label == PERIOD_END_SHARES else a.published, splits)
         current, prior, note = per_share_basis(a, announcements, splits, shares_factor)
+        if fix := shares_before_split(a, adjusted_shares, splits, shares_factor, current):
+            factor, fix_note = fix
+            # the existing rule found nothing on the current figure, so its note can only be about the prior-year EPS: dropped when that is now on the same basis
+            prior, note = (factor, "") if prior in (current, factor) else (prior, note)
+            current = shares_factor = factor
+            note = "Split basis: " + "; ".join(x for x in (fix_note, note.removeprefix("Split basis: ")) if x)
+        if (a.values.get("wa_shares") or [None])[0] and not a.supplement:
+            adjusted_shares.append((a.published, a.shares_label, a.values["wa_shares"][0] * shares_factor))
         factors = [current, prior, current]  # this period, same period last year, previous period
         values = {
             k: [v / f for v, f in zip(vs, factors)] if k in PER_SHARE else [v * shares_factor for v in vs] if k in SHARE_COUNTS else vs

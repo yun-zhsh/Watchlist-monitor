@@ -354,3 +354,49 @@ def test_prior_year_columns_repeat_the_figures_a_year_earlier():
         assert abs(now.values["eps"][1] * factor - before.values["eps"][0]) <= 0.011, (year, quarter, now.values["eps"], before.values["eps"])
         checked += 1
     assert checked >= 20
+
+
+# --- the split rule for a filing approved on the ex-rights day (filings.shares_before_split) ---
+
+SPLITS = pd.Series({pd.Timestamp(day): ratio for day, ratio in BONUS.items()})
+
+
+def announcement(period: str, published: str, eps: list[float], profit: list[float], shares: list[float]):
+    from valuation_monitor.filings import Announcement
+
+    return Announcement(pd.Period(period), pd.Timestamp(published), f"https://example/{period}.pdf", "TWD", True,
+                        {"eps": eps, "profit": profit, "revenue": [1.0, 1.0], "wa_shares": shares}, "TW")
+
+
+def test_a_filing_approved_on_the_ex_rights_day_is_on_the_old_share_basis():
+    from valuation_monitor.filings import adjust_for_splits
+
+    q2_2019 = announcement("2019Q2", "2019-08-02 13:30", [2.71, 2.27], [1894.118, 1584.195], [699.076, 697.49])
+    q1 = announcement("2020Q1", "2020-04-29 13:30", [1.85, 2.31], [1294.665, 1613.136], [700.573, 698.744])
+    q2 = announcement("2020Q2", "2020-07-31 13:30", [3.29, 2.71], [2307.6, 1892.289], [700.87, 699.076])  # the 2020 split is dated 2020-07-31
+    q3 = announcement("2020Q3", "2020-10-30 13:30", [2.52, 2.78], [1941.395, 2136.117], [771.537, 769.212])  # restated for the bonus shares
+    out = {a.period: a for a in adjust_for_splits([q2_2019, q1, q2, q3], SPLITS)}
+    after_2020 = 1.0998772  # only the 2023 split is after the 2020Q2 report
+    both = 1.099863 * after_2020
+    assert out[pd.Period("2020Q2")].values["eps"][0] == pytest.approx(3.29 / both)  # 2.7197, as the 2021Q2 report restates it (2.99 / 1.0999)
+    assert out[pd.Period("2020Q2")].values["wa_shares"][0] == pytest.approx(700.87 * both)  # 847.9 million, not 770.9
+    assert out[pd.Period("2020Q2")].values["eps"][1] == pytest.approx(2.71 / both)  # the prior-year EPS is on the same old basis
+    assert out[pd.Period("2020Q2")].per_share_factors == (pytest.approx(both), pytest.approx(both))
+    note = out[pd.Period("2020Q2")].note
+    assert note.startswith("Split basis: the filing's EPS and weighted average shares (700.9 million) are on the shares before the split")
+    assert "847.5 million in the previous filing" in note and "repeats the earlier filing" not in note
+    # the usual factor already fits the restated report of the next quarter: the rule does not fire
+    assert out[pd.Period("2020Q3")].values["wa_shares"][0] == pytest.approx(771.537 * after_2020)
+    assert out[pd.Period("2020Q3")].values["eps"][0] == pytest.approx(2.52 / after_2020) and "Split basis" not in out[pd.Period("2020Q3")].note
+    # and nothing changes without a split in the window
+    assert out[pd.Period("2020Q1")].values["wa_shares"][0] == pytest.approx(700.573 * both) and out[pd.Period("2020Q1")].note == ""
+
+
+def test_the_split_rule_needs_a_share_count_that_fits_another_split_factor():
+    from valuation_monitor.filings import adjust_for_splits
+
+    q1 = announcement("2020Q1", "2020-04-29 13:30", [1.85, 2.31], [1294.665, 1613.136], [700.573, 698.744])
+    # the share count jumps (a large issue of new shares, say) but no split factor explains it: left as it is
+    odd = announcement("2020Q2", "2020-07-31 13:30", [3.205, 2.71], [2307.6, 1892.289], [720.0, 699.076])  # 6.6% below on the usual basis, 2.8% above with the other factor
+    out = adjust_for_splits([q1, odd], SPLITS)
+    assert out[1].values["wa_shares"][0] == pytest.approx(720.0 * 1.0998772) and "before the split" not in out[1].note

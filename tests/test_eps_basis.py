@@ -41,7 +41,7 @@ def test_bad_eps_basis_is_refused(metrics, basis, message):
         stock(metrics=metrics, eps_basis=basis)
 
 
-def test_the_real_config_names_alibabas_and_amphenols_non_gaap_pe_diluted_and_every_other_pe_basic():
+def test_the_real_config_names_alibabas_and_amphenols_non_gaap_pe_diluted_and_every_other_pe_basic():  # and TSMC's PE
     from pathlib import Path
 
     from valuation_monitor.config import load_config
@@ -56,7 +56,8 @@ def test_the_real_config_names_alibabas_and_amphenols_non_gaap_pe_diluted_and_ev
     assert labels[("CTSH", "pe_non_gaap")] == "Diluted PE Non-GAAP (TTM)" and labels[("XP", "pe_non_gaap")] == "Basic PE Non-GAAP (TTM)"
     assert labels[("NVDA", "pe_non_gaap")] == "Diluted PE Non-GAAP (TTM)" and labels[("NVDA", "pe")] == "Basic PE (TTM)"
     assert labels[("TSLA", "pe_non_gaap")] == "Diluted PE Non-GAAP (TTM)" and labels[("TSLA", "pe")] == "Basic PE (TTM)"
-    diluted = {("BABA", "pe_non_gaap"), ("APH", "pe_non_gaap"), ("CTSH", "pe_non_gaap"), ("NVDA", "pe_non_gaap"), ("TSLA", "pe_non_gaap")}
+    assert labels[("TSM", "pe")] == "Diluted PE (TTM)"  # TSMC's release gives diluted EPS only
+    diluted = {("BABA", "pe_non_gaap"), ("APH", "pe_non_gaap"), ("CTSH", "pe_non_gaap"), ("NVDA", "pe_non_gaap"), ("TSLA", "pe_non_gaap"), ("TSM", "pe")}
     assert all(label.startswith("Basic ") for key, label in labels.items() if key not in diluted)
 
 

@@ -50,7 +50,9 @@ from valuation_monitor.release_eps import parse_adjusted_eps_release
 from valuation_monitor.sap_ifrs import parse_sap_statement
 from valuation_monitor.tesla_update import parse_tesla_filing
 from valuation_monitor.tifrs import parse_tifrs
-from valuation_monitor.tsmc_release import CURRENCY as TSMC_CURRENCY, EQUITY_NOTE as TSMC_EQUITY_NOTE, parse_release as parse_tsmc_release, parse_slides as parse_tsmc_slides
+from valuation_monitor.tsmc_release import CURRENCY as TSMC_CURRENCY, EQUITY_NOTE as TSMC_EQUITY_NOTE, STATEMENTS_EQUITY_NOTE as TSMC_STATEMENTS_EQUITY_NOTE
+from valuation_monitor.tsmc_release import STATEMENTS_NOTE as TSMC_STATEMENTS_NOTE, parse_release as parse_tsmc_release, parse_slides as parse_tsmc_slides
+from valuation_monitor.tsmc_release import parse_statements as parse_tsmc_statements
 from valuation_monitor.travelsky import parse_travelsky_statements
 from valuation_monitor.us_release import parse_us_release
 from valuation_monitor.providers.base import Filing
@@ -375,13 +377,14 @@ def parse_announcement(filing: Filing, fmt: str = "highlights", market: Market =
     """Parse one earnings filing; values stay as in the filing (amounts converted to millions, EPS to yuan; not adjusted for splits).
 
     non_gaap is the EPS basis of the stock's Non-GAAP PE, None without one; only the us_press_release and tesla_update layouts use it (see parse_us_release, parse_tesla_update)."""
-    if filing.supplement and fmt == "tsmc_release":  # TSMC's slides in a 6-K of their own (until 2019): only the equity is read
-        balance = parse_tsmc_slides(filing.content)
+    if filing.supplement and fmt == "tsmc_release":  # TSMC's slides in a 6-K of their own (until 2019) or its consolidated statements: only the equity is read
+        statements = filing.note == TSMC_STATEMENTS_NOTE
+        balance = parse_tsmc_statements(filing.content) if statements else parse_tsmc_slides(filing.content)
         if balance is None:
             raise ValueError(f"{filing.url}: the slides have no text balance sheet")
         return Announcement(
             balance[0], filing.published, filing.url, TSMC_CURRENCY, True, {"equity": [balance[1]]}, market.key, note=filing.note, supplement=True,
-            series_notes={"equity": TSMC_EQUITY_NOTE},
+            series_notes={"equity": TSMC_STATEMENTS_EQUITY_NOTE if statements else TSMC_EQUITY_NOTE},
         )
     if filing.supplement:  # a supplementary document whatever the layout of the main filings: only its Non-GAAP EPS is read
         parsed = parse_adjusted_eps_release(filing.content)

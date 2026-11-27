@@ -307,7 +307,8 @@ class SecProvider:
 
         since_ts = pd.Timestamp(since)
         if exhibit == TSMC_RELEASE:
-            return tsmc_filings(index, folder, since_ts)
+            statements = self._tsmc_statements(symbol, cik, since_ts, folder, index)
+            return tsmc_filings(index, folder, since_ts) + statements
         return [
             Filing(e["title"], pd.Timestamp(e["published"]), e["url"], (folder / e["file"]).read_bytes(), supplement=supplement)
             for e in index
@@ -463,6 +464,80 @@ class SecProvider:
             folder.mkdir(parents=True, exist_ok=True)
             (folder / file).write_bytes(html)
         return {**entry, "results": "file" in found, **found}
+
+
+    def _tsmc_statements(self, symbol: str, cik: int, since: pd.Timestamp, folder: Path, index: list[dict]) -> list[Filing]:
+        """TSMC's consolidated financial statements of the quarters whose slides have no text balance sheet (see tsmc_equity_gaps), as
+        supplementary documents for their equity, from statements.json next to index.json. The 6-Ks published 15-100 days after the end of
+        such a quarter are looked at, each recorded in statements.json as it is checked (the index is saved whenever it grew); a 6-K that
+        cannot be read is reported and tried again on the next run, and the others go on."""
+        from valuation_monitor.tsmc_release import STATEMENTS_NOTE, statements_excerpt, statements_period, statements_title
+
+        path = folder / "statements.json"
+        saved = json.loads(path.read_text(encoding="utf-8")) if path.exists() else []
+        wanted = {q for q in tsmc_equity_gaps(index, folder) if q.end_time >= since} - {statements_period(e["title"]) for e in saved if e["results"]}
+        if wanted and self.http is not None:
+            known = {e["accession"] for e in saved}
+            try:
+                candidates = [
+                    item for item in self._filing_list(cik, "6-K")
+                    if item["accession"] not in known and any(STATEMENTS_WINDOW_DAYS[0] <= (item["published"] - q.end_time.normalize()).days <= STATEMENTS_WINDOW_DAYS[1] for q in wanted)
+                ]
+            except Exception as e:  # noqa: BLE001 - the saved statements are used
+                print(f"{symbol}: cannot reach the SEC ({e}); using the {sum(x['results'] for x in saved)} saved financial statements", file=sys.stderr)
+                candidates = []
+            for item in candidates:
+                entry = {"accession": item["accession"], "published": f"{item['published']:%Y-%m-%dT%H:%M:%S}", "results": False}
+                try:
+                    for f in self._listing(cik, item["accession"]):
+                        name, size = f["name"], int(f["size"] or 0)
+                        if not name.lower().endswith((".htm", ".html")) or not STATEMENTS_MIN_BYTES <= size <= STATEMENTS_MAX_BYTES:
+                            continue
+                        url = ARCHIVE_URL.format(cik=cik, accession=item["accession"].replace("-", ""), name=name)
+                        html = self._archive_get(url, cache=False)
+                        title = statements_title(html)
+                        if title is None or statements_period(title) not in wanted:
+                            continue
+                        file = f"{item['published']:%Y-%m-%d}_{name}"
+                        folder.mkdir(parents=True, exist_ok=True)
+                        (folder / file).write_bytes(statements_excerpt(html))
+                        entry.update(results=True, title=title, url=url, file=file)
+                        wanted.discard(statements_period(title))
+                        print(f"{symbol}: new consolidated financial statements {entry['published']} {title}", file=sys.stderr)
+                        break
+                except Exception as e:  # noqa: BLE001 - this 6-K only; not recorded, so the next run checks it again
+                    print(f"{symbol}: ERROR reading the 6-K {item['accession']} for financial statements ({e}); skipped for this run", file=sys.stderr)
+                    continue
+                saved.append(entry)
+                saved.sort(key=lambda e: e["published"])
+                save_index(path, saved)
+                if not wanted:
+                    break
+        return [
+            Filing(e["title"], pd.Timestamp(e["published"]), e["url"], (folder / e["file"]).read_bytes(), note=STATEMENTS_NOTE, supplement=True)
+            for e in saved
+            if e["results"] and pd.Timestamp(e["published"]) >= since
+        ]
+
+
+STATEMENTS_WINDOW_DAYS = (15, 100)  # TSMC furnishes its consolidated financial statements 4-8 weeks after the quarter end
+STATEMENTS_MIN_BYTES = 1_000_000  # the statements with their notes are 1.5-12 MB; the 6-K cover and the notices are far smaller
+STATEMENTS_MAX_BYTES = 20_000_000
+
+
+def tsmc_equity_gaps(index: list[dict], folder: Path) -> set[pd.Period]:
+    """The quarters of TSMC's earnings releases (index.json) whose equity is in no text balance sheet: neither slides of the same 6-K, nor
+    slides in a 6-K of their own, nor the release document itself (its quarter: 45 days before its publication, as us_release.quarter_of)."""
+    from valuation_monitor.tsmc_release import has_text_balance_sheet
+
+    def quarter(e: dict) -> pd.Period:
+        return (pd.Timestamp(e["published"]) - pd.Timedelta(days=45)).to_period("Q")
+
+    covered = {quarter(e) for e in index if e.get("slides_file")}
+    return {
+        quarter(e) for e in index
+        if e["results"] and quarter(e) not in covered and not has_text_balance_sheet((folder / e["file"]).read_bytes())
+    }
 
 
 def tsmc_filings(index: list[dict], folder: Path, since: pd.Timestamp) -> list[Filing]:

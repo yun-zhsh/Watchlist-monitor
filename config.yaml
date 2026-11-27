@@ -22,7 +22,7 @@ levels:
 # (the data is still saved and the site still published; the failure is what tells someone to look). Prices by market,
 # long enough for weekends and holidays. Only the price and FX limits fail the run; an old newest filing is just a warning.
 freshness:
-  max_price_age_days: { HK: 5, US: 5, KR: 6, CN: 10 }
+  max_price_age_days: { HK: 5, US: 5, KR: 6, CN: 10, JP: 6 }
   max_fx_age_days: 7
   max_filing_age_days: 200
 
@@ -54,8 +54,11 @@ freshness:
 # sec_release_non_gaap: true also reads the earnings press release next to the IFRS statements, for its "Adjusted Basic EPS" (pe_non_gaap; XP)
 #   kifrs_statements  English consolidated financial statements (K-IFRS) on the Samsung Electronics IR website, every quarter; market KR
 #   cn_report         periodic reports (Q1, half-year, Q3, annual) and annual express reports of A-share companies on CNINFO (Chinese originals); market CN
+#   jp_tanshin        Kessan Tanshin (summaries of consolidated results, Japanese GAAP; Japanese originals) and their corrections, from the
+#                     company's IR library on Xj-Storage, every quarter (year to date after the first quarter); market JP
 # market: HK (HKEXnews; default for symbols ending in .HK), US (SEC EDGAR), KR (the IR website of a Korean company; default for
-# symbols ending in .KS) or CN (A-shares, CNINFO; default for symbols ending in .SZ or .SS).
+# symbols ending in .KS), CN (A-shares, CNINFO; default for symbols ending in .SZ or .SS) or JP (Tokyo Stock Exchange, the company's IR
+# library on Xj-Storage; default for symbols ending in .T).
 # Accessing EDGAR requires identifying yourself: before running, set the environment variable
 # SEC_USER_AGENT="valuation-monitor your-email" (see the README).
 # The order below is the order of the stocks on the home page and in the reports. hidden: true leaves a stock off the home page
@@ -226,6 +229,12 @@ stocks:
     market: CN   # Shanghai; Chinese periodic reports and express reports on CNINFO. A commercial bank
     filing_format: cn_report   # RMB; revenue is the operating income (net interest income included); PB uses the equity of the ordinary shareholders (without preference shares and perpetual bonds)
     metrics: [pe, ps, pb]
+  - symbol: 3697.T
+    name: SHIFT
+    market: JP   # Tokyo Stock Exchange Prime; Japanese Kessan Tanshin from the company's IR library on Xj-Storage (as filed on TDnet)
+    filing_format: jp_tanshin   # JPY, Japanese GAAP, basic EPS; splits 5-for-1 (February 2015) and 15-for-1 (January 2025)
+    metrics: [pe, ps, pb]
+    fiscal_year_end: 8   # the fiscal year ends on August 31: the quarter to November 2025 is shown as FY2026Q1
   - symbol: 2395.TW
     name: Advantech
     market: TW   # Taiwan Stock Exchange; English consolidated financial statements on the company IR website (MOPS refuses cloud networks)

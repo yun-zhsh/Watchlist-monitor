@@ -4,6 +4,8 @@ HK: full day closes at 16:00; Christmas Eve (24 Dec), New Year's Eve (31 Dec) an
 have a morning session only and close at 12:00.
 KR: closes at 15:30 (Seoul time), no half days.
 CN (A-shares): closes at 15:00 (Beijing time), no half days.
+JP (Tokyo Stock Exchange): closes at 15:00 (Tokyo time) up to 2024-11-04 and at 15:30 from 2024-11-05, when the TSE extended
+its afternoon session; no half days.
 TW (Taiwan Stock Exchange): closes at 13:30 (Taipei time), no half days.
 US (NYSE/Nasdaq): regular close 16:00 (New York time); the day after Thanksgiving, 3 July (Mon-Thu) and
 Christmas Eve (Mon-Thu) close early at 13:00.
@@ -63,13 +65,22 @@ class Market:
     half_close: time
     half_day: Callable[[pd.Timestamp], bool]
     cross_checks_prices: bool = False  # whether a second source of prices can be used to cross-check (only HK, via Tencent)
+    close_changes: tuple[tuple[str, time], ...] = ()  # (first day, full-day close from that day on), oldest first; full_close applies before the first (JP only)
 
     def is_half_day(self, day: pd.Timestamp) -> bool:
         """Whether the market closes early on this day if it is open (does not decide whether it is open)."""
         return self.half_day(pd.Timestamp(day).normalize())
 
     def close_time(self, day: pd.Timestamp) -> time:
-        return self.half_close if self.is_half_day(day) else self.full_close
+        return self.half_close if self.is_half_day(day) else self.full_day_close(day)
+
+    def full_day_close(self, day: pd.Timestamp) -> time:
+        """The close of a full trading day: full_close, or the close of the latest change in close_changes on or before the day."""
+        close = self.full_close
+        for first_day, changed in self.close_changes:
+            if pd.Timestamp(day).normalize() >= pd.Timestamp(first_day):
+                close = changed
+        return close
 
     def available_date(self, published: pd.Timestamp) -> pd.Timestamp:
         """The earliest day whose closing price may already reflect this filing (calendar day, not necessarily a trading day).
@@ -86,9 +97,11 @@ US = Market("US", "America/New_York", FULL_DAY_CLOSE, time(13, 0), _us_half_day)
 KR = Market("KR", "Asia/Seoul", time(15, 30), time(15, 30), lambda day: False)
 # A-shares (SSE, SZSE): closes at 15:00, no half days (closure days are decided by the price data)
 CN = Market("CN", "Asia/Shanghai", time(15, 0), time(15, 0), lambda day: False)
+# Tokyo Stock Exchange: closed at 15:00 until the afternoon session was extended to 15:30 on 2024-11-05; no half days
+JP = Market("JP", "Asia/Tokyo", time(15, 0), time(15, 0), lambda day: False, close_changes=(("2024-11-05", time(15, 30)),))
 # Taiwan Stock Exchange: closes at 13:30, no half days (closure days are decided by the price data)
 TW = Market("TW", "Asia/Taipei", time(13, 30), time(13, 30), lambda day: False)
-MARKETS = {m.key: m for m in (HK, US, KR, CN, TW)}
+MARKETS = {m.key: m for m in (HK, US, KR, CN, JP, TW)}
 
 
 def get_market(key: str) -> Market:

@@ -15,6 +15,7 @@ from valuation_monitor.providers.cninfo import CninfoProvider
 from valuation_monitor.providers.hkex import HkexProvider
 from valuation_monitor.providers.samsung import SamsungIrProvider
 from valuation_monitor.providers.sec import SecProvider
+from valuation_monitor.providers.xj_storage import XjStorageProvider
 from valuation_monitor.store import EarningsStore, PriceStore
 
 
@@ -29,8 +30,10 @@ class StockData:
 
 
 class DataLoader:
-    def __init__(self, config: Config, prices: PriceStore, hkex: HkexProvider, sec: SecProvider, samsung: SamsungIrProvider, cninfo: CninfoProvider, earnings: EarningsStore,
-                 advantech: AdvantechIrProvider):
+    def __init__(
+        self, config: Config, prices: PriceStore, hkex: HkexProvider, sec: SecProvider, samsung: SamsungIrProvider, cninfo: CninfoProvider, earnings: EarningsStore,
+        xj_storage: XjStorageProvider | None = None, advantech: AdvantechIrProvider | None = None,
+    ):
         self.config = config
         self.prices = prices
         self.hkex = hkex
@@ -38,6 +41,7 @@ class DataLoader:
         self.samsung = samsung
         self.cninfo = cninfo
         self.earnings = earnings
+        self.xj_storage = xj_storage
         self.advantech = advantech
 
     def load(self, stock: StockConfig) -> StockData:
@@ -56,6 +60,8 @@ class DataLoader:
             filings = self.samsung.results_announcements(stock.symbol, since)
         elif stock.market == "CN":
             filings = self.cninfo.results_announcements(stock.symbol, since)
+        elif stock.market == "JP":
+            filings = self.xj_storage.results_announcements(stock.symbol, since)
         elif stock.market == "TW":
             filings = self.advantech.results_announcements(stock.symbol, since)
         else:

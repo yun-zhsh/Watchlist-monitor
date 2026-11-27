@@ -17,6 +17,7 @@ from valuation_monitor.providers.cninfo import REQUEST_INTERVAL as CNINFO_INTERV
 from valuation_monitor.providers.hkex import HkexProvider
 from valuation_monitor.providers.http import HttpClient
 from valuation_monitor.providers.samsung import SamsungIrProvider
+from valuation_monitor.providers.advantech import AdvantechIrProvider
 from valuation_monitor.providers.sec import SecProvider, SecUserAgentMissing, make_http_client
 from valuation_monitor.providers.tencent import TencentQuoteProvider
 from valuation_monitor.providers.yahoo import YahooProvider
@@ -102,6 +103,7 @@ class Monitor:
             SamsungIrProvider(http, self.data_dir / "filings"),
             CninfoProvider(cninfo_http, self.data_dir / "filings"),
             self.earnings,
+            AdvantechIrProvider(http, self.data_dir / "filings"),
         )
 
     @property

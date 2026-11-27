@@ -4,6 +4,7 @@ HK: full day closes at 16:00; Christmas Eve (24 Dec), New Year's Eve (31 Dec) an
 have a morning session only and close at 12:00.
 KR: closes at 15:30 (Seoul time), no half days.
 CN (A-shares): closes at 15:00 (Beijing time), no half days.
+TW (Taiwan Stock Exchange): closes at 13:30 (Taipei time), no half days.
 US (NYSE/Nasdaq): regular close 16:00 (New York time); the day after Thanksgiving, 3 July (Mon-Thu) and
 Christmas Eve (Mon-Thu) close early at 13:00.
 
@@ -85,7 +86,9 @@ US = Market("US", "America/New_York", FULL_DAY_CLOSE, time(13, 0), _us_half_day)
 KR = Market("KR", "Asia/Seoul", time(15, 30), time(15, 30), lambda day: False)
 # A-shares (SSE, SZSE): closes at 15:00, no half days (closure days are decided by the price data)
 CN = Market("CN", "Asia/Shanghai", time(15, 0), time(15, 0), lambda day: False)
-MARKETS = {m.key: m for m in (HK, US, KR, CN)}
+# Taiwan Stock Exchange: closes at 13:30, no half days (closure days are decided by the price data)
+TW = Market("TW", "Asia/Taipei", time(13, 30), time(13, 30), lambda day: False)
+MARKETS = {m.key: m for m in (HK, US, KR, CN, TW)}
 
 
 def get_market(key: str) -> Market:

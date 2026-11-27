@@ -226,3 +226,8 @@ stocks:
     market: CN   # Shanghai; Chinese periodic reports and express reports on CNINFO. A commercial bank
     filing_format: cn_report   # RMB; revenue is the operating income (net interest income included); PB uses the equity of the ordinary shareholders (without preference shares and perpetual bonds)
     metrics: [pe, ps, pb]
+  - symbol: 2395.TW
+    name: Advantech
+    market: TW   # Taiwan Stock Exchange; English consolidated financial statements on the company IR website (MOPS refuses cloud networks)
+    filing_format: tifrs_statements   # TWD, Taiwan-IFRS; basic and diluted EPS disclosed, no non-IFRS EPS; 10% stock dividends in 2014, 2017, 2020 and 2023
+    metrics: [pe, ps, pb]

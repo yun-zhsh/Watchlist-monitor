@@ -22,6 +22,7 @@ FILING_SOURCES = {
     "US": "SEC EDGAR",
     "KR": "Samsung Electronics IR website (English financial statements)",
     "CN": "CNINFO (the CSRC-designated disclosure platform)",
+    "TW": "Advantech IR website (English financial statements)",
 }
 
 
@@ -34,7 +35,7 @@ class StockConfig:
     name: str
     metrics: list[str] = field(default_factory=lambda: ["pe"])
     filing_format: str = "highlights"  # layout of the earnings filings, see filings.FILING_FORMATS
-    market: str = "HK"  # listing market: HK (HKEXnews), US (SEC EDGAR), KR (company IR website) or CN (A-shares, CNINFO)
+    market: str = "HK"  # listing market: HK (HKEXnews), US (SEC EDGAR), KR (company IR website), CN (A-shares, CNINFO) or TW (company IR website)
     cik: int | None = None  # SEC Central Index Key of a US-listed company
     sec_exhibit: str = "release"  # what is parsed: the earnings press release itself, the summary US GAAP financial statements exhibit (ASML), the IFRS consolidated financial statements (XP), SAP's quarterly results document (sap_ifrs) or Tesla's Update deck (tesla_update)
     sec_form: str = "6-K"  # the SEC form that carries the earnings press release: 6-K (foreign private issuers, e.g. JD, ASML) or 8-K item 2.02 (US companies, e.g. Meta)
@@ -67,6 +68,7 @@ DEFAULT_LOOKBACK_OPTIONS = [10, 5, 3, 2, 1]
 
 
 DEFAULT_MAX_PRICE_AGE_DAYS = {"HK": 5, "US": 5, "KR": 6, "CN": 10}  # long enough for weekends and the longest holidays (China's Golden Week and New Year)
+DEFAULT_MAX_PRICE_AGE_DAYS["TW"] = 12  # Taiwan: the Lunar New Year closure can last nine days with the weekends
 
 
 @dataclass(frozen=True)
@@ -127,16 +129,17 @@ def parse_config(raw: dict) -> Config:
             raise ValueError(f"{s['symbol']}: unknown metric {unknown}; available metrics: {sorted(METRICS)}")
         symbol = str(s["symbol"])
         suffix_markets = {".HK": "HK", ".KS": "KR", ".KQ": "KR", ".SZ": "CN", ".SS": "CN"}
+        suffix_markets.update({".TW": "TW", ".TWO": "TW"})  # Taiwan Stock Exchange and Taipei Exchange
         default_market = next((m for suffix, m in suffix_markets.items() if symbol.upper().endswith(suffix)), "US")
         market = str(s.get("market", default_market)).upper()
         if market not in MARKETS:
             raise ValueError(f"{symbol}: unknown market {market}; available markets: {sorted(MARKETS)}")
         # HK earnings come from HKEXnews filings (PDF), US from SEC EDGAR press releases (HTML), KR from the company IR website financial statements
-        default_format = {"HK": "highlights", "US": "press_release", "KR": "kifrs_statements", "CN": "cn_report"}[market]
+        default_format = {"HK": "highlights", "US": "press_release", "KR": "kifrs_statements", "CN": "cn_report", "TW": "tifrs_statements"}[market]
         filing_format = str(s.get("filing_format", default_format))
         if filing_format not in FILING_FORMATS:
             raise ValueError(f"{symbol}: unknown filing format {filing_format}; available formats: {sorted(FILING_FORMATS)}")
-        foreign_formats = {"press_release": "US", "us_press_release": "US", "us_gaap_statements": "US", "ifrs_statements": "US", "sap_ifrs": "US", "kifrs_statements": "KR", "cn_report": "CN", "tesla_update": "US"}  # non-HK formats only apply to their own market
+        foreign_formats = {"press_release": "US", "us_press_release": "US", "us_gaap_statements": "US", "ifrs_statements": "US", "sap_ifrs": "US", "kifrs_statements": "KR", "cn_report": "CN", "tesla_update": "US", "tifrs_statements": "TW"}  # non-HK formats only apply to their own market
         if foreign_formats.get(filing_format, "HK" if market == "HK" else None) != market:
             raise ValueError(f"{symbol}: filing format {filing_format} does not match market {market}")
         cik = int(s["cik"]) if s.get("cik") is not None else None

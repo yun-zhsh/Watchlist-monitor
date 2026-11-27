@@ -43,7 +43,7 @@ from pypdf import PdfReader
 from valuation_monitor.market_calendar import HK, Market, effective_trading_day, get_market
 from valuation_monitor.cn_report import parse_cn_express, parse_cn_report
 from valuation_monitor.audit import Component, num, shares_formula, split_notes, sum_formula
-from valuation_monitor.baidu_release import parse_baidu_release
+from valuation_monitor.baidu_release import parse_baidu_filing
 from valuation_monitor.ifrs import parse_ifrs_statements
 from valuation_monitor.jp_tanshin import parse_jp_tanshin
 from valuation_monitor.kifrs import parse_kifrs, parse_kifrs_deck
@@ -406,7 +406,7 @@ def parse_announcement(filing: Filing, fmt: str = "highlights", market: Market =
         elif fmt == "tifrs_statements":
             parsed = parse_tifrs(filing.title, filing.content)
         elif fmt == "baidu_release":
-            parsed = parse_baidu_release(filing.content)
+            parsed = parse_baidu_filing(filing.url, filing.content)
         elif filing.provisional:
             parsed = parse_kifrs_deck(filing.title, filing.content, filing.attachments["previous_bs"])
         else:

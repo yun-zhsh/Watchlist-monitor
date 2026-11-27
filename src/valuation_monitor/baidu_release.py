@@ -38,7 +38,7 @@ from typing import NamedTuple
 
 import pandas as pd
 
-from valuation_monitor.parsed import NoStatements, Parsed
+from valuation_monitor.parsed import Parsed
 from valuation_monitor.press_release import MONTHS, clean, table_rows, to_number
 
 MONTH_DAY_RE = re.compile(r"^([A-Z][a-z]+)\.? ?(\d{1,2}),?$")
@@ -83,6 +83,10 @@ DEFINITION_2018_NOTE = (
 RATIO_TOLERANCE = 0.05  # allowed relative distance of (EPS per ADS / EPS per share) from a whole number or its inverse
 TOLERANCE = 0.001  # allowed (relative) difference of the same amount in different tables
 PER_SHARE_KEYS = ("eps", "eps_share", "non_ifrs_eps")
+
+
+class NoStatements(ValueError):
+    """A results release without its financial statements (the fourth-quarter 2020 release on EDGAR has the summary tables only)."""
 
 
 class Header(NamedTuple):
@@ -332,7 +336,7 @@ def parse_baidu_release(html: bytes) -> Parsed:
             candidates.setdefault("equity", []).append(equity)
     statements = {"revenue", "profit", "eps", "eps_share", "wa_shares", "equity"}
     if not statements & candidates.keys():
-        raise NoStatements("The release has no income statement and no balance sheet")  # the fourth-quarter 2020 release on EDGAR
+        raise NoStatements("The release has no income statement and no balance sheet")
     missing = statements - candidates.keys()
     if missing:
         raise ValueError(f"Not found: {sorted(missing)}")
@@ -365,3 +369,110 @@ def definition_note(text: str) -> str | None:
     if not AMORTIZATION_RE.search(m.group(1)):
         return DEFINITION_2018_NOTE
     return None
+
+
+# ---- the fourth quarter of 2020: the statements of the release on Baidu's IR website, supplied by the maintainer ------------------------
+#
+# The 6-K of 2021-02-19 (accession 0001193125-21-049165) furnishes only the first ten pages of the release (the summary tables and the text);
+# the full release on Baidu's IR website has the statements on pages 11 to 18. Baidu's IR website refuses requests from cloud networks, so the
+# maintainer supplied a copy of that PDF; its first page and the statement pages are kept, unchanged, in the package (supplied/BIDU/). The
+# figures are read from its text, with the publication time of the 6-K (the filing whose exhibit lacks them).
+
+SUPPLIED_DIR = "supplied"
+SUPPLIED_STATEMENTS = {  # the SEC exhibit without statements -> the supplied PDF with them
+    "https://www.sec.gov/Archives/edgar/data/1329099/000119312521049165/d102906dex991.htm": "BIDU/2021-02-19_baidu-2020q4-ir-release-statements.pdf",
+}
+SUPPLIED_NOTE = (
+    "from the statements of Baidu's release on its IR website (pages 11-18 of the PDF, supplied by the maintainer, kept in "
+    "src/valuation_monitor/supplied/{file}), because the 6-K exhibit furnished to the SEC omits them, and used from the 6-K's publication time"
+)  # no "; " in a note: the saved note column joins the notes with it
+PDF_NUMBER_RE = re.compile(r"^\(?-?[\d,]+(?:\.\d+)?\)?$")
+# the column headers of the supplied statements, which fix the order of their columns
+SUPPLIED_INCOME_HEADER = (
+    "December 31, September 30, December 31, December 31, December 31, December 31, December 31,",
+    "2019 2020 2020 2020 2019 2020 2020",
+    "RMB RMB RMB US$(2) RMB RMB US$(2)",
+)  # this quarter is the third column, the same quarter last year the first, the previous quarter the second (then the US$ and the years)
+SUPPLIED_BALANCE_HEADER = ("December 31, December 31, December 31,", "2019 2020 2020", "RMB RMB US$")  # end of last year, end of this year, US$
+SUPPLIED_RECONCILIATION_HEADER = "December 31, 2019 (RMB) September 30, 2020 (RMB) December 31, 2020 (RMB) December 31, 2020 (US$)"
+
+
+def supplied_file(url: str) -> str | None:
+    """The supplied PDF with the statements of the release at this URL, None if there is none."""
+    return SUPPLIED_STATEMENTS.get(url)
+
+
+def _pdf_row(lines: list[str], label: str, start: int = 0) -> tuple[list[float], int]:
+    """The numbers of the first line from `start` that is `label` followed by numbers only, and the index of that line."""
+    for i in range(start, len(lines)):
+        line = clean(lines[i])
+        if line.startswith(label + " "):
+            cells = line[len(label):].split()
+            if cells and all(PDF_NUMBER_RE.match(c) for c in cells):
+                return [to_number(c) for c in cells], i
+    raise ValueError(f"Not found in the supplied statements: {label}")
+
+
+def _page_with(pages: list[str], heading: str, *headers: str) -> list[str]:
+    for text in pages:
+        lines = [clean(x) for x in text.splitlines()]
+        if any(heading in x for x in lines) and all(h in lines for h in headers):
+            return lines
+    raise ValueError(f"The supplied statements lack the page {heading!r} with the header {headers}")
+
+
+def parse_supplied_statements(pdf: bytes, html: bytes, file: str) -> Parsed:
+    """The fourth quarter of 2020 from the supplied statement pages (see SUPPLIED_STATEMENTS); html is the SEC exhibit, for its definition."""
+    import io
+
+    from pypdf import PdfReader
+
+    pages = [p.extract_text() or "" for p in PdfReader(io.BytesIO(pdf)).pages]
+    if "Baidu Announces Fourth Quarter and Fiscal Year 2020 Results" not in clean(pages[0]):
+        raise ValueError("The supplied PDF is not the release of the fourth quarter of 2020")
+    income = _page_with(pages, "Condensed Consolidated Statements of Income (Loss)", *SUPPLIED_INCOME_HEADER)
+    order = [2, 0, 1]  # this quarter, the same quarter last year, the previous quarter
+    values: dict[str, list[float]] = {}
+    for key, label in (("revenue", "Total revenues"), ("profit", "Net income attributable to Baidu")):
+        row, _ = _pdf_row(income, label)
+        values[key] = [row[j] for j in order]
+    ads_at = next(i for i, x in enumerate(income) if x.startswith("Earnings per ADS"))
+    eps, eps_at = _pdf_row(income, "-Basic", ads_at)
+    share_at = next(i for i, x in enumerate(income) if x.startswith("Earnings per share"))
+    eps_share, _ = _pdf_row(income, "-Basic", share_at)
+    if not ads_at < eps_at < share_at:
+        raise ValueError("The supplied statements: the basic EPS per ADS is not in its section")
+    shares_at = next(i for i, x in enumerate(income) if x.startswith("Weighted average number of Class A and Class B ordinary shares outstanding"))
+    shares, _ = _pdf_row(income, "Basic", shares_at)
+    values["eps"] = [eps[j] for j in order]
+    ratio = ads_ratio(values["eps"], [eps_share[j] for j in order])
+    values["wa_shares"] = [shares[j] * 1e-6 / ratio for j in order]  # single shares ("except for share ... information") -> millions of ADSs
+    balance = _page_with(pages, "Condensed Consolidated Balance Sheets", *SUPPLIED_BALANCE_HEADER)
+    equity, _ = _pdf_row(balance, "Total Baidu shareholders' equity")
+    values["equity"] = [equity[1], equity[0]]  # the end of this year, the end of last year
+    reconciliation = _page_with(pages, "Reconciliations of Non-GAAP Financial Measures", SUPPLIED_RECONCILIATION_HEADER)
+    non_gaap, _ = _pdf_row(reconciliation, "Diluted earnings per ADS (non-GAAP)")
+    if len(non_gaap) != 4:
+        raise ValueError(f"The supplied Non-GAAP EPS row has {len(non_gaap)} values, not one per date")
+    values["non_ifrs_eps"] = [non_gaap[j] for j in order]
+    from bs4 import BeautifulSoup
+
+    note = SUPPLIED_NOTE.format(file=file)
+    notes = {key: note for key in values}
+    if definition := definition_note(BeautifulSoup(html, "lxml").get_text(" ")):
+        notes["non_ifrs_eps"] = f"{note}. {definition}"
+    return Parsed("CNY", values, pd.Period("2020Q4"), notes=notes)
+
+
+def parse_baidu_filing(url: str, html: bytes) -> Parsed:
+    """A Baidu release; one without statements is read from the statements supplied for it (SUPPLIED_STATEMENTS), else it is an error."""
+    try:
+        return parse_baidu_release(html)
+    except NoStatements:
+        file = supplied_file(url)
+        if file is None:
+            raise
+        from importlib.resources import files
+
+        pdf = files("valuation_monitor").joinpath(SUPPLIED_DIR, *file.split("/")).read_bytes()
+        return parse_supplied_statements(pdf, html, file)

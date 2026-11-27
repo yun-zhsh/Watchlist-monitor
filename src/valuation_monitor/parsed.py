@@ -7,11 +7,6 @@ from typing import NamedTuple
 import pandas as pd
 
 
-class NoStatements(ValueError):
-    """A results filing without its financial statements, so nothing can be read from it: the earnings store leaves it out (Baidu's
-    fourth-quarter 2020 release on EDGAR has the summary tables only; its quarter comes from the next release's previous-quarter column)."""
-
-
 class Parsed(NamedTuple):
     currency: str
     values: dict[str, list[float]]  # series -> this period, same period last year, (previous period); equity: end of this period, end of last year

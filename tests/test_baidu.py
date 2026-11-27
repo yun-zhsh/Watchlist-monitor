@@ -14,13 +14,15 @@ import pytest
 from valuation_monitor.baidu_release import (
     DEFINITION_2016_NOTE,
     DEFINITION_2018_NOTE,
+    SUPPLIED_STATEMENTS,
+    NoStatements,
     ads_ratio,
+    parse_baidu_filing,
     parse_baidu_release,
 )
 from valuation_monitor.config import parse_config
 from valuation_monitor.filings import PARSER_VERSIONS, announcements_from_frame, announcements_to_frame, build_history, parse_announcement
 from valuation_monitor.market_calendar import US
-from valuation_monitor.parsed import NoStatements
 from valuation_monitor.providers.base import Filing
 
 FOLDER = Path(__file__).parent.parent / "data" / "filings" / "BIDU"
@@ -258,19 +260,37 @@ def test_a_release_with_only_the_summary_tables_has_no_statements():
         parse_baidu_release(release(SUMMARY_2026, CURRENT_DEFINITION))
 
 
-def test_the_earnings_store_leaves_out_a_release_without_statements(tmp_path, capsys):
-    from valuation_monitor.db import Database
-    from valuation_monitor.store import EarningsStore
+Q4_2020_URL = "https://www.sec.gov/Archives/edgar/data/1329099/000119312521049165/d102906dex991.htm"
 
-    filings = [
-        Filing("Baidu Announces Fourth Quarter and Fiscal Year 2020 Results", pd.Timestamp("2021-02-19 17:55"), "summary-only", release(SUMMARY_2026, CURRENT_DEFINITION)),
-        Filing("Baidu Announces Second Quarter 2026 Results", pd.Timestamp("2026-08-18 16:08"), "full", RELEASE_2026),
-    ]
-    history = EarningsStore(db=Database(tmp_path / "v.db")).load("BIDU", filings, pd.Series(dtype=float), None, "baidu_release", US, "diluted")
-    assert [a.url for a in history.announcements] == ["full"]
-    assert "no financial statements in summary-only" in capsys.readouterr().err
-    with pytest.raises(ValueError, match="Not found"):  # any other parse error still stops the update
-        EarningsStore(db=Database(tmp_path / "w.db")).load("BIDU", [Filing("t", pd.Timestamp("2026-08-18"), "u", release(INCOME_2026))], pd.Series(dtype=float), None, "baidu_release", US)
+
+def test_a_release_without_statements_and_without_supplied_ones_is_an_error():
+    filing = Filing("Baidu Announces Fourth Quarter and Fiscal Year 2026 Results", pd.Timestamp("2027-02-18 16:05"), "https://www.sec.gov/x.htm", release(SUMMARY_2026, CURRENT_DEFINITION))
+    with pytest.raises(NoStatements):  # never skipped silently: the maintainer has to supply the statements
+        parse_announcement(filing, "baidu_release", US)
+
+
+def test_the_fourth_quarter_of_2020_from_the_supplied_statements():
+    """The abbreviated 6-K exhibit has no statements; the supplied pages of the IR release give them (the PDF is in the package)."""
+    assert SUPPLIED_STATEMENTS == {Q4_2020_URL: "BIDU/2021-02-19_baidu-2020q4-ir-release-statements.pdf"}
+    filing = Filing("Baidu Announces Fourth Quarter and Fiscal Year 2020 Results", pd.Timestamp("2021-02-19 17:55:35"), Q4_2020_URL, release(SUMMARY_2026, CURRENT_DEFINITION))
+    a = parse_announcement(filing, "baidu_release", US)
+    assert a.period == pd.Period("2020Q4") and a.currency == "CNY"
+    # the same figures as the release on PR Newswire and as the previous-quarter column of the first-quarter 2021 release
+    assert a.values["revenue"] == [30263.0, 28884.0, 28232.0]
+    assert a.values["profit"] == [5174.0, 6345.0, 13678.0]
+    assert a.values["eps"] == [15.28, 18.28, 40.21]
+    assert a.values["wa_shares"] == pytest.approx([336.90743, 345.86035, 339.82547])  # 33,690,743 shares x 10 ADSs per share
+    assert a.values["equity"] == [182696.0, 163599.0]
+    assert a.values["non_ifrs_eps"] == [20.08, 26.54, 20.35]
+    assert set(a.series_notes) == set(a.values) and all("supplied by the maintainer" in n and "; " not in n for n in a.series_notes.values())
+    assert a.available == pd.Timestamp("2021-02-20")  # the 6-K's acceptance time, after the close: from the next day (trading day 2021-02-22)
+    history = build_history([a])
+    assert "supplied by the maintainer" in history.quarters["eps"][pd.Period("2020Q4")].note
+    assert announcements_from_frame(announcements_to_frame([a], 1), US)[0].series_notes == a.series_notes
+
+
+def test_the_supplied_statements_only_replace_a_release_without_statements():
+    assert parse_baidu_filing(Q4_2020_URL, RELEASE_2026).period == pd.Period("2026Q2")  # a release with statements is read as it is
 
 
 def test_a_row_without_one_number_per_column_is_not_read_and_a_missing_value_is_an_error():
@@ -320,24 +340,20 @@ def index() -> list[dict]:
 
 @cache
 def parsed(file: str):
-    try:
-        return parse_baidu_release((FOLDER / file).read_bytes())
-    except NoStatements:
-        return None
+    e = next(x for x in index() if x["file"] == file)
+    return parse_baidu_filing(e["url"], (FOLDER / file).read_bytes())
 
 
 def by_period() -> dict[pd.Period, object]:
-    return {p.period: p for e in index() if (p := parsed(e["file"])) is not None}
+    return {parsed(e["file"]).period: parsed(e["file"]) for e in index()}
 
 
 @saved
-def test_every_saved_release_parses_except_the_one_without_statements():
-    without = [e["file"] for e in index() if parsed(e["file"]) is None]
-    assert without == ["2021-02-19_d102906dex991.htm"]  # the fourth quarter of 2020: only the summary tables
-    periods = [parsed(e["file"]).period for e in index() if parsed(e["file"]) is not None]
+def test_every_saved_release_parses_and_no_quarter_is_missing():
+    periods = [parsed(e["file"]).period for e in index()]
     assert periods == sorted(periods) and len(set(periods)) == len(periods)
-    missing = set(pd.period_range(periods[0], periods[-1], freq="Q")) - set(periods)
-    assert missing == {pd.Period("2020Q4")}
+    assert set(pd.period_range(periods[0], periods[-1], freq="Q")) == set(periods)  # the fourth quarter of 2020 from the supplied statements
+    assert [e["file"] for e in index() if parsed(e["file"]).notes and "supplied" in parsed(e["file"]).notes.get("eps", "")] == ["2021-02-19_d102906dex991.htm"]
 
 
 @saved

@@ -1,0 +1,200 @@
+{
+ "source": "CVM, quarterly financial statements (ITR): account codes and values of the consolidated statements (an extract, not the original document)",
+ "kind": "ITR",
+ "company_code": "019992",
+ "reference_date": "2014-03-31",
+ "version": 1,
+ "document_id": 36502,
+ "received_date": "2014-04-29",
+ "delivered": "2014-04-29T18:00:35",
+ "values_from": "CVM open data; the share capital from the delivered document",
+ "link": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=36502",
+ "currency": "BRL",
+ "scale": 1000,
+ "income_statement": [
+  {
+   "code": "3.01",
+   "start": "2013-01-01",
+   "end": "2013-03-31",
+   "value": 374211.0
+  },
+  {
+   "code": "3.01",
+   "start": "2014-01-01",
+   "end": "2014-03-31",
+   "value": 431873.0
+  },
+  {
+   "code": "3.09",
+   "start": "2013-01-01",
+   "end": "2013-03-31",
+   "value": 51894.0
+  },
+  {
+   "code": "3.09",
+   "start": "2014-01-01",
+   "end": "2014-03-31",
+   "value": 61619.0
+  },
+  {
+   "code": "3.10",
+   "start": "2013-01-01",
+   "end": "2013-03-31",
+   "value": 0.0
+  },
+  {
+   "code": "3.10",
+   "start": "2014-01-01",
+   "end": "2014-03-31",
+   "value": 0.0
+  },
+  {
+   "code": "3.10.01",
+   "start": "2013-01-01",
+   "end": "2013-03-31",
+   "value": 0.0
+  },
+  {
+   "code": "3.10.01",
+   "start": "2014-01-01",
+   "end": "2014-03-31",
+   "value": 0.0
+  },
+  {
+   "code": "3.10.02",
+   "start": "2013-01-01",
+   "end": "2013-03-31",
+   "value": 0.0
+  },
+  {
+   "code": "3.10.02",
+   "start": "2014-01-01",
+   "end": "2014-03-31",
+   "value": 0.0
+  },
+  {
+   "code": "3.11",
+   "start": "2013-01-01",
+   "end": "2013-03-31",
+   "value": 51894.0
+  },
+  {
+   "code": "3.11",
+   "start": "2014-01-01",
+   "end": "2014-03-31",
+   "value": 61619.0
+  },
+  {
+   "code": "3.11.01",
+   "start": "2013-01-01",
+   "end": "2013-03-31",
+   "value": 51894.0
+  },
+  {
+   "code": "3.11.01",
+   "start": "2014-01-01",
+   "end": "2014-03-31",
+   "value": 61498.0
+  },
+  {
+   "code": "3.11.02",
+   "start": "2013-01-01",
+   "end": "2013-03-31",
+   "value": 0.0
+  },
+  {
+   "code": "3.11.02",
+   "start": "2014-01-01",
+   "end": "2014-03-31",
+   "value": 121.0
+  },
+  {
+   "code": "3.99",
+   "start": "2013-01-01",
+   "end": "2013-03-31",
+   "value": 0.0
+  },
+  {
+   "code": "3.99",
+   "start": "2014-01-01",
+   "end": "2014-03-31",
+   "value": 0.0
+  },
+  {
+   "code": "3.99.01",
+   "start": "2013-01-01",
+   "end": "2013-03-31",
+   "value": 0.0
+  },
+  {
+   "code": "3.99.01",
+   "start": "2014-01-01",
+   "end": "2014-03-31",
+   "value": 0.0
+  },
+  {
+   "code": "3.99.01.01",
+   "start": "2013-01-01",
+   "end": "2013-03-31",
+   "value": 0.32
+  },
+  {
+   "code": "3.99.01.01",
+   "start": "2014-01-01",
+   "end": "2014-03-31",
+   "value": 0.38
+  },
+  {
+   "code": "3.99.02",
+   "start": "2013-01-01",
+   "end": "2013-03-31",
+   "value": 0.0
+  },
+  {
+   "code": "3.99.02",
+   "start": "2014-01-01",
+   "end": "2014-03-31",
+   "value": 0.0
+  },
+  {
+   "code": "3.99.02.01",
+   "start": "2013-01-01",
+   "end": "2013-03-31",
+   "value": 0.31
+  },
+  {
+   "code": "3.99.02.01",
+   "start": "2014-01-01",
+   "end": "2014-03-31",
+   "value": 0.37
+  }
+ ],
+ "balance_sheet": [
+  {
+   "code": "2.03",
+   "end": "2013-12-31",
+   "value": 1069838.0
+  },
+  {
+   "code": "2.03",
+   "end": "2014-03-31",
+   "value": 1022052.0
+  },
+  {
+   "code": "2.03.09",
+   "end": "2013-12-31",
+   "value": 2217.0
+  },
+  {
+   "code": "2.03.09",
+   "end": "2014-03-31",
+   "value": 2390.0
+  }
+ ],
+ "shares": {
+  "ordinary": 163467071,
+  "preferred": 0,
+  "ordinary_treasury": 439761,
+  "preferred_treasury": 0
+ }
+}

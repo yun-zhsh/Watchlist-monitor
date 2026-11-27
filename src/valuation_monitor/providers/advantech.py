@@ -98,14 +98,14 @@ class AdvantechIrProvider:
     def results_announcements(self, symbol: str, since: datetime) -> list[Filing]:
         """All saved reports published after `since`, in ascending order of publication time (new ones are fetched first)."""
         folder, index = self._index(symbol)
+        saved = len(index)
         try:
-            added = self._fetch_new(symbol, since, folder, index)
+            self._fetch_new(symbol, since, folder, index)
         except Exception as e:
             if not index:
                 raise
             print(f"{symbol}: cannot reach the Advantech IR website ({e}); using the {len(index)} saved reports", file=sys.stderr)
-            added = False
-        if added:
+        if len(index) != saved:  # the reports fetched are recorded even when the website failed after them, so the next run does not fetch them again
             index.sort(key=lambda e: e["published"])
             save_index(folder / "index.json", index)
 
@@ -127,26 +127,36 @@ class AdvantechIrProvider:
             )
         return filings
 
-    def _fetch_new(self, symbol: str, since: datetime, folder: Path, index: list[dict]) -> bool:
+    def _fetch_new(self, symbol: str, since: datetime, folder: Path, index: list[dict]) -> None:
+        """Fetch the reports not saved yet, appending each to `index` as soon as its excerpt is written. A report that cannot be downloaded or
+        read (e.g. an encrypted PDF that cannot be decrypted) is an error for that report: it is reported and tried again on the next run, and
+        the other reports are still fetched. Raises only when the IR pages themselves cannot be read."""
         known = {(e["year"], e["quarter"]) for e in index}
         pages = [self.http.get_bytes(url).decode("utf-8", "replace") for url in PAGES]
-        added = False
         for (year, quarter), (kind, url) in sorted(discover(pages).items()):
             period_end = pd.Period(year=year, quarter=quarter, freq="Q").end_time.normalize()
             if (year, quarter) in known or year < FIRST_YEAR or period_end + pd.Timedelta(days=120) < pd.Timestamp(since):
                 continue
-            pdf = self.http.get_bytes(url, cache=False)
-            texts = page_texts(pdf)
-            found = approval(texts, period_end)
-            if found is None:
-                print(f"{symbol}: {year}Q{quarter} ({url}) states no board approval date, so the publication time is unknown; skipped", file=sys.stderr)
+            try:
+                entry = self._fetch_report(symbol, folder, year, quarter, kind, url, period_end)
+            except Exception as e:
+                print(f"ERROR {symbol}: {year}Q{quarter} ({url}) cannot be read ({type(e).__name__}: {e}); not saved, tried again on the next update", file=sys.stderr)
                 continue
-            approved = found[0]
-            name = f"{year}Q{quarter}_" + ("Shareholder-Annual-Report-" + url.split("/")[-2] + "-en.pdf" if kind == "annual_report" else url.rsplit("/", 1)[-1])
-            folder.mkdir(parents=True, exist_ok=True)
-            (folder / name).write_bytes(excerpt(pdf, wanted_pages(texts, period_end)))
-            index.append({"year": year, "quarter": quarter, "kind": kind, "published": f"{approved:%Y-%m-%d}T{PUBLISHED_TIME}:00", "url": url, "file": name})
-            known.add((year, quarter))
-            added = True
-            print(f"{symbol}: new report {year}Q{quarter} ({kind}), approved by the board on {approved:%Y-%m-%d}", file=sys.stderr)
-        return added
+            if entry is not None:
+                index.append(entry)
+                known.add((year, quarter))
+
+    def _fetch_report(self, symbol: str, folder: Path, year: int, quarter: int, kind: str, url: str, period_end: pd.Timestamp) -> dict | None:
+        """Download one report and save its excerpt; returns its index entry, or None when it states no approval day."""
+        pdf = self.http.get_bytes(url, cache=False)
+        texts = page_texts(pdf)  # an encrypted report (the 2017 shareholder annual report: AES) is decrypted with the empty user password
+        found = approval(texts, period_end)
+        if found is None:
+            print(f"{symbol}: {year}Q{quarter} ({url}) states no board approval date, so the publication time is unknown; skipped", file=sys.stderr)
+            return None
+        approved = found[0]
+        name = f"{year}Q{quarter}_" + ("Shareholder-Annual-Report-" + url.split("/")[-2] + "-en.pdf" if kind == "annual_report" else url.rsplit("/", 1)[-1])
+        folder.mkdir(parents=True, exist_ok=True)
+        (folder / name).write_bytes(excerpt(pdf, wanted_pages(texts, period_end)))  # the excerpt is written without encryption
+        print(f"{symbol}: new report {year}Q{quarter} ({kind}), approved by the board on {approved:%Y-%m-%d}", file=sys.stderr)
+        return {"year": year, "quarter": quarter, "kind": kind, "published": f"{approved:%Y-%m-%d}T{PUBLISHED_TIME}:00", "url": url, "file": name}

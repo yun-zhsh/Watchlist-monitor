@@ -1,0 +1,378 @@
+[
+  {
+    "year": 2015,
+    "quarter": 1,
+    "kind": "quarterly",
+    "published": "2015-04-30T13:30:00",
+    "url": "https://advcloudfiles.advantech.com/investor/Quarterly/2015_Q1_Consolidated-English.pdf",
+    "file": "2015Q1_2015_Q1_Consolidated-English.pdf"
+  },
+  {
+    "year": 2015,
+    "quarter": 2,
+    "kind": "quarterly",
+    "published": "2015-07-30T13:30:00",
+    "url": "https://advcloudfiles.advantech.com/investor/Quarterly/2015_Q2_Consolidated-English.pdf",
+    "file": "2015Q2_2015_Q2_Consolidated-English.pdf"
+  },
+  {
+    "year": 2015,
+    "quarter": 3,
+    "kind": "quarterly",
+    "published": "2015-10-30T13:30:00",
+    "url": "https://advcloudfiles.advantech.com/investor/Quarterly/2015_Q3_Consolidated-English.pdf",
+    "file": "2015Q3_2015_Q3_Consolidated-English.pdf"
+  },
+  {
+    "year": 2015,
+    "quarter": 4,
+    "kind": "annual_report",
+    "published": "2016-03-04T13:30:00",
+    "url": "https://advcloudfiles.advantech.com/investor/Shareholder-Annual-Report/105/1-en.pdf",
+    "file": "2015Q4_Shareholder-Annual-Report-105-en.pdf"
+  },
+  {
+    "year": 2016,
+    "quarter": 1,
+    "kind": "quarterly",
+    "published": "2016-04-29T13:30:00",
+    "url": "https://advcloudfiles.advantech.com/investor/Quarterly/2016_Q1_Consolidated-English.pdf",
+    "file": "2016Q1_2016_Q1_Consolidated-English.pdf"
+  },
+  {
+    "year": 2016,
+    "quarter": 2,
+    "kind": "quarterly",
+    "published": "2016-07-29T13:30:00",
+    "url": "https://advcloudfiles.advantech.com/investor/Quarterly/2016_Q2_Consolidated-English.pdf",
+    "file": "2016Q2_2016_Q2_Consolidated-English.pdf"
+  },
+  {
+    "year": 2016,
+    "quarter": 3,
+    "kind": "quarterly",
+    "published": "2016-10-28T13:30:00",
+    "url": "https://advcloudfiles.advantech.com/investor/Quarterly/2016_Q3_Consolidated-English.pdf",
+    "file": "2016Q3_2016_Q3_Consolidated-English.pdf"
+  },
+  {
+    "year": 2016,
+    "quarter": 4,
+    "kind": "annual_report",
+    "published": "2017-03-06T13:30:00",
+    "url": "https://advcloudfiles.advantech.com/investor/Shareholder-Annual-Report/106/1-en.pdf",
+    "file": "2016Q4_Shareholder-Annual-Report-106-en.pdf"
+  },
+  {
+    "year": 2017,
+    "quarter": 1,
+    "kind": "quarterly",
+    "published": "2017-04-28T13:30:00",
+    "url": "https://advcloudfiles.advantech.com/investor/Quarterly/2017_Q1_Consolidated-English.pdf",
+    "file": "2017Q1_2017_Q1_Consolidated-English.pdf"
+  },
+  {
+    "year": 2017,
+    "quarter": 2,
+    "kind": "quarterly",
+    "published": "2017-07-27T13:30:00",
+    "url": "https://advcloudfiles.advantech.com/investor/Quarterly/2017_Q2_Consolidated-English.pdf",
+    "file": "2017Q2_2017_Q2_Consolidated-English.pdf"
+  },
+  {
+    "year": 2017,
+    "quarter": 3,
+    "kind": "quarterly",
+    "published": "2017-10-31T13:30:00",
+    "url": "https://advcloudfiles.advantech.com/investor/Quarterly/2017_Q3_Consolidated-English.pdf",
+    "file": "2017Q3_2017_Q3_Consolidated-English.pdf"
+  },
+  {
+    "year": 2017,
+    "quarter": 4,
+    "kind": "annual_report",
+    "published": "2018-03-02T13:30:00",
+    "url": "https://advcloudfiles.advantech.com/investor/Shareholder-Annual-Report/107/1-en.pdf",
+    "file": "2017Q4_Shareholder-Annual-Report-107-en.pdf"
+  },
+  {
+    "year": 2018,
+    "quarter": 1,
+    "kind": "quarterly",
+    "published": "2018-04-27T13:30:00",
+    "url": "https://advcloudfiles.advantech.com/investor/Quarterly/2018_Q1_Consolidated-English.pdf",
+    "file": "2018Q1_2018_Q1_Consolidated-English.pdf"
+  },
+  {
+    "year": 2018,
+    "quarter": 2,
+    "kind": "quarterly",
+    "published": "2018-07-27T13:30:00",
+    "url": "https://advcloudfiles.advantech.com/investor/Quarterly/2018_Q2_Consolidated-English.pdf",
+    "file": "2018Q2_2018_Q2_Consolidated-English.pdf"
+  },
+  {
+    "year": 2018,
+    "quarter": 3,
+    "kind": "quarterly",
+    "published": "2018-10-26T13:30:00",
+    "url": "https://advcloudfiles.advantech.com/investor/Quarterly/2018_Q3_Consolidated-English.pdf",
+    "file": "2018Q3_2018_Q3_Consolidated-English.pdf"
+  },
+  {
+    "year": 2018,
+    "quarter": 4,
+    "kind": "annual",
+    "published": "2019-03-08T13:30:00",
+    "url": "https://advcloudfiles.advantech.com/investor/Annual/2018_Annual_Consolidated_English.pdf",
+    "file": "2018Q4_2018_Annual_Consolidated_English.pdf"
+  },
+  {
+    "year": 2019,
+    "quarter": 1,
+    "kind": "quarterly",
+    "published": "2019-05-03T13:30:00",
+    "url": "https://advcloudfiles.advantech.com/investor/Quarterly/2019_Q1_Consolidated-English.pdf",
+    "file": "2019Q1_2019_Q1_Consolidated-English.pdf"
+  },
+  {
+    "year": 2019,
+    "quarter": 2,
+    "kind": "quarterly",
+    "published": "2019-08-02T13:30:00",
+    "url": "https://advcloudfiles.advantech.com/investor/Quarterly/2019_Q2_Consolidated-English.pdf",
+    "file": "2019Q2_2019_Q2_Consolidated-English.pdf"
+  },
+  {
+    "year": 2019,
+    "quarter": 3,
+    "kind": "quarterly",
+    "published": "2019-11-01T13:30:00",
+    "url": "https://advcloudfiles.advantech.com/investor/Quarterly/2019_Q3_Consolidated-English.pdf",
+    "file": "2019Q3_2019_Q3_Consolidated-English.pdf"
+  },
+  {
+    "year": 2019,
+    "quarter": 4,
+    "kind": "annual",
+    "published": "2020-03-06T13:30:00",
+    "url": "https://advcloudfiles.advantech.com/investor/Annual/2019_Annual_Consolidated_English.pdf",
+    "file": "2019Q4_2019_Annual_Consolidated_English.pdf"
+  },
+  {
+    "year": 2020,
+    "quarter": 1,
+    "kind": "quarterly",
+    "published": "2020-04-29T13:30:00",
+    "url": "https://advcloudfiles.advantech.com/investor/Quarterly/2020_Q1_Consolidated-English.pdf",
+    "file": "2020Q1_2020_Q1_Consolidated-English.pdf"
+  },
+  {
+    "year": 2020,
+    "quarter": 2,
+    "kind": "quarterly",
+    "published": "2020-07-31T13:30:00",
+    "url": "https://advcloudfiles.advantech.com/investor/Quarterly/2020_Q2_Consolidated-English.pdf",
+    "file": "2020Q2_2020_Q2_Consolidated-English.pdf"
+  },
+  {
+    "year": 2020,
+    "quarter": 3,
+    "kind": "quarterly",
+    "published": "2020-10-30T13:30:00",
+    "url": "https://advcloudfiles.advantech.com/investor/Quarterly/2020_Q3_Consolidated-English.pdf",
+    "file": "2020Q3_2020_Q3_Consolidated-English.pdf"
+  },
+  {
+    "year": 2020,
+    "quarter": 4,
+    "kind": "annual",
+    "published": "2021-03-05T13:30:00",
+    "url": "https://advcloudfiles.advantech.com/investor/Annual/2020_Annual_Consolidated_English.pdf",
+    "file": "2020Q4_2020_Annual_Consolidated_English.pdf"
+  },
+  {
+    "year": 2021,
+    "quarter": 1,
+    "kind": "quarterly",
+    "published": "2021-04-29T13:30:00",
+    "url": "https://advcloudfiles.advantech.com/investor/Quarterly/2021_Q1_Consolidated-English.pdf",
+    "file": "2021Q1_2021_Q1_Consolidated-English.pdf"
+  },
+  {
+    "year": 2021,
+    "quarter": 2,
+    "kind": "quarterly",
+    "published": "2021-07-30T13:30:00",
+    "url": "https://advcloudfiles.advantech.com/investor/Quarterly/2021_Q2_Consolidated-English.pdf",
+    "file": "2021Q2_2021_Q2_Consolidated-English.pdf"
+  },
+  {
+    "year": 2021,
+    "quarter": 3,
+    "kind": "quarterly",
+    "published": "2021-10-29T13:30:00",
+    "url": "https://advcloudfiles.advantech.com/investor/Quarterly/2021_Q3_Consolidated-English.pdf",
+    "file": "2021Q3_2021_Q3_Consolidated-English.pdf"
+  },
+  {
+    "year": 2021,
+    "quarter": 4,
+    "kind": "annual",
+    "published": "2022-02-25T13:30:00",
+    "url": "https://advcloudfiles.advantech.com/investor/Annual/2021_Annual_Consolidated_English.pdf",
+    "file": "2021Q4_2021_Annual_Consolidated_English.pdf"
+  },
+  {
+    "year": 2022,
+    "quarter": 1,
+    "kind": "quarterly",
+    "published": "2022-04-29T13:30:00",
+    "url": "https://advcloudfiles.advantech.com/investor/Quarterly/2022_Q1_Consolidated-English.pdf",
+    "file": "2022Q1_2022_Q1_Consolidated-English.pdf"
+  },
+  {
+    "year": 2022,
+    "quarter": 2,
+    "kind": "quarterly",
+    "published": "2022-07-29T13:30:00",
+    "url": "https://advcloudfiles.advantech.com/investor/Quarterly/2022_Q2_Consolidated-English.pdf",
+    "file": "2022Q2_2022_Q2_Consolidated-English.pdf"
+  },
+  {
+    "year": 2022,
+    "quarter": 3,
+    "kind": "quarterly",
+    "published": "2022-10-28T13:30:00",
+    "url": "https://advcloudfiles.advantech.com/investor/Quarterly/2022_Q3_Consolidated-English.pdf",
+    "file": "2022Q3_2022_Q3_Consolidated-English.pdf"
+  },
+  {
+    "year": 2022,
+    "quarter": 4,
+    "kind": "annual",
+    "published": "2023-02-24T13:30:00",
+    "url": "https://advcloudfiles.advantech.com/investor/Annual/2022_Annual_Consolidated_English.pdf",
+    "file": "2022Q4_2022_Annual_Consolidated_English.pdf"
+  },
+  {
+    "year": 2023,
+    "quarter": 1,
+    "kind": "quarterly",
+    "published": "2023-04-28T13:30:00",
+    "url": "https://advcloudfiles.advantech.com/investor/Quarterly/2023_Q1_Consolidated-English.pdf",
+    "file": "2023Q1_2023_Q1_Consolidated-English.pdf"
+  },
+  {
+    "year": 2023,
+    "quarter": 2,
+    "kind": "quarterly",
+    "published": "2023-08-01T13:30:00",
+    "url": "https://advcloudfiles.advantech.com/investor/Quarterly/2023_Q2_Consolidated-English.pdf",
+    "file": "2023Q2_2023_Q2_Consolidated-English.pdf"
+  },
+  {
+    "year": 2023,
+    "quarter": 3,
+    "kind": "quarterly",
+    "published": "2023-10-30T13:30:00",
+    "url": "https://advcloudfiles.advantech.com/investor/Quarterly/2023_Q3_Consolidated-English.pdf",
+    "file": "2023Q3_2023_Q3_Consolidated-English.pdf"
+  },
+  {
+    "year": 2023,
+    "quarter": 4,
+    "kind": "annual",
+    "published": "2024-02-27T13:30:00",
+    "url": "https://advcloudfiles.advantech.com/investor/Annual/2023_Annual_Consolidated_English.pdf",
+    "file": "2023Q4_2023_Annual_Consolidated_English.pdf"
+  },
+  {
+    "year": 2024,
+    "quarter": 1,
+    "kind": "quarterly",
+    "published": "2024-04-26T13:30:00",
+    "url": "https://advcloudfiles.advantech.com/investor/Quarterly/2024_Q1_Consolidated-English.pdf",
+    "file": "2024Q1_2024_Q1_Consolidated-English.pdf"
+  },
+  {
+    "year": 2024,
+    "quarter": 2,
+    "kind": "quarterly",
+    "published": "2024-07-26T13:30:00",
+    "url": "https://advcloudfiles.advantech.com/investor/Quarterly/2024_Q2_Consolidated-English.pdf",
+    "file": "2024Q2_2024_Q2_Consolidated-English.pdf"
+  },
+  {
+    "year": 2024,
+    "quarter": 3,
+    "kind": "quarterly",
+    "published": "2024-10-31T13:30:00",
+    "url": "https://advcloudfiles.advantech.com/investor/Quarterly/2024_Q3_Consolidated-English.pdf",
+    "file": "2024Q3_2024_Q3_Consolidated-English.pdf"
+  },
+  {
+    "year": 2024,
+    "quarter": 4,
+    "kind": "annual",
+    "published": "2025-02-27T13:30:00",
+    "url": "https://advcloudfiles.advantech.com/investor/Annual/2024_Annual_Consolidated_English.pdf",
+    "file": "2024Q4_2024_Annual_Consolidated_English.pdf"
+  },
+  {
+    "year": 2025,
+    "quarter": 1,
+    "kind": "quarterly",
+    "published": "2025-04-24T13:30:00",
+    "url": "https://advcloudfiles.advantech.com/investor/Quarterly/2025_Q1_Consolidated-English.pdf",
+    "file": "2025Q1_2025_Q1_Consolidated-English.pdf"
+  },
+  {
+    "year": 2025,
+    "quarter": 2,
+    "kind": "quarterly",
+    "published": "2025-07-31T13:30:00",
+    "url": "https://advcloudfiles.advantech.com/investor/Quarterly/2025_Q2_Consolidated-English.pdf",
+    "file": "2025Q2_2025_Q2_Consolidated-English.pdf"
+  },
+  {
+    "year": 2025,
+    "quarter": 3,
+    "kind": "quarterly",
+    "published": "2025-10-30T13:30:00",
+    "url": "https://advcloudfiles.advantech.com/investor/Quarterly/2025_Q3_Consolidated-English.pdf",
+    "file": "2025Q3_2025_Q3_Consolidated-English.pdf"
+  },
+  {
+    "year": 2025,
+    "quarter": 4,
+    "kind": "annual",
+    "published": "2026-02-26T13:30:00",
+    "url": "https://advcloudfiles.advantech.com/investor/Annual/2025_Annual_Consolidated_English.pdf",
+    "file": "2025Q4_2025_Annual_Consolidated_English.pdf"
+  },
+  {
+    "year": 2026,
+    "quarter": 1,
+    "kind": "quarterly",
+    "published": "2026-04-30T13:30:00",
+    "url": "https://advcloudfiles.advantech.com/investor/Quarterly/2026_Q1_Consolidated-English.pdf",
+    "file": "2026Q1_2026_Q1_Consolidated-English.pdf"
+  },
+  {
+    "year": 2026,
+    "quarter": 2,
+    "kind": "quarterly",
+    "published": "2026-07-31T13:30:00",
+    "url": "https://advcloudfiles.advantech.com/investor/Quarterly/2026_Q2_Consolidated-English.pdf",
+    "file": "2026Q2_2026_Q2_Consolidated-English.pdf"
+  },
+  {
+    "year": 2026,
+    "quarter": 3,
+    "kind": "quarterly",
+    "published": "2026-10-29T13:30:00",
+    "url": "https://advcloudfiles.advantech.com/investor/Quarterly/2026_Q3_Consolidated-English.pdf",
+    "file": "2026Q3_2026_Q3_Consolidated-English.pdf"
+  }
+]

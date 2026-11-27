@@ -44,6 +44,8 @@ freshness:
 # filing_format: the layout of the earnings filings, which decides how the data is extracted
 #   highlights        a financial highlights table on the first page, results every quarter (Tencent)
 #   statements        only consolidated statements, usually results every half year (Sunny Optical)
+#   travelsky_statements  TravelSky's consolidated statements, results every half year: IFRS until the 2020 interim results, the English
+#                     translation of its CASBE (China Accounting Standards for Business Enterprises) statements from the 2020 annual results
 #   press_release     earnings press release (Form 6-K) filed with the SEC on EDGAR by US-listed companies, every quarter; needs a cik
 #   ifrs_statements   IFRS consolidated financial statements (HTML) furnished on Form 6-K, interim (IAS 34) every quarter and the audited annual
 #                     statements for the fourth quarter (full year minus nine months); needs a cik and sec_exhibit: ifrs_statements (XP)
@@ -225,4 +227,8 @@ stocks:
     hidden: true
     market: CN   # Shanghai; Chinese periodic reports and express reports on CNINFO. A commercial bank
     filing_format: cn_report   # RMB; revenue is the operating income (net interest income included); PB uses the equity of the ordinary shareholders (without preference shares and perpetual bonds)
+    metrics: [pe, ps, pb]
+  - symbol: 0696.HK
+    name: TravelSky Technology
+    filing_format: travelsky_statements   # RMB; H shares in HKD; basic EPS (equal to diluted); never a Non-IFRS EPS, so no pe_non_ifrs
     metrics: [pe, ps, pb]

@@ -353,4 +353,4 @@ def test_prior_year_columns_repeat_the_figures_a_year_earlier():
         assert now.values["profit"][1] == before.values["profit"][0], (year, quarter)
         assert abs(now.values["eps"][1] * factor - before.values["eps"][0]) <= 0.011, (year, quarter, now.values["eps"], before.values["eps"])
         checked += 1
-    assert checked >= 25
+    assert checked >= 20

@@ -96,6 +96,12 @@ TESLA_UPDATE = "tesla_update"  # Tesla's quarterly Update deck (exhibit 99.1 of 
 PERIODIC_REPORT = "periodic_report"  # the Form 10-Q or 10-K of a quarter whose Update has its statements as page images only (Tesla)
 IMAGES_ONLY = "images"  # the "statements" of an index entry of an Update deck whose statements are page images only
 INDEX_PAGE_NAME = "{accession}-index.htm"
+# TSMC: the earnings release and the earnings conference slides, in the same 6-K (from the third quarter of 2019) or the slides in a 6-K of their
+# own the next morning (until the second quarter of 2019); the documents have no telling names ("a3q26e_withguidancexfinal.htm", "d256764d6k.htm")
+# and the slides are small (6-45 KB), so every HTML document of a 6-K is looked at (see tsmc_release.py and _examine_tsmc)
+TSMC_RELEASE = "tsmc_release"
+TSMC_MIN_BYTES = 1_000
+SLIDES_NOTE = "earnings conference slides"  # Filing.note of a 6-K with only the slides: what its equity comes from (see build_history)
 
 
 def make_http_client(cache_dir: str | Path = ".cache", ttl_seconds: int = 12 * 3600, refresh: bool = False) -> HttpClient:
@@ -300,6 +306,8 @@ class SecProvider:
             save_index(index_path, index)
 
         since_ts = pd.Timestamp(since)
+        if exhibit == TSMC_RELEASE:
+            return tsmc_filings(index, folder, since_ts)
         return [
             Filing(e["title"], pd.Timestamp(e["published"]), e["url"], (folder / e["file"]).read_bytes(), supplement=supplement)
             for e in index
@@ -372,6 +380,8 @@ class SecProvider:
         entry = {"accession": accession, "published": f"{item['published']:%Y-%m-%dT%H:%M:%S}", "results": False}
         if exhibit == PERIODIC_REPORT:
             return self._examine_report(cik, item, folder, entry)
+        if exhibit == TSMC_RELEASE:
+            return self._examine_tsmc(cik, item, folder, entry)
         files = self._listing(cik, accession)
         if exhibit == "us_gaap_statements":
             files = sorted(files, key=lambda f: not FINANCIAL_STATEMENTS_NAME_RE.search(f["name"]))  # the names say it from 2016 on (financialstatements...); before, the exhibits are numbered and are told apart by their content
@@ -425,6 +435,49 @@ class SecProvider:
         folder.mkdir(parents=True, exist_ok=True)
         (folder / file).write_bytes(html)
         return {**entry, "results": True, "title": title, "url": url, "file": file}
+
+
+    def _examine_tsmc(self, cik: int, item: dict, folder: Path, entry: dict) -> dict:
+        """A TSMC 6-K: its earnings release ("TSMC Reports ... Quarter EPS of NT$...") and its earnings conference slides with a text balance
+        sheet, whichever it has. The slides are recorded as "slides_file" next to the release, or alone (results false) when the 6-K has only them."""
+        from valuation_monitor.tsmc_release import has_text_balance_sheet, slides_title, title as release_title
+
+        accession = item["accession"]
+        folder_name = accession.replace("-", "")
+        found: dict[str, str] = {}
+        for f in self._listing(cik, accession):
+            name, size = f["name"], int(f["size"] or 0)
+            if not name.lower().endswith((".htm", ".html")) or name.endswith("-index.htm") or name.endswith("-index-headers.html"):
+                continue
+            if not TSMC_MIN_BYTES <= size <= MAX_EXHIBIT_BYTES:
+                continue
+            url = ARCHIVE_URL.format(cik=cik, accession=folder_name, name=name)
+            html = self._archive_get(url, cache=False)
+            file = f"{item['published']:%Y-%m-%d}_{name}"
+            if "file" not in found and (title := release_title(html)):
+                found.update(title=title, url=url, file=file)
+            elif "slides_file" not in found and (title := slides_title(html)) and has_text_balance_sheet(html):
+                found.update(slides_title=title, slides_url=url, slides_file=file)
+            else:
+                continue
+            folder.mkdir(parents=True, exist_ok=True)
+            (folder / file).write_bytes(html)
+        return {**entry, "results": "file" in found, **found}
+
+
+def tsmc_filings(index: list[dict], folder: Path, since: pd.Timestamp) -> list[Filing]:
+    """TSMC's filings from index.json: each earnings release, with the slides of the same 6-K as the attachment "slides", and each 6-K that has
+    only the slides as a supplementary document (its equity is used from its own publication time, see build_history)."""
+    out = []
+    for e in index:
+        if pd.Timestamp(e["published"]) < since:
+            continue
+        if e["results"]:
+            attachments = {"slides": (folder / e["slides_file"]).read_bytes()} if e.get("slides_file") else {}
+            out.append(Filing(e["title"], pd.Timestamp(e["published"]), e["url"], (folder / e["file"]).read_bytes(), attachments))
+        elif e.get("slides_file"):
+            out.append(Filing(e["slides_title"], pd.Timestamp(e["published"]), e["slides_url"], (folder / e["slides_file"]).read_bytes(), note=SLIDES_NOTE, supplement=True))
+    return out
 
 
 PERIODIC_FORMS = ("10-Q", "10-K")

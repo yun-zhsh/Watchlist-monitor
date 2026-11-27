@@ -19,6 +19,7 @@ class Filing:
     provisional: bool = False  # preliminary data (e.g. Samsung earnings call presentation), replaced when the official report is out
     note: str = ""  # explanation of the publication time etc. (e.g. the annual report keeps the express report's publication time)
     supplement: bool = False  # a supplementary document of results parsed from other filings (XP's press release): only its Non-GAAP EPS is read
+    correction: bool = False  # a corrected reissue of an earlier filing of the same period (a Japanese Kessan Tanshin): used from its own publication on
 
 
 @dataclass(frozen=True)

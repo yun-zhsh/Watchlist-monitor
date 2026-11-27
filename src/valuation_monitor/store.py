@@ -266,7 +266,7 @@ class EarningsStore:
 
         trading_days is used to list in the saved detail the trading day each value actually starts to be used; fmt is the layout of the filings;
         non_gaap is the EPS basis of the stock's Non-GAAP PE (None without one), passed to the parser; non_gaap_changes are the days the company
-        changed its definition (see build_history); fiscal_year_end is the month its fiscal year ends, used for the labels only.
+        changed its definition (see build_history); fiscal_year_end is the month its fiscal year ends, used for the labels and for where its year-to-date figures start.
         """
         version = PARSER_VERSIONS[fmt]
         saved = {}

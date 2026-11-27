@@ -44,6 +44,11 @@ Q = lambda text: pd.Period(text, freq="Q")  # noqa: E731
         (9, "2024Q4", "FY2025Q1"),
         (9, "2025Q2", "FY2025Q3"),
         (9, "2025Q3", "FY2025Q4"),
+        # August (SHIFT): FY2025 runs from September 2024 to August 2025; its quarters end in November, February, May and August
+        (8, "2024Q4", "FY2025Q1"),
+        (8, "2025Q1", "FY2025Q2"),
+        (8, "2025Q2", "FY2025Q3"),
+        (8, "2025Q3", "FY2025Q4"),
         # January (NVIDIA): FY2025 runs from February 2024 to January 2025; its quarters are kept under the calendar quarter of
         # their end minus 45 days (FY2025Q1 ended 2024-04-28: 2024Q1)
         (1, "2024Q1", "FY2025Q1"),
@@ -102,7 +107,8 @@ def test_alibaba_and_dynatrace_end_their_fiscal_year_in_march():
     assert ends["MSFT"] == 6  # Microsoft's fiscal year ends on June 30
     assert ends["AAPL"] == 9  # Apple's fiscal year ends on the last Saturday of September
     assert ends["NVDA"] == 1  # NVIDIA's fiscal year ends on the last Sunday of January
-    assert all(end == 12 for symbol, end in ends.items() if symbol not in {"BABA", "DT", "MSFT", "AAPL", "NVDA"})
+    assert ends["3697.T"] == 8  # SHIFT's fiscal year ends on August 31
+    assert all(end == 12 for symbol, end in ends.items() if symbol not in {"BABA", "DT", "MSFT", "AAPL", "NVDA", "3697.T"})
 
 
 # what is shown: the pages, the downloads and the MCP results of a March year end

@@ -219,7 +219,8 @@ def test_publication_time_from_the_website_the_list_or_the_close():
     when, note = publication(dated, None)
     assert when == pd.Timestamp("2020-01-31 15:30") and "next trading day" in note
     assert KR.available_date(when) == pd.Timestamp("2020-02-01")  # at the close: the next day (the next trading day once prices are known)
-    assert publication(dated, (pd.Timestamp("2020-01-31 08:00"), "FactSet")) == (pd.Timestamp("2020-01-31 08:00"), "the time of the earnings call from FactSet (the IR website gives only its date)")
+    when, note = publication(dated, (pd.Timestamp("2020-01-31 08:00"), "FactSet"))
+    assert when == pd.Timestamp("2020-01-31 08:00") and note.startswith("the time of the earnings conference call from a FactSet event calendar")
     assert publication(dated, (pd.Timestamp("2020-01-30 16:00"), "FactSet"))[0] == pd.Timestamp("2020-01-31 15:30")  # another day: ignored
 
 
@@ -235,8 +236,12 @@ def test_call_times_list(tmp_path):
         read_call_times(path)
 
 
-def test_the_shipped_call_times_list_is_readable():
-    assert isinstance(read_call_times(), dict)
+def test_the_shipped_call_times_list_covers_the_quarters_without_a_time_on_the_website():
+    times = read_call_times()
+    assert set(times) >= {(y, q) for y in range(2014, 2023) for q in range(1, 5)} | {(2013, 4)}
+    assert times[(2014, 4)] == (pd.Timestamp("2015-01-28 15:30"), "FactSet") and times[(2017, 3)] == (pd.Timestamp("2017-10-26 13:00"), "FactSet")
+    assert KR.available_date(times[(2014, 4)][0]) == pd.Timestamp("2015-01-29")  # at or after the close: the next day
+    assert all(t.hour == 9 for p, (t, _) in times.items() if p not in ((2014, 4), (2017, 3)))
 
 
 # --- the provider, with a fake website ---
@@ -377,7 +382,7 @@ def test_a_call_time_listed_later_changes_the_saved_publication_time(tmp_path):
     assert provider.results_announcements("000660.KS", SINCE)[0].published == pd.Timestamp("2019-04-25 15:30")
     times.write_text("fiscal_year,quarter,date,time,time_zone,source\n2019,1,2019-04-25,08:00,Asia/Seoul,FactSet\n", encoding="utf-8")
     found = provider.results_announcements("000660.KS", SINCE)
-    assert found[0].published == pd.Timestamp("2019-04-25 08:00") and found[0].note.startswith("the time of the earnings call from FactSet")
+    assert found[0].published == pd.Timestamp("2019-04-25 08:00") and found[0].note.startswith("the time of the earnings conference call from a FactSet")
 
 
 def test_store_parses_again_a_filing_whose_publication_time_changed(tmp_path):

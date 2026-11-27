@@ -239,7 +239,7 @@ def as_saved(announcement: Announcement, parser_version: int, market: Market) ->
     return stored
 
 
-REPARSE_WHEN_TIME_CHANGES = {"skhynix_statements"}  # layouts whose saved parse results are redone when the provider gives a filing another publication time or status (SK Hynix: call times listed later)
+REPARSE_WHEN_TIME_CHANGES = {"skhynix_statements"}  # layouts whose saved parse results are redone when the provider gives a filing another publication time, status or note (SK Hynix: call times listed later)
 
 
 class EarningsStore:
@@ -286,7 +286,7 @@ class EarningsStore:
         for f in filings:
             try:
                 kept = saved.get(f.url)
-                if fmt in REPARSE_WHEN_TIME_CHANGES and kept is not None and (kept.published, kept.provisional) != (pd.Timestamp(f.published).floor("min"), f.provisional):
+                if fmt in REPARSE_WHEN_TIME_CHANGES and kept is not None and (kept.published, kept.provisional, kept.note) != (pd.Timestamp(f.published).floor("min"), f.provisional, f.note):
                     kept = None  # the same document with another publication time (saved to the minute) or status, e.g. a call time learnt later: parsed again
                 parsed.append(kept or as_saved(parse_announcement(f, fmt, market, non_gaap), version, market))
             except Exception as e:

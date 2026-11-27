@@ -18,7 +18,8 @@ Publication time. The results are first published on the day of the earnings cal
 comes out shortly before it). The reports do not state a publication time and come out later, but their figures are those of the call (reviewed), so every
 record keeps the time of the call, as is done for Samsung (see release_info). The time of day comes from, in this order:
   1. the IR website (from the first quarter of 2023 on);
-  2. the list of earnings call times in CALL_TIMES_FILE (supplied by the maintainer from FactSet), used only when its date is the website's date;
+  2. the list of earnings conference call times in CALL_TIMES_FILE, from a FactSet event calendar supplied by the maintainer (every quarter from the
+     fourth of 2013; all at 9:00 except 4Q14, 15:30, and 3Q17, 13:00), used only when its date is the website's date;
   3. otherwise only the date is known, and the figures are taken as published after the 15:30 close: they count from the next trading day.
 """
 
@@ -54,7 +55,7 @@ CALL_RE = re.compile(r"(?P<date>[A-Z][a-z]{2,8} \d{1,2}, 20\d\d)(?: ?/ ?(?P<hour
 TITLE_RE = re.compile(r"FY(?P<year>20\d\d) Q(?P<q>[1-4]) Earnings? Results")
 NOTES = {
     "website": "the time of the earnings call on the SK Hynix IR website (the results are published shortly before it, before the market opens)",
-    "list": "the time of the earnings call from {source} (the IR website gives only its date)",
+    "list": "the time of the earnings conference call from a {source} event calendar supplied by the maintainer (the IR website gives only its date; the results release may come slightly earlier the same day)",
     "date": "the IR website gives only the date of the earnings call; taken as after the 15:30 close, so the figures count from the next trading day",
 }
 REPORT_NOTE = "the figures come from the English review or audit report, uploaded to the IR website weeks after the call; they are those published at the call, reviewed by the auditors"

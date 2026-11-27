@@ -303,7 +303,7 @@ def parsed(year: int, quarter: int):
 
 @saved
 def test_every_saved_report_parses_and_its_shares_agree_with_profit_over_eps():
-    assert len(index()) >= 46 and (index()[0]["year"], index()[0]["quarter"]) == (2015, 1)
+    assert len(index()) >= 47 and (index()[0]["year"], index()[0]["quarter"]) == (2015, 1)
     for e in index():
         p = parsed(e["year"], e["quarter"])
         assert p.period == pd.Period(year=e["year"], quarter=e["quarter"], freq="Q") and p.quarterly == (e["quarter"] != 4)

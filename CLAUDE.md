@@ -15,7 +15,9 @@
   Chinese-language A-share filings; never displayed), the Chinese string fixtures in `tests/test_cn.py`, and the saved
   original Chinese PDFs under `data/filings/002415.SZ/`, `data/filings/002410.SZ/` and `data/filings/300308.SZ/`;
   likewise `src/valuation_monitor/jp_patterns.py` (patterns used to *read* the Japanese Kessan Tanshin), the Japanese string
-  fixtures in `tests/test_jp.py`, and the saved original Japanese PDFs under `data/filings/3697.T/`.
+  fixtures in `tests/test_jp.py`, and the saved original Japanese PDFs under `data/filings/3697.T/`; likewise the saved original PDFs of SK Hynix
+  under `data/filings/000660.KS/` may contain Korean (footnotes of its earnings presentations; the pages saved so far have none), while their
+  saved file names, the index and everything read from them stay English.
 - `tests/test_english_only.py` enforces this (string literals, comments and docstrings in `src/` and `tests/`,
   templates, static files, config, workflow, README/docs, `data/` text files and the text cells of `data/valuation.db`, rendered pages and downloads).
   Keep it green; extend it when adding new output channels or file types.

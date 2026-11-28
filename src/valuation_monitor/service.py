@@ -18,6 +18,7 @@ from valuation_monitor.providers.hkex import HkexProvider
 from valuation_monitor.providers.http import HttpClient
 from valuation_monitor.providers.samsung import SamsungIrProvider
 from valuation_monitor.providers.advantech import AdvantechIrProvider
+from valuation_monitor.providers.cvm import CvmProvider
 from valuation_monitor.providers.skhynix import SkHynixIrProvider
 from valuation_monitor.providers.sec import SecProvider, SecUserAgentMissing, make_http_client
 from valuation_monitor.providers.tencent import TencentQuoteProvider
@@ -107,6 +108,7 @@ class Monitor:
             self.earnings,
             XjStorageProvider(http, self.data_dir / "filings"),
             AdvantechIrProvider(http, self.data_dir / "filings"),
+            CvmProvider(http, self.data_dir / "filings"),
             SkHynixIrProvider(http, self.data_dir / "filings"),
         )
 

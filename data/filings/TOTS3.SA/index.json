@@ -1,0 +1,642 @@
+[
+  {
+    "kind": "ITR",
+    "reference_date": "2013-03-31",
+    "version": 1,
+    "document_id": 26501,
+    "title": "ITR 1Q13",
+    "published": "2013-05-02T17:46:55",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=26501",
+    "file": "2013-03-31_ITR_v1_26501.json"
+  },
+  {
+    "kind": "ITR",
+    "reference_date": "2013-06-30",
+    "version": 1,
+    "document_id": 30094,
+    "title": "ITR 2Q13",
+    "published": "2013-07-31T17:40:18",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=30094",
+    "file": "2013-06-30_ITR_v1_30094.json"
+  },
+  {
+    "kind": "ITR",
+    "reference_date": "2013-09-30",
+    "version": 1,
+    "document_id": 32152,
+    "title": "ITR 3Q13",
+    "published": "2013-10-30T17:26:46",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=32152",
+    "file": "2013-09-30_ITR_v1_32152.json"
+  },
+  {
+    "kind": "DFP",
+    "reference_date": "2013-12-31",
+    "version": 1,
+    "document_id": 34227,
+    "title": "DFP 2013",
+    "published": "2014-01-29T17:40:21",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=34227",
+    "file": "2013-12-31_DFP_v1_34227.json"
+  },
+  {
+    "kind": "ITR",
+    "reference_date": "2014-03-31",
+    "version": 1,
+    "document_id": 36502,
+    "title": "ITR 1Q14",
+    "published": "2014-04-29T18:00:35",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=36502",
+    "file": "2014-03-31_ITR_v1_36502.json"
+  },
+  {
+    "kind": "ITR",
+    "reference_date": "2014-06-30",
+    "version": 1,
+    "document_id": 39990,
+    "title": "ITR 2Q14",
+    "published": "2014-07-30T17:39:34",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=39990",
+    "file": "2014-06-30_ITR_v1_39990.json"
+  },
+  {
+    "kind": "ITR",
+    "reference_date": "2014-09-30",
+    "version": 1,
+    "document_id": 41863,
+    "title": "ITR 3Q14",
+    "published": "2014-10-29T17:54:59",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=41863",
+    "file": "2014-09-30_ITR_v1_41863.json"
+  },
+  {
+    "kind": "DFP",
+    "reference_date": "2014-12-31",
+    "version": 1,
+    "document_id": 43673,
+    "title": "DFP 2014",
+    "published": "2015-01-28T17:42:22",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=43673",
+    "file": "2014-12-31_DFP_v1_43673.json"
+  },
+  {
+    "kind": "DFP",
+    "reference_date": "2014-12-31",
+    "version": 2,
+    "document_id": 43677,
+    "title": "DFP 2014 (version 2)",
+    "published": "2015-01-28T19:19:12",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=43677",
+    "file": "2014-12-31_DFP_v2_43677.json"
+  },
+  {
+    "kind": "ITR",
+    "reference_date": "2015-03-31",
+    "version": 1,
+    "document_id": 46507,
+    "title": "ITR 1Q15",
+    "published": "2015-05-06T17:51:10",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=46507",
+    "file": "2015-03-31_ITR_v1_46507.json"
+  },
+  {
+    "kind": "ITR",
+    "reference_date": "2015-06-30",
+    "version": 1,
+    "document_id": 49472,
+    "title": "ITR 2Q15",
+    "published": "2015-08-05T17:41:31",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=49472",
+    "file": "2015-06-30_ITR_v1_49472.json"
+  },
+  {
+    "kind": "ITR",
+    "reference_date": "2015-09-30",
+    "version": 1,
+    "document_id": 51149,
+    "title": "ITR 3Q15",
+    "published": "2015-10-28T17:40:07",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=51149",
+    "file": "2015-09-30_ITR_v1_51149.json"
+  },
+  {
+    "kind": "DFP",
+    "reference_date": "2015-12-31",
+    "version": 1,
+    "document_id": 54126,
+    "title": "DFP 2015",
+    "published": "2016-03-16T18:55:16",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=54126",
+    "file": "2015-12-31_DFP_v1_54126.json"
+  },
+  {
+    "kind": "ITR",
+    "reference_date": "2016-03-31",
+    "version": 1,
+    "document_id": 55563,
+    "title": "ITR 1Q16",
+    "published": "2016-05-04T18:53:06",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=55563",
+    "file": "2016-03-31_ITR_v1_55563.json"
+  },
+  {
+    "kind": "ITR",
+    "reference_date": "2016-06-30",
+    "version": 1,
+    "document_id": 58438,
+    "title": "ITR 2Q16",
+    "published": "2016-08-03T17:53:10",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=58438",
+    "file": "2016-06-30_ITR_v1_58438.json"
+  },
+  {
+    "kind": "ITR",
+    "reference_date": "2016-09-30",
+    "version": 1,
+    "document_id": 60338,
+    "title": "ITR 3Q16",
+    "published": "2016-11-03T18:20:50",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=60338",
+    "file": "2016-09-30_ITR_v1_60338.json"
+  },
+  {
+    "kind": "DFP",
+    "reference_date": "2016-12-31",
+    "version": 1,
+    "document_id": 62713,
+    "title": "DFP 2016",
+    "published": "2017-02-22T18:36:01",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=62713",
+    "file": "2016-12-31_DFP_v1_62713.json"
+  },
+  {
+    "kind": "ITR",
+    "reference_date": "2017-03-31",
+    "version": 1,
+    "document_id": 64634,
+    "title": "ITR 1Q17",
+    "published": "2017-05-03T18:18:28",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=64634",
+    "file": "2017-03-31_ITR_v1_64634.json"
+  },
+  {
+    "kind": "ITR",
+    "reference_date": "2017-06-30",
+    "version": 1,
+    "document_id": 67477,
+    "title": "ITR 2Q17",
+    "published": "2017-08-02T18:15:52",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=67477",
+    "file": "2017-06-30_ITR_v1_67477.json"
+  },
+  {
+    "kind": "ITR",
+    "reference_date": "2017-09-30",
+    "version": 1,
+    "document_id": 69571,
+    "title": "ITR 3Q17",
+    "published": "2017-11-08T18:13:07",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=69571",
+    "file": "2017-09-30_ITR_v1_69571.json"
+  },
+  {
+    "kind": "DFP",
+    "reference_date": "2017-12-31",
+    "version": 1,
+    "document_id": 71390,
+    "title": "DFP 2017",
+    "published": "2018-02-07T18:43:23",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=71390",
+    "file": "2017-12-31_DFP_v1_71390.json"
+  },
+  {
+    "kind": "ITR",
+    "reference_date": "2018-03-31",
+    "version": 1,
+    "document_id": 74066,
+    "title": "ITR 1Q18",
+    "published": "2018-05-09T18:21:48",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=74066",
+    "file": "2018-03-31_ITR_v1_74066.json"
+  },
+  {
+    "kind": "ITR",
+    "reference_date": "2018-06-30",
+    "version": 1,
+    "document_id": 76621,
+    "title": "ITR 2Q18",
+    "published": "2018-08-01T18:26:09",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=76621",
+    "file": "2018-06-30_ITR_v1_76621.json"
+  },
+  {
+    "kind": "ITR",
+    "reference_date": "2018-09-30",
+    "version": 1,
+    "document_id": 79128,
+    "title": "ITR 3Q18",
+    "published": "2018-11-13T18:27:30",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=79128",
+    "file": "2018-09-30_ITR_v1_79128.json"
+  },
+  {
+    "kind": "DFP",
+    "reference_date": "2018-12-31",
+    "version": 1,
+    "document_id": 80641,
+    "title": "DFP 2018",
+    "published": "2019-02-13T18:14:35",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=80641",
+    "file": "2018-12-31_DFP_v1_80641.json"
+  },
+  {
+    "kind": "ITR",
+    "reference_date": "2019-03-31",
+    "version": 1,
+    "document_id": 82906,
+    "title": "ITR 1Q19",
+    "published": "2019-05-08T17:52:08",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=82906",
+    "file": "2019-03-31_ITR_v1_82906.json"
+  },
+  {
+    "kind": "ITR",
+    "reference_date": "2019-06-30",
+    "version": 1,
+    "document_id": 86133,
+    "title": "ITR 2Q19",
+    "published": "2019-08-07T18:19:53",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=86133",
+    "file": "2019-06-30_ITR_v1_86133.json"
+  },
+  {
+    "kind": "ITR",
+    "reference_date": "2019-09-30",
+    "version": 1,
+    "document_id": 89064,
+    "title": "ITR 3Q19",
+    "published": "2019-11-06T18:16:59",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=89064",
+    "file": "2019-09-30_ITR_v1_89064.json"
+  },
+  {
+    "kind": "DFP",
+    "reference_date": "2019-12-31",
+    "version": 1,
+    "document_id": 90914,
+    "title": "DFP 2019",
+    "published": "2020-02-12T18:14:34",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=90914",
+    "file": "2019-12-31_DFP_v1_90914.json"
+  },
+  {
+    "kind": "ITR",
+    "reference_date": "2020-03-31",
+    "version": 1,
+    "document_id": 92749,
+    "title": "ITR 1Q20",
+    "published": "2020-05-06T18:14:29",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=92749",
+    "file": "2020-03-31_ITR_v1_92749.json"
+  },
+  {
+    "kind": "ITR",
+    "reference_date": "2020-06-30",
+    "version": 1,
+    "document_id": 95692,
+    "title": "ITR 2Q20",
+    "published": "2020-08-05T18:37:24",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=95692",
+    "file": "2020-06-30_ITR_v1_95692.json"
+  },
+  {
+    "kind": "ITR",
+    "reference_date": "2020-09-30",
+    "version": 1,
+    "document_id": 97949,
+    "title": "ITR 3Q20",
+    "published": "2020-10-29T19:04:12",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=97949",
+    "file": "2020-09-30_ITR_v1_97949.json"
+  },
+  {
+    "kind": "DFP",
+    "reference_date": "2020-12-31",
+    "version": 1,
+    "document_id": 100096,
+    "title": "DFP 2020",
+    "published": "2021-02-10T21:08:42",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=100096",
+    "file": "2020-12-31_DFP_v1_100096.json"
+  },
+  {
+    "kind": "ITR",
+    "reference_date": "2021-03-31",
+    "version": 1,
+    "document_id": 103434,
+    "title": "ITR 1Q21",
+    "published": "2021-05-05T19:52:28",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=103434",
+    "file": "2021-03-31_ITR_v1_103434.json"
+  },
+  {
+    "kind": "ITR",
+    "reference_date": "2021-06-30",
+    "version": 1,
+    "document_id": 107269,
+    "title": "ITR 2Q21",
+    "published": "2021-08-04T19:13:40",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=107269",
+    "file": "2021-06-30_ITR_v1_107269.json"
+  },
+  {
+    "kind": "ITR",
+    "reference_date": "2021-09-30",
+    "version": 1,
+    "document_id": 109682,
+    "title": "ITR 3Q21",
+    "published": "2021-11-10T19:17:05",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=109682",
+    "file": "2021-09-30_ITR_v1_109682.json"
+  },
+  {
+    "kind": "ITR",
+    "reference_date": "2021-09-30",
+    "version": 2,
+    "document_id": 110219,
+    "title": "ITR 3Q21 (version 2)",
+    "published": "2021-11-16T20:43:28",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=110219",
+    "file": "2021-09-30_ITR_v2_110219.json"
+  },
+  {
+    "kind": "DFP",
+    "reference_date": "2020-12-31",
+    "version": 2,
+    "document_id": 111812,
+    "title": "DFP 2020 (version 2)",
+    "published": "2022-02-16T19:43:48",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=111812",
+    "file": "2020-12-31_DFP_v2_111812.json"
+  },
+  {
+    "kind": "DFP",
+    "reference_date": "2021-12-31",
+    "version": 1,
+    "document_id": 111818,
+    "title": "DFP 2021",
+    "published": "2022-02-16T21:18:06",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=111818",
+    "file": "2021-12-31_DFP_v1_111818.json"
+  },
+  {
+    "kind": "ITR",
+    "reference_date": "2022-03-31",
+    "version": 1,
+    "document_id": 114288,
+    "title": "ITR 1Q22",
+    "published": "2022-05-04T19:38:31",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=114288",
+    "file": "2022-03-31_ITR_v1_114288.json"
+  },
+  {
+    "kind": "ITR",
+    "reference_date": "2020-03-31",
+    "version": 2,
+    "document_id": 115737,
+    "title": "ITR 1Q20 (version 2)",
+    "published": "2022-05-25T18:38:37",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=115737",
+    "file": "2020-03-31_ITR_v2_115737.json"
+  },
+  {
+    "kind": "ITR",
+    "reference_date": "2020-06-30",
+    "version": 2,
+    "document_id": 115739,
+    "title": "ITR 2Q20 (version 2)",
+    "published": "2022-05-25T18:54:22",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=115739",
+    "file": "2020-06-30_ITR_v2_115739.json"
+  },
+  {
+    "kind": "ITR",
+    "reference_date": "2020-09-30",
+    "version": 2,
+    "document_id": 115743,
+    "title": "ITR 3Q20 (version 2)",
+    "published": "2022-05-25T19:06:47",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=115743",
+    "file": "2020-09-30_ITR_v2_115743.json"
+  },
+  {
+    "kind": "ITR",
+    "reference_date": "2021-03-31",
+    "version": 2,
+    "document_id": 115746,
+    "title": "ITR 1Q21 (version 2)",
+    "published": "2022-05-25T19:17:35",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=115746",
+    "file": "2021-03-31_ITR_v2_115746.json"
+  },
+  {
+    "kind": "ITR",
+    "reference_date": "2021-06-30",
+    "version": 2,
+    "document_id": 115747,
+    "title": "ITR 2Q21 (version 2)",
+    "published": "2022-05-25T19:25:13",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=115747",
+    "file": "2021-06-30_ITR_v2_115747.json"
+  },
+  {
+    "kind": "ITR",
+    "reference_date": "2021-09-30",
+    "version": 3,
+    "document_id": 115748,
+    "title": "ITR 3Q21 (version 3)",
+    "published": "2022-05-25T19:31:53",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=115748",
+    "file": "2021-09-30_ITR_v3_115748.json"
+  },
+  {
+    "kind": "ITR",
+    "reference_date": "2022-06-30",
+    "version": 1,
+    "document_id": 119204,
+    "title": "ITR 2Q22",
+    "published": "2022-08-03T18:54:21",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=119204",
+    "file": "2022-06-30_ITR_v1_119204.json"
+  },
+  {
+    "kind": "ITR",
+    "reference_date": "2022-09-30",
+    "version": 1,
+    "document_id": 121472,
+    "title": "ITR 3Q22",
+    "published": "2022-11-08T19:03:39",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=121472",
+    "file": "2022-09-30_ITR_v1_121472.json"
+  },
+  {
+    "kind": "DFP",
+    "reference_date": "2022-12-31",
+    "version": 1,
+    "document_id": 123527,
+    "title": "DFP 2022",
+    "published": "2023-02-14T18:49:21",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=123527",
+    "file": "2022-12-31_DFP_v1_123527.json"
+  },
+  {
+    "kind": "ITR",
+    "reference_date": "2023-03-31",
+    "version": 1,
+    "document_id": 125914,
+    "title": "ITR 1Q23",
+    "published": "2023-05-08T18:39:26",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=125914",
+    "file": "2023-03-31_ITR_v1_125914.json"
+  },
+  {
+    "kind": "ITR",
+    "reference_date": "2023-06-30",
+    "version": 1,
+    "document_id": 129830,
+    "title": "ITR 2Q23",
+    "published": "2023-08-08T18:19:31",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=129830",
+    "file": "2023-06-30_ITR_v1_129830.json"
+  },
+  {
+    "kind": "ITR",
+    "reference_date": "2023-09-30",
+    "version": 1,
+    "document_id": 131852,
+    "title": "ITR 3Q23",
+    "published": "2023-11-07T18:30:51",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=131852",
+    "file": "2023-09-30_ITR_v1_131852.json"
+  },
+  {
+    "kind": "DFP",
+    "reference_date": "2023-12-31",
+    "version": 1,
+    "document_id": 133904,
+    "title": "DFP 2023",
+    "published": "2024-02-07T18:25:54",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=133904",
+    "file": "2023-12-31_DFP_v1_133904.json"
+  },
+  {
+    "kind": "ITR",
+    "reference_date": "2024-03-31",
+    "version": 1,
+    "document_id": 136696,
+    "title": "ITR 1Q24",
+    "published": "2024-05-08T18:25:36",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=136696",
+    "file": "2024-03-31_ITR_v1_136696.json"
+  },
+  {
+    "kind": "ITR",
+    "reference_date": "2024-06-30",
+    "version": 1,
+    "document_id": 140501,
+    "title": "ITR 2Q24",
+    "published": "2024-08-07T18:32:56",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=140501",
+    "file": "2024-06-30_ITR_v1_140501.json"
+  },
+  {
+    "kind": "ITR",
+    "reference_date": "2024-09-30",
+    "version": 1,
+    "document_id": 142620,
+    "title": "ITR 3Q24",
+    "published": "2024-11-06T18:47:41",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=142620",
+    "file": "2024-09-30_ITR_v1_142620.json"
+  },
+  {
+    "kind": "DFP",
+    "reference_date": "2024-12-31",
+    "version": 1,
+    "document_id": 144748,
+    "title": "DFP 2024",
+    "published": "2025-02-12T19:00:46",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=144748",
+    "file": "2024-12-31_DFP_v1_144748.json"
+  },
+  {
+    "kind": "ITR",
+    "reference_date": "2025-03-31",
+    "version": 1,
+    "document_id": 147118,
+    "title": "ITR 1Q25",
+    "published": "2025-05-08T18:29:20",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=147118",
+    "file": "2025-03-31_ITR_v1_147118.json"
+  },
+  {
+    "kind": "ITR",
+    "reference_date": "2025-06-30",
+    "version": 1,
+    "document_id": 150669,
+    "title": "ITR 2Q25",
+    "published": "2025-08-06T18:45:59",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=150669",
+    "file": "2025-06-30_ITR_v1_150669.json"
+  },
+  {
+    "kind": "ITR",
+    "reference_date": "2025-09-30",
+    "version": 1,
+    "document_id": 152679,
+    "title": "ITR 3Q25",
+    "published": "2025-11-05T18:07:45",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=152679",
+    "file": "2025-09-30_ITR_v1_152679.json"
+  },
+  {
+    "kind": "DFP",
+    "reference_date": "2025-12-31",
+    "version": 1,
+    "document_id": 154722,
+    "title": "DFP 2025",
+    "published": "2026-02-11T19:26:10",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=154722",
+    "file": "2025-12-31_DFP_v1_154722.json"
+  },
+  {
+    "kind": "ITR",
+    "reference_date": "2026-03-31",
+    "version": 1,
+    "document_id": 156731,
+    "title": "ITR 1Q26",
+    "published": "2026-05-06T18:45:14",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=156731",
+    "file": "2026-03-31_ITR_v1_156731.json"
+  },
+  {
+    "kind": "ITR",
+    "reference_date": "2026-06-30",
+    "version": 1,
+    "document_id": 160172,
+    "title": "ITR 2Q26",
+    "published": "2026-08-05T18:15:08",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=160172",
+    "file": "2026-06-30_ITR_v1_160172.json"
+  },
+  {
+    "kind": "ITR",
+    "reference_date": "2026-09-30",
+    "version": 1,
+    "document_id": 161966,
+    "title": "ITR 3Q26",
+    "published": "2026-11-04T18:08:03",
+    "url": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=161966",
+    "file": "2026-09-30_ITR_v1_161966.json"
+  }
+]

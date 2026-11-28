@@ -37,6 +37,7 @@ from valuation_monitor.analysis import BAND_PERCENTILES, evaluate
 from valuation_monitor.audit import explain, num
 from valuation_monitor.config import Config, StockConfig, load_config
 from valuation_monitor.data import StockData
+from valuation_monitor.audit import eps_kind
 from valuation_monitor.filings import effective_day
 from valuation_monitor.market_calendar import get_market
 from valuation_monitor.providers.base import Release
@@ -483,6 +484,7 @@ class ValuationService:
             )
 
         for series, item in SOURCE_SERIES[column]:
+            item = item.replace("Basic EPS", "Diluted EPS") if series == "eps" and eps_kind(rec) == "diluted" else item
             for comp in rec.get(series) or []:
                 add(series, item, comp.period, comp.value, comp.derived, comp.note)
         latest = rec["period_label"]
@@ -491,7 +493,7 @@ class ValuationService:
         if column in ("revenue_per_share_ttm", "book_value_per_share"):
             if rec.get("shares_source") == "implied":
                 add("profit", "Net profit (used to imply the share count)", latest, rec.get("profit"))
-                add("eps", "Basic EPS (used to imply the share count)", latest, rec.get("eps_latest"))
+                add("eps", f"{eps_kind(rec).capitalize()} EPS (used to imply the share count)", latest, rec.get("eps_latest"))
             else:
                 add("wa_shares", "Weighted average shares", latest, None)
         return out

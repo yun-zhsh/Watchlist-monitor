@@ -111,7 +111,7 @@ SERIES_LABELS = {
     "equity": "Equity attributable to owners",
     "wa_shares": "Weighted average shares",
 }
-PARSER_VERSIONS = {"highlights": 5, "statements": 3, "press_release": 4, "us_press_release": 9, "us_gaap_statements": 5, "ifrs_statements": 1, "sap_ifrs": 2, "kifrs_statements": 4, "cn_report": 8, "tesla_update": 1, "jp_tanshin": 1, "travelsky_statements": 1, "tifrs_statements": 1, "cvm_statements": 1}  # add 1 when the parsing rules change; saved parse results are then re-parsed automatically
+PARSER_VERSIONS = {"highlights": 5, "statements": 3, "press_release": 5, "us_press_release": 9, "us_gaap_statements": 5, "ifrs_statements": 1, "sap_ifrs": 2, "kifrs_statements": 4, "cn_report": 8, "tesla_update": 1, "jp_tanshin": 1, "travelsky_statements": 1, "tifrs_statements": 1, "cvm_statements": 1}  # add 1 when the parsing rules change; saved parse results are then re-parsed automatically
 SUPPLEMENT_FORMAT = "adjusted_eps_release"  # the layout of a supplementary document (XP's press release, see release_eps.py); its parse results carry their own version
 SUPPLEMENT_PARSER_VERSION = 1  # add 1 when the rules of release_eps.py change
 SUPPLEMENT_TABLE = "supplement"  # the "table" of a supplementary document's parse result in the stored announcements
@@ -401,7 +401,7 @@ def parse_announcement(filing: Filing, fmt: str = "highlights", market: Market =
         if fmt == "tesla_update":
             parsed = parse_tesla_filing(filing, non_gaap)
         elif fmt == "press_release":
-            parsed = parse_press_release(filing.content)
+            parsed = parse_press_release(filing.content, non_gaap)
         elif fmt == "us_press_release":
             parsed = parse_us_release(filing.content, non_gaap)
         elif fmt == "us_gaap_statements":

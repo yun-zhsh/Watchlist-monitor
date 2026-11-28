@@ -1,5 +1,6 @@
 """Extract earnings data from the earnings press releases (HTML) of US-listed companies (verified on all JD press releases from August 2014 on
-and all Alibaba Group releases from January 2015 on).
+all Alibaba Group releases from January 2015 on and all PDD Holdings releases since its 2018 IPO; the rules for PDD are appended
+after the others and tried only where those find nothing, see PDD_GROUP_RE).
 
 The tables in the press release are laid out as "header + data rows":
   the first header row describes each group (For the three months ended / six months ended / year ended),

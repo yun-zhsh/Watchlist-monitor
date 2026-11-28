@@ -260,6 +260,13 @@ stocks:
     sec_exhibit: tsmc_release   # for the quarters whose slides have no text balance sheet, the equity comes from the consolidated financial statements 6-K (statements.json)
     metrics: [pe, ps, pb]   # TSMC has never published a Non-GAAP EPS; PB on total equity including non-controlling interests (the slides give no other)
     eps_basis: { pe: diluted }   # the release gives diluted EPS only: "Diluted PE (TTM)"
+  - symbol: PDD
+    name: PDD Holdings (ADR)
+    market: US
+    cik: 1737806   # PDD Holdings Inc. (Pinduoduo Inc. until February 2023); results every calendar quarter since its July 2018 IPO
+    filing_format: press_release   # the price is in USD per ADS (4 Class A ordinary shares); EPS is in RMB per ADS
+    metrics: [pe, pe_non_gaap, ps, pb]
+    eps_basis: { pe_non_gaap: diluted }   # a basic Non-GAAP EPS only until the March quarter 2021 release, a diluted one in every release
   - symbol: TOTS3.SA
     name: TOTVS
     market: BR   # B3 (Novo Mercado); the statements delivered to CVM (ITR every quarter, DFP for the year), CVM company code 019992

@@ -268,6 +268,18 @@ stocks:
     filing_format: infosys_ifrs   # USD, IFRS, basic EPS (two decimals); 1:1 bonus issues in December 2014, June 2015 and September 2018
     metrics: [pe, ps, pb]   # no pe_non_gaap: the only adjusted EPS was a one-off, for the quarter to December 2025 (Labour Codes provision; see the README)
     fiscal_year_end: 3   # the fiscal year ends on March 31: the quarter to September 2026 is shown as FY2027Q2
+  - symbol: BIDU
+    name: Baidu (ADR)
+    market: US
+    cik: 1329099   # Baidu, Inc.; results every calendar quarter on 6-K
+    filing_format: baidu_release   # the price is in USD per ADS (8 Class A ordinary shares since the 2021 subdivision; 1/10 share before); EPS is in RMB per ADS
+    metrics: [pe, pe_non_gaap, ps, pb]   # PE on basic EPS per ADS; Baidu discloses no basic Non-GAAP EPS, so its PE Non-GAAP uses the disclosed diluted one
+    eps_basis: { pe_non_gaap: diluted }   # no non_gaap_changes: one series across the definition changes of 2018 and 2019, the older figures carry a note
+  - symbol: 000660.KS
+    name: SK Hynix
+    market: KR   # KOSPI; English consolidated financial statements and earnings presentations on the SK Hynix IR website, every quarter
+    filing_format: skhynix_statements   # KRW, K-IFRS; basic EPS of ordinary shares (no preferred shares), no non-GAAP EPS
+    metrics: [pe, ps, pb]
   - symbol: TOTS3.SA
     name: TOTVS
     market: BR   # B3 (Novo Mercado); the statements delivered to CVM (ITR every quarter, DFP for the year), CVM company code 019992

@@ -18,7 +18,9 @@ equity attributable to owners (millions), shares disclosed in the filing (millio
   ifrs_statements (XP, HTML) in ifrs.py; sap_ifrs (SAP, HTML) in sap_ifrs.py; kifrs_statements (Samsung, PDF) in kifrs.py;
   cn_report (Hikvision, Glodon, PDF) in cn_report.py; tifrs_statements (Advantech, PDF) in tifrs.py; tesla_update (Tesla's Update decks, and the Form 10-Q or 10-K of a quarter whose deck has
   its statements as page images only) in tesla_update.py; jp_tanshin (SHIFT's Japanese Kessan Tanshin, PDF) in jp_tanshin.py; cvm_statements (TOTVS, extracts of the statements delivered to
-  Brazil's CVM, JSON) in cvm_statements.py. These parse
+  Brazil's CVM, JSON) in cvm_statements.py;
+  baidu_release (Baidu's 6-K press releases, HTML) in baidu_release.py;
+  skhynix_statements (SK Hynix's English statements and earnings presentations, PDF) in skhynix.py. These parse
   functions return the common Parsed (see parsed.py).
 
 A company may publish results every quarter (4 periods a year) or only interim and annual (2 periods a year; the second half is obtained as full year minus first half).
@@ -44,12 +46,14 @@ from valuation_monitor.market_calendar import HK, Market, effective_trading_day,
 from valuation_monitor.cn_report import parse_cn_express, parse_cn_report
 from valuation_monitor.cvm_statements import parse_cvm_statements
 from valuation_monitor.audit import DILUTED_SHARES_LABEL, Component, num, shares_formula, split_notes, sum_formula
+from valuation_monitor.baidu_release import parse_baidu_filing
 from valuation_monitor.ifrs import parse_ifrs_statements
 from valuation_monitor.jp_tanshin import parse_jp_tanshin
 from valuation_monitor.kifrs import parse_kifrs, parse_kifrs_deck
 from valuation_monitor.press_release import parse_press_release
 from valuation_monitor.release_eps import parse_adjusted_eps_release
 from valuation_monitor.sap_ifrs import parse_sap_statement
+from valuation_monitor.skhynix import parse_deck as parse_skhynix_deck, parse_report as parse_skhynix_report
 from valuation_monitor.tesla_update import parse_tesla_filing
 from valuation_monitor.tifrs import parse_tifrs
 from valuation_monitor.tsmc_release import CURRENCY as TSMC_CURRENCY, EQUITY_NOTE as TSMC_EQUITY_NOTE, STATEMENTS_EQUITY_NOTE as TSMC_STATEMENTS_EQUITY_NOTE
@@ -116,7 +120,7 @@ SERIES_LABELS = {
     "equity": "Equity attributable to owners",
     "wa_shares": "Weighted average shares",
 }
-PARSER_VERSIONS = {"highlights": 5, "statements": 3, "press_release": 4, "us_press_release": 9, "us_gaap_statements": 5, "ifrs_statements": 1, "sap_ifrs": 2, "kifrs_statements": 4, "cn_report": 8, "tesla_update": 1, "jp_tanshin": 1, "travelsky_statements": 1, "tifrs_statements": 1, "cvm_statements": 1, "tsmc_release": 1, "infosys_ifrs": 1}  # add 1 when the parsing rules change; saved parse results are then re-parsed automatically
+PARSER_VERSIONS = {"highlights": 5, "statements": 3, "press_release": 4, "us_press_release": 9, "us_gaap_statements": 5, "ifrs_statements": 1, "sap_ifrs": 2, "kifrs_statements": 4, "cn_report": 8, "tesla_update": 1, "jp_tanshin": 1, "travelsky_statements": 1, "tifrs_statements": 1, "cvm_statements": 1, "tsmc_release": 1, "baidu_release": 1, "skhynix_statements": 1, "infosys_ifrs": 1}  # add 1 when the parsing rules change; saved parse results are then re-parsed automatically
 SUPPLEMENT_FORMAT = "adjusted_eps_release"  # the layout of a supplementary document (XP's press release, see release_eps.py); its parse results carry their own version
 SUPPLEMENT_PARSER_VERSION = 1  # add 1 when the rules of release_eps.py change (or those of tsmc_release.parse_slides, which reads TSMC's supplementary slides); and of infosys.parse_statements (Infosys's IFRS statements)
 SUPPLEMENT_SERIES = ("non_ifrs_eps", "equity")  # what a supplementary document may add: XP's press release its Non-GAAP EPS, TSMC's slides (until 2019) the equity
@@ -153,6 +157,9 @@ PROVISIONAL_NOTES = {
     "KR": "comes from the earnings call presentation (before the external review; revenue and net profit are only precise to KRW 0.1 trillion and equity is an estimate); it is replaced automatically when the English financial statements are out",
     "CN": "comes from the express report (not audited by the accounting firm, so it may differ slightly from the final annual report numbers); it is replaced automatically when the annual report is out",
     "*": "is preliminary and is replaced automatically when the official report is out",
+}
+PROVISIONAL_FORMAT_NOTES = {  # a layout whose preliminary data differs from that of the other stocks of its market; used instead of PROVISIONAL_NOTES
+    "skhynix_statements": "comes from the earnings presentation (before the auditors' review; revenue, net profit and equity in KRW billions, net profit and equity including non-controlling interests); it is replaced automatically when the English report is on the IR website",
 }
 
 
@@ -378,7 +385,7 @@ def parse_statements(pages: Pages) -> tuple[str, dict[str, list[float]]]:
 
 
 FORMATS = {"highlights": parse_highlights, "statements": parse_statements, "travelsky_statements": parse_travelsky_statements}  # HKEX PDF announcements; travelsky_statements also returns series notes
-FILING_FORMATS = {*FORMATS, "press_release", "us_press_release", "us_gaap_statements", "ifrs_statements", "sap_ifrs", "kifrs_statements", "cn_report", "tesla_update", "jp_tanshin", "tifrs_statements", "cvm_statements", "tsmc_release", "infosys_ifrs"}  # plus US HTML press releases (6-K of JD; 8-K of US companies), IFRS statements (6-K of XP and SAP), Samsung English financial statements, A-share reports and Tesla's Update decks; Advantech's Taiwan-IFRS statements; the statements Brazilian companies deliver to CVM (TOTVS); TSMC's earnings releases and slides; Infosys's IFRS USD press releases and statements
+FILING_FORMATS = {*FORMATS, "press_release", "us_press_release", "us_gaap_statements", "ifrs_statements", "sap_ifrs", "kifrs_statements", "cn_report", "tesla_update", "jp_tanshin", "tifrs_statements", "cvm_statements", "tsmc_release", "baidu_release", "skhynix_statements", "infosys_ifrs"}  # plus US HTML press releases (6-K of JD; 8-K of US companies), IFRS statements (6-K of XP and SAP), Samsung English financial statements, A-share reports and Tesla's Update decks; Advantech's Taiwan-IFRS statements; the statements Brazilian companies deliver to CVM (TOTVS); TSMC's earnings releases and slides; Infosys's IFRS USD press releases and statements
 
 
 def parse_announcement(filing: Filing, fmt: str = "highlights", market: Market = HK, non_gaap: str | None = None) -> Announcement:
@@ -416,6 +423,12 @@ def parse_announcement(filing: Filing, fmt: str = "highlights", market: Market =
             parsed.period, filing.published, filing.url, parsed.currency, parsed.quarterly, parsed.values, market.key,
             filing.provisional, "", PERIOD_END_SHARES, filing.note, correction=filing.correction,
         )
+    if fmt == "skhynix_statements":  # SK Hynix: review or audit report, or earnings presentation; keeps the explanation of the publication time
+        parsed = parse_skhynix_deck(filing.title, filing.content) if "presentation" in filing.title else parse_skhynix_report(filing.title, filing.content)
+        return Announcement(
+            parsed.period, filing.published, filing.url, parsed.currency, parsed.quarterly, parsed.values, market.key,
+            filing.provisional, "" if parsed.quarterly else "full year", note=filing.note, series_notes=dict(parsed.notes or {}),
+        )
     if fmt == "cvm_statements":  # Brazil: ITR (single quarters) and DFP (the year) delivered to CVM, or a later version of one
         parsed = parse_cvm_statements(filing.content)
         return Announcement(
@@ -423,7 +436,7 @@ def parse_announcement(filing: Filing, fmt: str = "highlights", market: Market =
             filing.provisional, "", PERIOD_END_SHARES, filing.note, series_notes=dict(parsed.notes or {}),
             correction=filing.correction,
         )
-    if fmt in ("press_release", "us_press_release", "us_gaap_statements", "ifrs_statements", "sap_ifrs", "kifrs_statements", "tesla_update", "tifrs_statements", "tsmc_release", "infosys_ifrs"):  # the parse result carries its own reporting period and whether it is a single quarter
+    if fmt in ("press_release", "us_press_release", "us_gaap_statements", "ifrs_statements", "sap_ifrs", "kifrs_statements", "tesla_update", "tifrs_statements", "tsmc_release", "baidu_release", "infosys_ifrs"):  # the parse result carries its own reporting period and whether it is a single quarter
         if fmt == "tesla_update":
             parsed = parse_tesla_filing(filing, non_gaap)
         elif fmt == "press_release":
@@ -440,6 +453,8 @@ def parse_announcement(filing: Filing, fmt: str = "highlights", market: Market =
             parsed = parse_tifrs(filing.title, filing.content)
         elif fmt == "tsmc_release":
             parsed = parse_tsmc_release(filing.content, filing.attachments.get("slides"))
+        elif fmt == "baidu_release":
+            parsed = parse_baidu_filing(filing.url, filing.content)
         elif fmt == "infosys_ifrs":
             parsed = parse_infosys_release(filing.content)
         elif filing.provisional:
@@ -694,6 +709,7 @@ class EarningsHistory:
     shares_basis: dict[pd.Period, str] = field(default_factory=dict)  # period the disclosed weighted average shares of each period refer to (empty = this period, "full year", "year to date")
     non_gaap_changes: tuple[pd.Timestamp, ...] = ()  # when the company changed the definition of its Non-GAAP EPS (see build_history)
     fiscal_year_end: int = 12  # the month the company's fiscal year ends: the labels shown (period_label) and where year-to-date figures start (fiscal_quarter)
+    provisional_note: str = ""  # what the preliminary data of this layout is, when it differs from the market's PROVISIONAL_NOTES (see PROVISIONAL_FORMAT_NOTES)
 
     def label(self, p: pd.Period) -> str:
         """The name a period is shown with (see period_label)."""
@@ -717,7 +733,7 @@ class EarningsHistory:
                     )
         for a in self.announcements:
             if a.provisional:
-                out.append(f"The {self.label(a.period)} data {PROVISIONAL_NOTES.get(a.market, PROVISIONAL_NOTES['*'])}")
+                out.append(f"The {self.label(a.period)} data {self.provisional_note or PROVISIONAL_NOTES.get(a.market, PROVISIONAL_NOTES['*'])}")
         for change in self.non_gaap_changes:
             after = self.ttm[pd.to_datetime(self.ttm["published"]) >= change]
             empty = after["non_ifrs_eps_ttm"].isna()

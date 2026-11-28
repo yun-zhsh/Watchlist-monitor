@@ -260,6 +260,14 @@ stocks:
     sec_exhibit: tsmc_release   # for the quarters whose slides have no text balance sheet, the equity comes from the consolidated financial statements 6-K (statements.json)
     metrics: [pe, ps, pb]   # TSMC has never published a Non-GAAP EPS; PB on total equity including non-controlling interests (the slides give no other)
     eps_basis: { pe: diluted }   # the release gives diluted EPS only: "Diluted PE (TTM)"
+  - symbol: INFY
+    name: Infosys (ADR)
+    market: US   # NYSE; one ADS = one equity share, so price and EPS need no ADS ratio; a foreign private issuer filing 20-F and 6-K
+    cik: 1067491   # Infosys Limited; fiscal year ends March 31, results every calendar quarter
+    sec_exhibit: infosys_ifrs   # the IFRS USD press release on the results day; the IFRS statements in USD 4-7 days later add the weighted average shares
+    filing_format: infosys_ifrs   # USD, IFRS, basic EPS (two decimals); 1:1 bonus issues in December 2014, June 2015 and September 2018
+    metrics: [pe, ps, pb]   # no pe_non_gaap: the only adjusted EPS was a one-off, for the quarter to December 2025 (Labour Codes provision; see the README)
+    fiscal_year_end: 3   # the fiscal year ends on March 31: the quarter to September 2026 is shown as FY2027Q2
   - symbol: BIDU
     name: Baidu (ADR)
     market: US

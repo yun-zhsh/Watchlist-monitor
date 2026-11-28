@@ -102,6 +102,11 @@ INDEX_PAGE_NAME = "{accession}-index.htm"
 TSMC_RELEASE = "tsmc_release"
 TSMC_MIN_BYTES = 1_000
 SLIDES_NOTE = "earnings conference slides"  # Filing.note of a 6-K with only the slides: what its equity comes from (see build_history)
+# Infosys: the IFRS USD press release on the day of the results and, 4-7 days later, a 6-K with the IFRS statements in US dollars (and the same
+# press release again); the exhibits are named by their number only ("exv99w02.htm"), tried after the usual names (see infosys.py and _examine_infosys)
+INFOSYS_IFRS = "infosys_ifrs"
+INFOSYS_EXHIBIT_RE = re.compile(r"^exv99w\d{1,2}\.html?$", re.I)
+INFOSYS_RELEASE_MAX_BYTES = 400_000  # the press release is 55-130 KB; the statements, 0.4-1 MB, are looked at only above it
 
 
 def make_http_client(cache_dir: str | Path = ".cache", ttl_seconds: int = 12 * 3600, refresh: bool = False) -> HttpClient:
@@ -309,6 +314,8 @@ class SecProvider:
         if exhibit == TSMC_RELEASE:
             statements = self._tsmc_statements(symbol, cik, since_ts, folder, index)
             return tsmc_filings(index, folder, since_ts) + statements
+        if exhibit == INFOSYS_IFRS:
+            return infosys_filings(index, folder, since_ts)
         return [
             Filing(e["title"], pd.Timestamp(e["published"]), e["url"], (folder / e["file"]).read_bytes(), supplement=supplement)
             for e in index
@@ -340,7 +347,7 @@ class SecProvider:
             skipped = []
             for item in new:
                 try:
-                    entry = self._examine(cik, item, folder, exhibit)
+                    entry = self._examine_infosys(cik, item, folder, index) if exhibit == INFOSYS_IFRS else self._examine(cik, item, folder, exhibit)
                 except ArchiveNotAvailable as e:
                     if last_try:  # not recorded in the index, so the next run checks this filing again
                         print(f"{symbol}: skipping the filing {item['accession']} for this run ({e})", file=sys.stderr)
@@ -351,6 +358,8 @@ class SecProvider:
                 added = True
                 if entry["results"]:
                     print(f"{symbol}: new results release {entry['published']} {entry['title']}", file=sys.stderr)
+                if entry.get("statements_file"):
+                    print(f"{symbol}: new financial statements {entry['published']} {entry['statements_title']}", file=sys.stderr)
             if not skipped:
                 break
             new = skipped  # the second pass only tries again what answered 404, after all the others
@@ -423,6 +432,46 @@ class SecProvider:
                 (folder / file).write_bytes(html)
                 return {**entry, "results": True, "title": title, "url": url, "file": file}
         return entry
+
+    def _examine_infosys(self, cik: int, item: dict, folder: Path, index: list[dict]) -> dict:
+        """An Infosys 6-K: its IFRS USD press release and its IFRS statements in US dollars, whichever it has. A press release already taken
+        from an earlier 6-K (its title in the index) is not kept again; the statements are kept as an excerpt (infosys.statements_excerpt),
+        recorded as "statements_file" of the entry."""
+        from valuation_monitor.infosys import release_title, statements_excerpt, statements_title
+
+        accession = item["accession"]
+        entry = {"accession": accession, "published": f"{item['published']:%Y-%m-%dT%H:%M:%S}", "results": False}
+        taken = {e["title"] for e in index if e["results"]}
+        files = self._listing(cik, accession)
+        named = [f for f in files if EXHIBIT_RE.search(f["name"])]
+        named += [f for f in files if INFOSYS_EXHIBIT_RE.search(f["name"]) and f not in named]
+        found: dict[str, str] = {}
+        for f in named:
+            name, size = f["name"], int(f["size"] or 0)
+            if not name.lower().endswith((".htm", ".html")) or not MIN_EXHIBIT_BYTES <= size <= MAX_EXHIBIT_BYTES:
+                continue
+            release = size <= INFOSYS_RELEASE_MAX_BYTES
+            if ("release_seen" if release else "statements_file") in found:
+                continue
+            url = ARCHIVE_URL.format(cik=cik, accession=accession.replace("-", ""), name=name)
+            html = self._archive_get(url, cache=False)
+            file = f"{item['published']:%Y-%m-%d}_{name}"
+            if release:
+                if (title := release_title(html)) is None:
+                    continue
+                found["release_seen"] = title
+                if title in taken:  # the press release again, next to the statements: the earlier one stands
+                    continue
+                found.update(title=title, url=url, file=file)
+            else:
+                if (title := statements_title(html)) is None:
+                    continue
+                found.update(statements_title=title, statements_url=url, statements_file=file)
+                html = statements_excerpt(html)
+            folder.mkdir(parents=True, exist_ok=True)
+            (folder / file).write_bytes(html)
+        found.pop("release_seen", None)
+        return {**entry, "results": "file" in found, **found}
 
     def _examine_report(self, cik: int, item: dict, folder: Path, entry: dict) -> dict:
         """A Form 10-Q or 10-K: its primary document, kept when its cover page names the period of the report."""
@@ -556,6 +605,22 @@ def tsmc_filings(index: list[dict], folder: Path, since: pd.Timestamp) -> list[F
 
 
 PERIODIC_FORMS = ("10-Q", "10-K")
+
+
+def infosys_filings(index: list[dict], folder: Path, since: pd.Timestamp) -> list[Filing]:
+    """Infosys's filings from index.json: each IFRS USD press release, and the IFRS statements in US dollars as supplementary documents
+    (their shares are used from their own publication time, see build_history)."""
+    from valuation_monitor.infosys import STATEMENTS_NOTE
+
+    out = []
+    for e in index:
+        if pd.Timestamp(e["published"]) < since:
+            continue
+        if e["results"]:
+            out.append(Filing(e["title"], pd.Timestamp(e["published"]), e["url"], (folder / e["file"]).read_bytes()))
+        if e.get("statements_file"):
+            out.append(Filing(e["statements_title"], pd.Timestamp(e["published"]), e["statements_url"], (folder / e["statements_file"]).read_bytes(), note=STATEMENTS_NOTE, supplement=True))
+    return out
 
 
 def image_only_quarters(index_path: Path) -> set[pd.Period]:

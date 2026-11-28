@@ -275,6 +275,13 @@ stocks:
     filing_format: baidu_release   # the price is in USD per ADS (8 Class A ordinary shares since the 2021 subdivision; 1/10 share before); EPS is in RMB per ADS
     metrics: [pe, pe_non_gaap, ps, pb]   # PE on basic EPS per ADS; Baidu discloses no basic Non-GAAP EPS, so its PE Non-GAAP uses the disclosed diluted one
     eps_basis: { pe_non_gaap: diluted }   # no non_gaap_changes: one series across the definition changes of 2018 and 2019, the older figures carry a note
+  - symbol: PDD
+    name: PDD Holdings (ADR)
+    market: US
+    cik: 1737806   # PDD Holdings Inc. (Pinduoduo Inc. until February 2023); results every calendar quarter since its July 2018 IPO
+    filing_format: press_release   # the price is in USD per ADS (4 Class A ordinary shares); EPS is in RMB per ADS
+    metrics: [pe, pe_non_gaap, ps, pb]
+    eps_basis: { pe_non_gaap: diluted }   # a basic Non-GAAP EPS only until the March quarter 2021 release, a diluted one in every release
   - symbol: 000660.KS
     name: SK Hynix
     market: KR   # KOSPI; English consolidated financial statements and earnings presentations on the SK Hynix IR website, every quarter

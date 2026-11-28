@@ -243,6 +243,23 @@ def real_monitor(tmp_path, formats=None):
 saved_data = pytest.mark.skipif(not (ROOT / "data" / "valuation.db").exists(), reason="no saved database")
 
 
+def formats_saved_on_the_current_version() -> set[str]:
+    """The layouts whose results in the committed database are all from the current parser version: a layout bumped on a branch
+    (PDD: press_release 4 -> 5) is parsed again by the first scheduled run after the merge, which the bump test covers."""
+    import sqlite3
+
+    import yaml
+
+    from valuation_monitor import filings
+
+    raw = yaml.safe_load((ROOT / "config.yaml").read_text(encoding="utf-8"))
+    format_of = {str(s["symbol"]): s.get("filing_format", "highlights") for s in raw["stocks"]}
+    with sqlite3.connect(ROOT / "data" / "valuation.db") as conn:
+        rows = conn.execute(f'SELECT DISTINCT symbol, parser_version FROM announcements WHERE "table" IS NOT \'{filings.SUPPLEMENT_TABLE}\'').fetchall()
+    stale = {format_of[symbol] for symbol, version in rows if symbol in format_of and int(version) != filings.PARSER_VERSIONS[format_of[symbol]]}
+    return set(filings.PARSER_VERSIONS) - stale
+
+
 @saved_data
 def test_one_run_after_a_parser_bump_leaves_the_database_settled(tmp_path, monkeypatch):
     """After a PARSER_VERSIONS bump the run that parses again writes what every later run reads: a second run writes nothing.
@@ -273,7 +290,7 @@ def test_a_run_without_new_filings_parses_nothing_and_stays_settled(tmp_path, mo
         raise AssertionError("nothing should be parsed again")
 
     monkeypatch.setattr(store_module, "parse_announcement", no_parse)
-    monitor, db = real_monitor(tmp_path)
+    monitor, db = real_monitor(tmp_path, formats_saved_on_the_current_version())
     reports = monitor().analyze_all()
     assert not [r.error for r in reports if r.error and "nothing should be parsed" in r.error]
     settled = earnings_tables(db)

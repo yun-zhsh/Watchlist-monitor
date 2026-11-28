@@ -118,7 +118,7 @@ SERIES_LABELS = {
 }
 PARSER_VERSIONS = {"highlights": 5, "statements": 3, "press_release": 4, "us_press_release": 9, "us_gaap_statements": 5, "ifrs_statements": 1, "sap_ifrs": 2, "kifrs_statements": 4, "cn_report": 8, "tesla_update": 1, "jp_tanshin": 1, "travelsky_statements": 1, "tifrs_statements": 1, "cvm_statements": 1, "tsmc_release": 1, "infosys_ifrs": 1}  # add 1 when the parsing rules change; saved parse results are then re-parsed automatically
 SUPPLEMENT_FORMAT = "adjusted_eps_release"  # the layout of a supplementary document (XP's press release, see release_eps.py); its parse results carry their own version
-SUPPLEMENT_PARSER_VERSION = 1  # add 1 when the rules of release_eps.py change (or those of tsmc_release.parse_slides, which reads TSMC's supplementary slides)
+SUPPLEMENT_PARSER_VERSION = 1  # add 1 when the rules of release_eps.py change (or those of tsmc_release.parse_slides, which reads TSMC's supplementary slides); and of infosys.parse_statements (Infosys's IFRS statements)
 SUPPLEMENT_SERIES = ("non_ifrs_eps", "equity")  # what a supplementary document may add: XP's press release its Non-GAAP EPS, TSMC's slides (until 2019) the equity
 # A supplementary document that repeats the figures of its quarter (Infosys's IFRS statements, 4-7 days after its press release): it adds what the
 # filing lacks (the weighted average shares) and replaces a figure that differs, both from its own publication time (see build_history)

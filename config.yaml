@@ -53,6 +53,9 @@ freshness:
 #                     statements; every quarter has a three-months income statement; needs a cik and sec_exhibit: sap_ifrs (SAP)
 #   tesla_update      Tesla's quarterly Update deck (exhibit 99.1 of its 8-K), its statements read from the text of the deck; a quarter whose deck
 #                     has its statements as page images only is read from its Form 10-Q or 10-K; needs a cik and sec_exhibit: tesla_update (Tesla)
+#   tsmc_release      TSMC's earnings release and earnings conference slides furnished on Form 6-K (diluted EPS only; equity from the slides,
+#                     or for a quarter whose slides have no text balance sheet from its consolidated financial statements 6-K); needs a cik and
+#                     sec_exhibit: tsmc_release (TSMC)
 # sec_release_non_gaap: true also reads the earnings press release next to the IFRS statements, for its "Adjusted Basic EPS" (pe_non_gaap; XP)
 #   kifrs_statements  English consolidated financial statements (K-IFRS) on the Samsung Electronics IR website, every quarter; market KR
 #   cn_report         periodic reports (Q1, half-year, Q3, annual) and annual express reports of A-share companies on CNINFO (Chinese originals); market CN
@@ -249,6 +252,14 @@ stocks:
     market: CN   # Shanghai; Chinese periodic reports and express reports on CNINFO. A commercial bank
     filing_format: cn_report   # RMB; revenue is the operating income (net interest income included); PB uses the equity of the ordinary shareholders (without preference shares and perpetual bonds)
     metrics: [pe, ps, pb]
+  - symbol: TSM
+    name: Taiwan Semiconductor Manufacturing (ADR)
+    market: US
+    cik: 1046179   # Taiwan Semiconductor Manufacturing Co Ltd; reports under Taiwan-IFRS in NT$, every calendar quarter
+    filing_format: tsmc_release   # the 6-K earnings release (revenue, net income, EPS) and conference slides (equity); the price is USD per ADR (5 common shares), EPS is NT$ per ADR
+    sec_exhibit: tsmc_release   # for the quarters whose slides have no text balance sheet, the equity comes from the consolidated financial statements 6-K (statements.json)
+    metrics: [pe, ps, pb]   # TSMC has never published a Non-GAAP EPS; PB on total equity including non-controlling interests (the slides give no other)
+    eps_basis: { pe: diluted }   # the release gives diluted EPS only: "Diluted PE (TTM)"
   - symbol: TOTS3.SA
     name: TOTVS
     market: BR   # B3 (Novo Mercado); the statements delivered to CVM (ITR every quarter, DFP for the year), CVM company code 019992

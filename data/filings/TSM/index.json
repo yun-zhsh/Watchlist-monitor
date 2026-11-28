@@ -1,0 +1,3331 @@
+[
+  {
+    "accession": "0001193125-14-438251",
+    "published": "2014-12-10T07:14:59",
+    "results": false
+  },
+  {
+    "accession": "0001193125-14-449440",
+    "published": "2014-12-22T06:18:30",
+    "results": false
+  },
+  {
+    "accession": "0001193125-15-005611",
+    "published": "2015-01-09T06:37:34",
+    "results": false
+  },
+  {
+    "accession": "0001193125-15-005712",
+    "published": "2015-01-09T08:16:33",
+    "results": false
+  },
+  {
+    "accession": "0001193125-15-011207",
+    "published": "2015-01-15T06:09:01",
+    "results": true,
+    "title": "TSMC Reports Fourth Quarter EPS of NT$3.08",
+    "url": "https://www.sec.gov/Archives/edgar/data/1046179/000119312515011207/d852630d6k.htm",
+    "file": "2015-01-15_d852630d6k.htm"
+  },
+  {
+    "accession": "0001193125-15-012415",
+    "published": "2015-01-16T06:08:01",
+    "results": false,
+    "slides_title": "2014 Fourth Quarter Earnings Conference",
+    "slides_url": "https://www.sec.gov/Archives/edgar/data/1046179/000119312515012415/d852747d6k.htm",
+    "slides_file": "2015-01-16_d852747d6k.htm"
+  },
+  {
+    "accession": "0001193125-15-019423",
+    "published": "2015-01-26T06:07:53",
+    "results": false
+  },
+  {
+    "accession": "0001193125-15-040300",
+    "published": "2015-02-10T07:20:33",
+    "results": false
+  },
+  {
+    "accession": "0001193125-15-040357",
+    "published": "2015-02-10T07:45:33",
+    "results": false
+  },
+  {
+    "accession": "0001193125-15-060947",
+    "published": "2015-02-25T06:08:34",
+    "results": false
+  },
+  {
+    "accession": "0001193125-15-074429",
+    "published": "2015-03-03T09:28:38",
+    "results": false
+  },
+  {
+    "accession": "0001193125-15-084273",
+    "published": "2015-03-10T07:20:34",
+    "results": false
+  },
+  {
+    "accession": "0001193125-15-100824",
+    "published": "2015-03-23T06:10:24",
+    "results": false
+  },
+  {
+    "accession": "0001193125-15-103965",
+    "published": "2015-03-25T06:07:00",
+    "results": false
+  },
+  {
+    "accession": "0001193125-15-125178",
+    "published": "2015-04-10T08:36:30",
+    "results": false
+  },
+  {
+    "accession": "0001193125-15-126896",
+    "published": "2015-04-13T08:53:00",
+    "results": false
+  },
+  {
+    "accession": "0001193125-15-132162",
+    "published": "2015-04-16T06:38:30",
+    "results": true,
+    "title": "TSMC Reports First Quarter EPS of NT$3.05",
+    "url": "https://www.sec.gov/Archives/edgar/data/1046179/000119312515132162/d912667d6k.htm",
+    "file": "2015-04-16_d912667d6k.htm"
+  },
+  {
+    "accession": "0001193125-15-134147",
+    "published": "2015-04-17T06:27:01",
+    "results": false,
+    "slides_title": "2015 First Quarter Earnings Conference",
+    "slides_url": "https://www.sec.gov/Archives/edgar/data/1046179/000119312515134147/d912716d6k.htm",
+    "slides_file": "2015-04-17_d912716d6k.htm"
+  },
+  {
+    "accession": "0001193125-15-142796",
+    "published": "2015-04-23T06:10:53",
+    "results": false
+  },
+  {
+    "accession": "0001193125-15-145102",
+    "published": "2015-04-24T06:11:01",
+    "results": false
+  },
+  {
+    "accession": "0001193125-15-178372",
+    "published": "2015-05-08T07:50:34",
+    "results": false
+  },
+  {
+    "accession": "0001193125-15-188877",
+    "published": "2015-05-15T06:14:06",
+    "results": false
+  },
+  {
+    "accession": "0001193125-15-199254",
+    "published": "2015-05-26T06:13:33",
+    "results": false
+  },
+  {
+    "accession": "0001193125-15-217080",
+    "published": "2015-06-09T06:07:35",
+    "results": false
+  },
+  {
+    "accession": "0001193125-15-217155",
+    "published": "2015-06-09T07:26:33",
+    "results": false
+  },
+  {
+    "accession": "0001193125-15-218623",
+    "published": "2015-06-10T06:07:34",
+    "results": false
+  },
+  {
+    "accession": "0001193125-15-218757",
+    "published": "2015-06-10T08:45:33",
+    "results": false
+  },
+  {
+    "accession": "0001193125-15-234129",
+    "published": "2015-06-25T06:17:59",
+    "results": false
+  },
+  {
+    "accession": "0001193125-15-249664",
+    "published": "2015-07-10T08:13:30",
+    "results": false
+  },
+  {
+    "accession": "0001193125-15-254327",
+    "published": "2015-07-16T07:37:01",
+    "results": true,
+    "title": "TSMC Reports Second Quarter EPS of NT$3.06",
+    "url": "https://www.sec.gov/Archives/edgar/data/1046179/000119312515254327/d138469d6k.htm",
+    "file": "2015-07-16_d138469d6k.htm"
+  },
+  {
+    "accession": "0001193125-15-255354",
+    "published": "2015-07-17T06:26:31",
+    "results": false,
+    "slides_title": "2015 Second Quarter Earnings Conference",
+    "slides_url": "https://www.sec.gov/Archives/edgar/data/1046179/000119312515255354/d95142d6k.htm",
+    "slides_file": "2015-07-17_d95142d6k.htm"
+  },
+  {
+    "accession": "0001193125-15-263156",
+    "published": "2015-07-27T07:38:05",
+    "results": false
+  },
+  {
+    "accession": "0001193125-15-283967",
+    "published": "2015-08-10T08:19:01",
+    "results": false
+  },
+  {
+    "accession": "0001193125-15-285756",
+    "published": "2015-08-11T07:34:59",
+    "results": false
+  },
+  {
+    "accession": "0001193125-15-290587",
+    "published": "2015-08-14T06:07:36",
+    "results": false
+  },
+  {
+    "accession": "0001193125-15-300778",
+    "published": "2015-08-25T06:08:29",
+    "results": false
+  },
+  {
+    "accession": "0001193125-15-300783",
+    "published": "2015-08-25T06:13:00",
+    "results": false
+  },
+  {
+    "accession": "0001193125-15-316647",
+    "published": "2015-09-10T08:40:29",
+    "results": false
+  },
+  {
+    "accession": "0001193125-15-325877",
+    "published": "2015-09-23T07:08:33",
+    "results": false
+  },
+  {
+    "accession": "0001193125-15-327864",
+    "published": "2015-09-25T06:10:13",
+    "results": false
+  },
+  {
+    "accession": "0001193125-15-339795",
+    "published": "2015-10-08T06:36:33",
+    "results": false
+  },
+  {
+    "accession": "0001193125-15-344166",
+    "published": "2015-10-15T06:28:00",
+    "results": true,
+    "title": "TSMC Reports Third Quarter EPS of NT$2.91",
+    "url": "https://www.sec.gov/Archives/edgar/data/1046179/000119312515344166/d189650d6k.htm",
+    "file": "2015-10-15_d189650d6k.htm"
+  },
+  {
+    "accession": "0001193125-15-345144",
+    "published": "2015-10-16T06:08:01",
+    "results": false,
+    "slides_title": "2015 Third Quarter Earnings Conference",
+    "slides_url": "https://www.sec.gov/Archives/edgar/data/1046179/000119312515345144/d198921d6k.htm",
+    "slides_file": "2015-10-16_d198921d6k.htm"
+  },
+  {
+    "accession": "0001193125-15-352540",
+    "published": "2015-10-26T06:19:30",
+    "results": false
+  },
+  {
+    "accession": "0001193125-15-372695",
+    "published": "2015-11-10T06:24:36",
+    "results": false
+  },
+  {
+    "accession": "0001193125-15-372742",
+    "published": "2015-11-10T07:26:29",
+    "results": false
+  },
+  {
+    "accession": "0001193125-15-376336",
+    "published": "2015-11-13T06:27:45",
+    "results": false
+  },
+  {
+    "accession": "0001193125-15-387715",
+    "published": "2015-11-25T06:11:00",
+    "results": false
+  },
+  {
+    "accession": "0001193125-15-389146",
+    "published": "2015-11-27T07:08:29",
+    "results": false
+  },
+  {
+    "accession": "0001193125-15-389681",
+    "published": "2015-11-27T16:21:59",
+    "results": false
+  },
+  {
+    "accession": "0001193125-15-395834",
+    "published": "2015-12-07T06:07:59",
+    "results": false
+  },
+  {
+    "accession": "0001193125-15-399457",
+    "published": "2015-12-10T07:02:34",
+    "results": false
+  },
+  {
+    "accession": "0001193125-15-413653",
+    "published": "2015-12-28T06:08:29",
+    "results": false
+  },
+  {
+    "accession": "0001193125-16-423942",
+    "published": "2016-01-08T06:13:59",
+    "results": false
+  },
+  {
+    "accession": "0001193125-16-429401",
+    "published": "2016-01-14T06:50:00",
+    "results": true,
+    "title": "TSMC Reports Fourth Quarter EPS of NT$2.81",
+    "url": "https://www.sec.gov/Archives/edgar/data/1046179/000119312516429401/d118248d6k.htm",
+    "file": "2016-01-14_d118248d6k.htm"
+  },
+  {
+    "accession": "0001193125-16-430375",
+    "published": "2016-01-15T06:07:32",
+    "results": false
+  },
+  {
+    "accession": "0001193125-16-436186",
+    "published": "2016-01-25T06:07:08",
+    "results": false
+  },
+  {
+    "accession": "0001193125-16-446757",
+    "published": "2016-02-02T07:13:01",
+    "results": false
+  },
+  {
+    "accession": "0001193125-16-453004",
+    "published": "2016-02-08T06:12:01",
+    "results": false
+  },
+  {
+    "accession": "0001193125-16-463791",
+    "published": "2016-02-16T06:49:00",
+    "results": false
+  },
+  {
+    "accession": "0001193125-16-466394",
+    "published": "2016-02-17T09:10:00",
+    "results": false
+  },
+  {
+    "accession": "0001193125-16-467652",
+    "published": "2016-02-18T06:09:41",
+    "results": false
+  },
+  {
+    "accession": "0001193125-16-476809",
+    "published": "2016-02-25T06:30:35",
+    "results": false
+  },
+  {
+    "accession": "0001193125-16-499090",
+    "published": "2016-03-10T06:08:32",
+    "results": false
+  },
+  {
+    "accession": "0001193125-16-510926",
+    "published": "2016-03-21T06:11:01",
+    "results": false
+  },
+  {
+    "accession": "0001193125-16-518746",
+    "published": "2016-03-28T08:24:31",
+    "results": false
+  },
+  {
+    "accession": "0001193125-16-520323",
+    "published": "2016-03-29T06:08:34",
+    "results": false
+  },
+  {
+    "accession": "0001193125-16-534553",
+    "published": "2016-04-08T06:15:33",
+    "results": false
+  },
+  {
+    "accession": "0001193125-16-534587",
+    "published": "2016-04-08T06:49:34",
+    "results": false
+  },
+  {
+    "accession": "0001193125-16-536256",
+    "published": "2016-04-11T08:20:00",
+    "results": false
+  },
+  {
+    "accession": "0001193125-16-540578",
+    "published": "2016-04-14T06:14:33",
+    "results": true,
+    "title": "TSMC Reports First Quarter EPS of NT$2.50",
+    "url": "https://www.sec.gov/Archives/edgar/data/1046179/000119312516540578/d156212d6k.htm",
+    "file": "2016-04-14_d156212d6k.htm"
+  },
+  {
+    "accession": "0001193125-16-542197",
+    "published": "2016-04-15T06:09:03",
+    "results": false,
+    "slides_title": "2016 First Quarter Earnings Conference",
+    "slides_url": "https://www.sec.gov/Archives/edgar/data/1046179/000119312516542197/d182761d6k.htm",
+    "slides_file": "2016-04-15_d182761d6k.htm"
+  },
+  {
+    "accession": "0001193125-16-554996",
+    "published": "2016-04-26T06:09:03",
+    "results": false
+  },
+  {
+    "accession": "0001193125-16-584605",
+    "published": "2016-05-10T06:08:38",
+    "results": false
+  },
+  {
+    "accession": "0001193125-16-584664",
+    "published": "2016-05-10T07:01:38",
+    "results": false
+  },
+  {
+    "accession": "0001193125-16-592457",
+    "published": "2016-05-17T06:07:43",
+    "results": false
+  },
+  {
+    "accession": "0001193125-16-602265",
+    "published": "2016-05-25T16:10:38",
+    "results": false
+  },
+  {
+    "accession": "0001193125-16-614578",
+    "published": "2016-06-07T06:12:36",
+    "results": false
+  },
+  {
+    "accession": "0001193125-16-614643",
+    "published": "2016-06-07T07:18:33",
+    "results": false
+  },
+  {
+    "accession": "0001193125-16-615913",
+    "published": "2016-06-08T07:11:04",
+    "results": false
+  },
+  {
+    "accession": "0001193125-16-630635",
+    "published": "2016-06-24T06:06:55",
+    "results": false
+  },
+  {
+    "accession": "0001193125-16-644973",
+    "published": "2016-07-11T08:29:32",
+    "results": false
+  },
+  {
+    "accession": "0001193125-16-647698",
+    "published": "2016-07-14T06:27:57",
+    "results": true,
+    "title": "TSMC Reports Second Quarter EPS of NT$2.80",
+    "url": "https://www.sec.gov/Archives/edgar/data/1046179/000119312516647698/d225530d6k.htm",
+    "file": "2016-07-14_d225530d6k.htm"
+  },
+  {
+    "accession": "0001193125-16-648763",
+    "published": "2016-07-15T06:07:07",
+    "results": false,
+    "slides_title": "2016 Second Quarter Earnings Conference",
+    "slides_url": "https://www.sec.gov/Archives/edgar/data/1046179/000119312516648763/d225903d6k.htm",
+    "slides_file": "2016-07-15_d225903d6k.htm"
+  },
+  {
+    "accession": "0001193125-16-655865",
+    "published": "2016-07-25T06:50:56",
+    "results": false
+  },
+  {
+    "accession": "0001193125-16-667470",
+    "published": "2016-08-02T07:23:02",
+    "results": false
+  },
+  {
+    "accession": "0001193125-16-677427",
+    "published": "2016-08-10T06:07:55",
+    "results": false
+  },
+  {
+    "accession": "0001193125-16-678570",
+    "published": "2016-08-11T06:49:06",
+    "results": false
+  },
+  {
+    "accession": "0001193125-16-690466",
+    "published": "2016-08-25T06:10:02",
+    "results": false
+  },
+  {
+    "accession": "0001193125-16-705878",
+    "published": "2016-09-09T06:07:02",
+    "results": false
+  },
+  {
+    "accession": "0001193125-16-717582",
+    "published": "2016-09-23T06:07:32",
+    "results": false
+  },
+  {
+    "accession": "0001193125-16-733245",
+    "published": "2016-10-07T06:56:32",
+    "results": false
+  },
+  {
+    "accession": "0001193125-16-737105",
+    "published": "2016-10-13T06:05:55",
+    "results": true,
+    "title": "TSMC Reports Third Quarter EPS of NT$3.73",
+    "url": "https://www.sec.gov/Archives/edgar/data/1046179/000119312516737105/d256764d6k.htm",
+    "file": "2016-10-13_d256764d6k.htm"
+  },
+  {
+    "accession": "0001193125-16-738097",
+    "published": "2016-10-14T06:10:04",
+    "results": false,
+    "slides_title": "2016 Third Quarter Earnings Conference",
+    "slides_url": "https://www.sec.gov/Archives/edgar/data/1046179/000119312516738097/d247733d6k.htm",
+    "slides_file": "2016-10-14_d247733d6k.htm"
+  },
+  {
+    "accession": "0001193125-16-745668",
+    "published": "2016-10-25T06:06:32",
+    "results": false
+  },
+  {
+    "accession": "0001193125-16-762367",
+    "published": "2016-11-08T07:20:31",
+    "results": false
+  },
+  {
+    "accession": "0001193125-16-765041",
+    "published": "2016-11-10T06:09:03",
+    "results": false
+  },
+  {
+    "accession": "0001193125-16-768288",
+    "published": "2016-11-15T06:12:59",
+    "results": false
+  },
+  {
+    "accession": "0001193125-16-776822",
+    "published": "2016-11-25T06:17:02",
+    "results": false
+  },
+  {
+    "accession": "0001193125-16-789050",
+    "published": "2016-12-09T06:09:02",
+    "results": false
+  },
+  {
+    "accession": "0001193125-16-804488",
+    "published": "2016-12-28T06:10:32",
+    "results": false
+  },
+  {
+    "accession": "0001193125-17-006287",
+    "published": "2017-01-10T06:48:02",
+    "results": false
+  },
+  {
+    "accession": "0001193125-17-008236",
+    "published": "2017-01-12T06:38:55",
+    "results": true,
+    "title": "TSMC Reports Fourth Quarter EPS of NT$3.86",
+    "url": "https://www.sec.gov/Archives/edgar/data/1046179/000119312517008236/d325593d6k.htm",
+    "file": "2017-01-12_d325593d6k.htm"
+  },
+  {
+    "accession": "0001193125-17-009241",
+    "published": "2017-01-13T06:06:03",
+    "results": false,
+    "slides_title": "2016 Fourth Quarter Earnings Conference",
+    "slides_url": "https://www.sec.gov/Archives/edgar/data/1046179/000119312517009241/d275424d6k.htm",
+    "slides_file": "2017-01-13_d275424d6k.htm"
+  },
+  {
+    "accession": "0001193125-17-015777",
+    "published": "2017-01-24T06:17:14",
+    "results": false
+  },
+  {
+    "accession": "0001193125-17-037013",
+    "published": "2017-02-10T06:13:55",
+    "results": false
+  },
+  {
+    "accession": "0001193125-17-042000",
+    "published": "2017-02-14T08:13:32",
+    "results": false
+  },
+  {
+    "accession": "0001193125-17-052874",
+    "published": "2017-02-23T06:50:01",
+    "results": false
+  },
+  {
+    "accession": "0001193125-17-052970",
+    "published": "2017-02-23T07:57:56",
+    "results": false
+  },
+  {
+    "accession": "0001193125-17-077550",
+    "published": "2017-03-10T07:21:55",
+    "results": false
+  },
+  {
+    "accession": "0001193125-17-088196",
+    "published": "2017-03-20T06:11:04",
+    "results": false
+  },
+  {
+    "accession": "0001193125-17-094410",
+    "published": "2017-03-24T06:06:56",
+    "results": false
+  },
+  {
+    "accession": "0001193125-17-117376",
+    "published": "2017-04-10T08:21:03",
+    "results": false
+  },
+  {
+    "accession": "0001193125-17-122057",
+    "published": "2017-04-13T06:42:33",
+    "results": true,
+    "title": "TSMC Reports First Quarter EPS of NT$3.38",
+    "url": "https://www.sec.gov/Archives/edgar/data/1046179/000119312517122057/d378963d6k.htm",
+    "file": "2017-04-13_d378963d6k.htm"
+  },
+  {
+    "accession": "0001193125-17-126659",
+    "published": "2017-04-18T06:11:32",
+    "results": false
+  },
+  {
+    "accession": "0001193125-17-126660",
+    "published": "2017-04-18T06:13:35",
+    "results": false,
+    "slides_title": "2017 First Quarter Earnings Conference",
+    "slides_url": "https://www.sec.gov/Archives/edgar/data/1046179/000119312517126660/d240456d6k.htm",
+    "slides_file": "2017-04-18_d240456d6k.htm"
+  },
+  {
+    "accession": "0001193125-17-133409",
+    "published": "2017-04-24T06:08:02",
+    "results": false
+  },
+  {
+    "accession": "0001193125-17-137807",
+    "published": "2017-04-26T06:11:03",
+    "results": false
+  },
+  {
+    "accession": "0001193125-17-163353",
+    "published": "2017-05-09T06:46:03",
+    "results": false
+  },
+  {
+    "accession": "0001193125-17-165143",
+    "published": "2017-05-10T08:43:02",
+    "results": false
+  },
+  {
+    "accession": "0001193125-17-169728",
+    "published": "2017-05-15T08:05:00",
+    "results": false
+  },
+  {
+    "accession": "0001193125-17-182436",
+    "published": "2017-05-25T06:08:56",
+    "results": false
+  },
+  {
+    "accession": "0001193125-17-196549",
+    "published": "2017-06-07T07:57:34",
+    "results": false
+  },
+  {
+    "accession": "0001193125-17-197599",
+    "published": "2017-06-08T06:26:34",
+    "results": false
+  },
+  {
+    "accession": "0001193125-17-197600",
+    "published": "2017-06-08T06:29:57",
+    "results": false
+  },
+  {
+    "accession": "0001193125-17-199167",
+    "published": "2017-06-09T07:51:35",
+    "results": false
+  },
+  {
+    "accession": "0001193125-17-211000",
+    "published": "2017-06-23T06:07:10",
+    "results": false
+  },
+  {
+    "accession": "0001193125-17-224668",
+    "published": "2017-07-10T06:07:32",
+    "results": false
+  },
+  {
+    "accession": "0001193125-17-227282",
+    "published": "2017-07-13T07:44:02",
+    "results": true,
+    "title": "TSMC Reports Second Quarter EPS of NT$2.56",
+    "url": "https://www.sec.gov/Archives/edgar/data/1046179/000119312517227282/d425292d6k.htm",
+    "file": "2017-07-13_d425292d6k.htm"
+  },
+  {
+    "accession": "0001193125-17-227935",
+    "published": "2017-07-14T06:07:56",
+    "results": false,
+    "slides_title": "2017 Second Quarter Earnings Conference",
+    "slides_url": "https://www.sec.gov/Archives/edgar/data/1046179/000119312517227935/d389084d6k.htm",
+    "slides_file": "2017-07-14_d389084d6k.htm"
+  },
+  {
+    "accession": "0001193125-17-234367",
+    "published": "2017-07-25T06:11:04",
+    "results": false
+  },
+  {
+    "accession": "0001193125-17-250674",
+    "published": "2017-08-08T07:31:58",
+    "results": false
+  },
+  {
+    "accession": "0001193125-17-253488",
+    "published": "2017-08-10T06:23:05",
+    "results": false
+  },
+  {
+    "accession": "0001193125-17-256593",
+    "published": "2017-08-14T06:13:05",
+    "results": false
+  },
+  {
+    "accession": "0001193125-17-267302",
+    "published": "2017-08-25T06:11:03",
+    "results": false
+  },
+  {
+    "accession": "0001193125-17-277156",
+    "published": "2017-09-06T06:13:35",
+    "results": false
+  },
+  {
+    "accession": "0001193125-17-279869",
+    "published": "2017-09-08T08:37:35",
+    "results": false
+  },
+  {
+    "accession": "0001193125-17-291948",
+    "published": "2017-09-25T06:15:03",
+    "results": false
+  },
+  {
+    "accession": "0001193125-17-298423",
+    "published": "2017-09-29T06:36:06",
+    "results": false
+  },
+  {
+    "accession": "0001193125-17-300211",
+    "published": "2017-10-02T06:12:12",
+    "results": false
+  },
+  {
+    "accession": "0001193125-17-305145",
+    "published": "2017-10-06T08:44:06",
+    "results": false
+  },
+  {
+    "accession": "0001193125-17-313208",
+    "published": "2017-10-19T06:48:57",
+    "results": true,
+    "title": "TSMC Reports Third Quarter EPS of NT$3.47",
+    "url": "https://www.sec.gov/Archives/edgar/data/1046179/000119312517313208/d478409d6k.htm",
+    "file": "2017-10-19_d478409d6k.htm"
+  },
+  {
+    "accession": "0001193125-17-314600",
+    "published": "2017-10-20T06:08:17",
+    "results": false,
+    "slides_title": "2017 Third Quarter Earnings Conference",
+    "slides_url": "https://www.sec.gov/Archives/edgar/data/1046179/000119312517314600/d478418d6k.htm",
+    "slides_file": "2017-10-20_d478418d6k.htm"
+  },
+  {
+    "accession": "0001193125-17-323818",
+    "published": "2017-10-30T06:11:12",
+    "results": false
+  },
+  {
+    "accession": "0001193125-17-339709",
+    "published": "2017-11-13T06:12:05",
+    "results": false
+  },
+  {
+    "accession": "0001193125-17-341700",
+    "published": "2017-11-14T06:30:37",
+    "results": false
+  },
+  {
+    "accession": "0001193125-17-344732",
+    "published": "2017-11-16T06:11:28",
+    "results": false
+  },
+  {
+    "accession": "0001193125-17-351046",
+    "published": "2017-11-24T06:12:49",
+    "results": false
+  },
+  {
+    "accession": "0001193125-17-364364",
+    "published": "2017-12-08T07:09:04",
+    "results": false
+  },
+  {
+    "accession": "0001193125-17-377061",
+    "published": "2017-12-22T06:09:34",
+    "results": false
+  },
+  {
+    "accession": "0001193125-18-007785",
+    "published": "2018-01-10T06:07:57",
+    "results": false
+  },
+  {
+    "accession": "0001193125-18-012698",
+    "published": "2018-01-18T06:09:35",
+    "results": true,
+    "title": "TSMC Reports Fourth Quarter EPS of NT$3.83",
+    "url": "https://www.sec.gov/Archives/edgar/data/1046179/000119312518012698/d703497d6k.htm",
+    "file": "2018-01-18_d703497d6k.htm"
+  },
+  {
+    "accession": "0001193125-18-013951",
+    "published": "2018-01-19T06:11:12",
+    "results": false
+  },
+  {
+    "accession": "0001193125-18-018960",
+    "published": "2018-01-25T06:12:04",
+    "results": false
+  },
+  {
+    "accession": "0001193125-18-020450",
+    "published": "2018-01-26T06:41:34",
+    "results": false
+  },
+  {
+    "accession": "0001193125-18-037049",
+    "published": "2018-02-09T07:33:34",
+    "results": false
+  },
+  {
+    "accession": "0001193125-18-037211",
+    "published": "2018-02-09T09:21:58",
+    "results": false
+  },
+  {
+    "accession": "0001193125-18-041147",
+    "published": "2018-02-13T06:43:57",
+    "results": false
+  },
+  {
+    "accession": "0001193125-18-054791",
+    "published": "2018-02-23T06:08:34",
+    "results": false
+  },
+  {
+    "accession": "0001193125-18-057149",
+    "published": "2018-02-26T07:40:10",
+    "results": false
+  },
+  {
+    "accession": "0001193125-18-057161",
+    "published": "2018-02-26T07:43:09",
+    "results": false
+  },
+  {
+    "accession": "0001193125-18-076152",
+    "published": "2018-03-09T08:12:06",
+    "results": false
+  },
+  {
+    "accession": "0001193125-18-086606",
+    "published": "2018-03-19T06:35:02",
+    "results": false
+  },
+  {
+    "accession": "0001193125-18-092767",
+    "published": "2018-03-23T06:19:32",
+    "results": false
+  },
+  {
+    "accession": "0001193125-18-112267",
+    "published": "2018-04-10T08:33:02",
+    "results": false
+  },
+  {
+    "accession": "0001193125-18-121859",
+    "published": "2018-04-19T07:51:02",
+    "results": true,
+    "title": "TSMC Reports First Quarter EPS of NT$3.46",
+    "url": "https://www.sec.gov/Archives/edgar/data/1046179/000119312518121859/d573889d6k.htm",
+    "file": "2018-04-19_d573889d6k.htm"
+  },
+  {
+    "accession": "0001193125-18-121999",
+    "published": "2018-04-19T09:27:32",
+    "results": false
+  },
+  {
+    "accession": "0001193125-18-123601",
+    "published": "2018-04-20T06:30:56",
+    "results": false
+  },
+  {
+    "accession": "0001193125-18-123673",
+    "published": "2018-04-20T07:18:03",
+    "results": false,
+    "slides_title": "2018 First Quarter Earnings Conference",
+    "slides_url": "https://www.sec.gov/Archives/edgar/data/1046179/000119312518123673/d573915d6k.htm",
+    "slides_file": "2018-04-20_d573915d6k.htm"
+  },
+  {
+    "accession": "0001193125-18-129832",
+    "published": "2018-04-25T06:32:33",
+    "results": false
+  },
+  {
+    "accession": "0001193125-18-153715",
+    "published": "2018-05-07T09:14:35",
+    "results": false
+  },
+  {
+    "accession": "0001193125-18-158237",
+    "published": "2018-05-10T06:23:02",
+    "results": false
+  },
+  {
+    "accession": "0001193125-18-174197",
+    "published": "2018-05-25T06:20:35",
+    "results": false
+  },
+  {
+    "accession": "0001193125-18-183880",
+    "published": "2018-06-05T06:38:02",
+    "results": false
+  },
+  {
+    "accession": "0001193125-18-184933",
+    "published": "2018-06-06T07:09:06",
+    "results": false
+  },
+  {
+    "accession": "0001193125-18-187291",
+    "published": "2018-06-08T06:09:20",
+    "results": false
+  },
+  {
+    "accession": "0001193125-18-201574",
+    "published": "2018-06-25T06:06:35",
+    "results": false
+  },
+  {
+    "accession": "0001193125-18-215054",
+    "published": "2018-07-10T06:09:01",
+    "results": false
+  },
+  {
+    "accession": "0001193125-18-220934",
+    "published": "2018-07-19T06:10:36",
+    "results": true,
+    "title": "TSMC Reports Second Quarter EPS of NT$2.79",
+    "url": "https://www.sec.gov/Archives/edgar/data/1046179/000119312518220934/d560280d6k.htm",
+    "file": "2018-07-19_d560280d6k.htm"
+  },
+  {
+    "accession": "0001193125-18-221854",
+    "published": "2018-07-20T06:10:16",
+    "results": false,
+    "slides_title": "2018 Second Quarter Earnings Conference",
+    "slides_url": "https://www.sec.gov/Archives/edgar/data/1046179/000119312518221854/d559302d6k.htm",
+    "slides_file": "2018-07-20_d559302d6k.htm"
+  },
+  {
+    "accession": "0001193125-18-225165",
+    "published": "2018-07-25T06:16:05",
+    "results": false
+  },
+  {
+    "accession": "0001193125-18-238914",
+    "published": "2018-08-06T06:20:36",
+    "results": false
+  },
+  {
+    "accession": "0001193125-18-238975",
+    "published": "2018-08-06T07:22:05",
+    "results": false
+  },
+  {
+    "accession": "0001193125-18-245001",
+    "published": "2018-08-10T06:18:41",
+    "results": false
+  },
+  {
+    "accession": "0001193125-18-247835",
+    "published": "2018-08-14T07:25:06",
+    "results": false
+  },
+  {
+    "accession": "0001193125-18-251028",
+    "published": "2018-08-17T06:19:46",
+    "results": false
+  },
+  {
+    "accession": "0001193125-18-256679",
+    "published": "2018-08-24T06:08:35",
+    "results": false
+  },
+  {
+    "accession": "0001193125-18-269529",
+    "published": "2018-09-10T06:11:08",
+    "results": false
+  },
+  {
+    "accession": "0001193125-18-281667",
+    "published": "2018-09-25T06:06:08",
+    "results": false
+  },
+  {
+    "accession": "0001193125-18-295250",
+    "published": "2018-10-09T06:20:09",
+    "results": false
+  },
+  {
+    "accession": "0001193125-18-301425",
+    "published": "2018-10-18T06:29:38",
+    "results": true,
+    "title": "TSMC Reports Third Quarter EPS of NT$3.44",
+    "url": "https://www.sec.gov/Archives/edgar/data/1046179/000119312518301425/d621184d6k.htm",
+    "file": "2018-10-18_d621184d6k.htm"
+  },
+  {
+    "accession": "0001193125-18-302386",
+    "published": "2018-10-19T06:20:23",
+    "results": false,
+    "slides_title": "2018 Third Quarter Earnings Conference",
+    "slides_url": "https://www.sec.gov/Archives/edgar/data/1046179/000119312518302386/d635846d6k.htm",
+    "slides_file": "2018-10-19_d635846d6k.htm"
+  },
+  {
+    "accession": "0001193125-18-306981",
+    "published": "2018-10-25T06:09:59",
+    "results": false
+  },
+  {
+    "accession": "0001193125-18-323049",
+    "published": "2018-11-09T06:14:07",
+    "results": false
+  },
+  {
+    "accession": "0001193125-18-324781",
+    "published": "2018-11-13T07:17:08",
+    "results": false
+  },
+  {
+    "accession": "0001193125-18-328409",
+    "published": "2018-11-16T06:12:15",
+    "results": false
+  },
+  {
+    "accession": "0001193125-18-332712",
+    "published": "2018-11-23T06:07:07",
+    "results": false
+  },
+  {
+    "accession": "0001193125-18-345464",
+    "published": "2018-12-10T06:46:37",
+    "results": false
+  },
+  {
+    "accession": "0001193125-18-358500",
+    "published": "2018-12-27T06:05:36",
+    "results": false
+  },
+  {
+    "accession": "0001193125-18-359980",
+    "published": "2018-12-28T06:13:06",
+    "results": false
+  },
+  {
+    "accession": "0001193125-19-005661",
+    "published": "2019-01-10T06:06:06",
+    "results": false
+  },
+  {
+    "accession": "0001193125-19-010925",
+    "published": "2019-01-17T06:10:04",
+    "results": true,
+    "title": "TSMC Reports Fourth Quarter EPS of NT$3.86",
+    "url": "https://www.sec.gov/Archives/edgar/data/1046179/000119312519010925/d644503d6k.htm",
+    "file": "2019-01-17_d644503d6k.htm"
+  },
+  {
+    "accession": "0001193125-19-011976",
+    "published": "2019-01-18T06:05:07",
+    "results": false,
+    "slides_title": "2018 Fourth Quarter Earnings Conference",
+    "slides_url": "https://www.sec.gov/Archives/edgar/data/1046179/000119312519011976/d629087d6k.htm",
+    "slides_file": "2019-01-18_d629087d6k.htm"
+  },
+  {
+    "accession": "0001193125-19-016334",
+    "published": "2019-01-25T06:13:03",
+    "results": false
+  },
+  {
+    "accession": "0001193125-19-018950",
+    "published": "2019-01-28T16:31:04",
+    "results": false
+  },
+  {
+    "accession": "0001193125-19-019669",
+    "published": "2019-01-29T06:46:34",
+    "results": false
+  },
+  {
+    "accession": "0001193125-19-041575",
+    "published": "2019-02-15T06:13:02",
+    "results": false
+  },
+  {
+    "accession": "0001193125-19-041683",
+    "published": "2019-02-15T08:00:02",
+    "results": false
+  },
+  {
+    "accession": "0001193125-19-043514",
+    "published": "2019-02-19T07:54:02",
+    "results": false
+  },
+  {
+    "accession": "0001193125-19-048915",
+    "published": "2019-02-25T06:08:04",
+    "results": false
+  },
+  {
+    "accession": "0001193125-19-061581",
+    "published": "2019-03-04T06:07:44",
+    "results": false
+  },
+  {
+    "accession": "0001193125-19-067854",
+    "published": "2019-03-08T06:15:02",
+    "results": false
+  },
+  {
+    "accession": "0001193125-19-077389",
+    "published": "2019-03-18T06:07:33",
+    "results": false
+  },
+  {
+    "accession": "0001193125-19-084266",
+    "published": "2019-03-25T06:11:03",
+    "results": false
+  },
+  {
+    "accession": "0001193125-19-097160",
+    "published": "2019-04-04T06:08:02",
+    "results": false
+  },
+  {
+    "accession": "0001193125-19-102369",
+    "published": "2019-04-10T08:22:05",
+    "results": false
+  },
+  {
+    "accession": "0001193125-19-107268",
+    "published": "2019-04-16T08:35:55",
+    "results": false
+  },
+  {
+    "accession": "0001193125-19-108474",
+    "published": "2019-04-17T08:05:32",
+    "results": false
+  },
+  {
+    "accession": "0001193125-19-110066",
+    "published": "2019-04-18T09:26:05",
+    "results": true,
+    "title": "TSMC Reports First Quarter EPS of NT$2.37",
+    "url": "https://www.sec.gov/Archives/edgar/data/1046179/000119312519110066/d733154d6k.htm",
+    "file": "2019-04-18_d733154d6k.htm"
+  },
+  {
+    "accession": "0001193125-19-117812",
+    "published": "2019-04-25T06:26:02",
+    "results": false
+  },
+  {
+    "accession": "0001193125-19-143620",
+    "published": "2019-05-10T07:29:03",
+    "results": false
+  },
+  {
+    "accession": "0001193125-19-145980",
+    "published": "2019-05-14T07:35:32",
+    "results": false
+  },
+  {
+    "accession": "0001193125-19-150950",
+    "published": "2019-05-20T06:08:36",
+    "results": false
+  },
+  {
+    "accession": "0001193125-19-155940",
+    "published": "2019-05-24T06:26:02",
+    "results": false
+  },
+  {
+    "accession": "0001193125-19-165499",
+    "published": "2019-06-05T06:41:32",
+    "results": false
+  },
+  {
+    "accession": "0001193125-19-168658",
+    "published": "2019-06-10T07:55:54",
+    "results": false
+  },
+  {
+    "accession": "0001193125-19-180618",
+    "published": "2019-06-25T06:08:03",
+    "results": false
+  },
+  {
+    "accession": "0001193125-19-187592",
+    "published": "2019-07-01T20:56:02",
+    "results": false
+  },
+  {
+    "accession": "0001193125-19-190858",
+    "published": "2019-07-09T06:10:02",
+    "results": false
+  },
+  {
+    "accession": "0001193125-19-191531",
+    "published": "2019-07-10T06:23:36",
+    "results": false
+  },
+  {
+    "accession": "0001193125-19-195998",
+    "published": "2019-07-18T06:06:55",
+    "results": true,
+    "title": "TSMC Reports Second Quarter EPS of NT$2.57",
+    "url": "https://www.sec.gov/Archives/edgar/data/1046179/000119312519195998/d779506d6k.htm",
+    "file": "2019-07-18_d779506d6k.htm"
+  },
+  {
+    "accession": "0001193125-19-197102",
+    "published": "2019-07-19T06:10:57",
+    "results": false,
+    "slides_title": "2019 Second Quarter Earnings Conference",
+    "slides_url": "https://www.sec.gov/Archives/edgar/data/1046179/000119312519197102/d779397d6k.htm",
+    "slides_file": "2019-07-19_d779397d6k.htm"
+  },
+  {
+    "accession": "0001193125-19-201772",
+    "published": "2019-07-25T06:05:02",
+    "results": false
+  },
+  {
+    "accession": "0001193125-19-218428",
+    "published": "2019-08-12T06:16:32",
+    "results": false
+  },
+  {
+    "accession": "0001193125-19-219458",
+    "published": "2019-08-13T06:58:22",
+    "results": false
+  },
+  {
+    "accession": "0001193125-19-223902",
+    "published": "2019-08-19T06:07:31",
+    "results": false
+  },
+  {
+    "accession": "0001193125-19-227249",
+    "published": "2019-08-23T06:08:32",
+    "results": false
+  },
+  {
+    "accession": "0001193125-19-229913",
+    "published": "2019-08-27T07:00:03",
+    "results": false
+  },
+  {
+    "accession": "0001193125-19-241443",
+    "published": "2019-09-10T06:07:02",
+    "results": false
+  },
+  {
+    "accession": "0001193125-19-254066",
+    "published": "2019-09-25T06:22:02",
+    "results": false
+  },
+  {
+    "accession": "0001564590-19-035985",
+    "published": "2019-10-01T06:32:53",
+    "results": false
+  },
+  {
+    "accession": "0001564590-19-036679",
+    "published": "2019-10-09T07:12:44",
+    "results": false
+  },
+  {
+    "accession": "0001564590-19-037052",
+    "published": "2019-10-17T07:26:56",
+    "results": true,
+    "title": "TSMC Reports Third Quarter EPS of NT$3.90",
+    "url": "https://www.sec.gov/Archives/edgar/data/1046179/000156459019037052/tsm-ex991_6.htm",
+    "file": "2019-10-17_tsm-ex991_6.htm"
+  },
+  {
+    "accession": "0001564590-19-037832",
+    "published": "2019-10-25T06:26:49",
+    "results": false
+  },
+  {
+    "accession": "0001564590-19-038179",
+    "published": "2019-10-28T17:45:31",
+    "results": false
+  },
+  {
+    "accession": "0001564590-19-041985",
+    "published": "2019-11-08T06:03:38",
+    "results": false
+  },
+  {
+    "accession": "0001564590-19-042544",
+    "published": "2019-11-12T07:25:09",
+    "results": false
+  },
+  {
+    "accession": "0001564590-19-043800",
+    "published": "2019-11-19T06:27:32",
+    "results": false
+  },
+  {
+    "accession": "0001564590-19-044276",
+    "published": "2019-11-25T06:02:21",
+    "results": false
+  },
+  {
+    "accession": "0001564590-19-045576",
+    "published": "2019-12-10T06:02:24",
+    "results": false
+  },
+  {
+    "accession": "0001564590-19-046601",
+    "published": "2019-12-23T06:04:54",
+    "results": false
+  },
+  {
+    "accession": "0001564590-19-046991",
+    "published": "2019-12-27T06:03:59",
+    "results": false
+  },
+  {
+    "accession": "0001564590-20-000680",
+    "published": "2020-01-10T06:03:39",
+    "results": false
+  },
+  {
+    "accession": "0001564590-20-001200",
+    "published": "2020-01-16T06:04:46",
+    "results": true,
+    "title": "TSMC Reports Fourth Quarter EPS of NT$4.47",
+    "url": "https://www.sec.gov/Archives/edgar/data/1046179/000156459020001200/tsm-ex991_8.htm",
+    "file": "2020-01-16_tsm-ex991_8.htm"
+  },
+  {
+    "accession": "0001564590-20-001554",
+    "published": "2020-01-22T06:05:03",
+    "results": false
+  },
+  {
+    "accession": "0001564590-20-003937",
+    "published": "2020-02-10T06:04:09",
+    "results": false
+  },
+  {
+    "accession": "0001564590-20-004119",
+    "published": "2020-02-11T07:15:03",
+    "results": false
+  },
+  {
+    "accession": "0001564590-20-006178",
+    "published": "2020-02-25T06:02:45",
+    "results": false
+  },
+  {
+    "accession": "0001564590-20-006977",
+    "published": "2020-02-27T06:04:03",
+    "results": false
+  },
+  {
+    "accession": "0001564590-20-009516",
+    "published": "2020-03-10T06:04:28",
+    "results": false
+  },
+  {
+    "accession": "0001564590-20-011523",
+    "published": "2020-03-18T08:41:19",
+    "results": false
+  },
+  {
+    "accession": "0001564590-20-012093",
+    "published": "2020-03-23T06:03:50",
+    "results": false
+  },
+  {
+    "accession": "0001564590-20-012664",
+    "published": "2020-03-25T06:03:48",
+    "results": false
+  },
+  {
+    "accession": "0001564590-20-016193",
+    "published": "2020-04-10T06:03:37",
+    "results": false
+  },
+  {
+    "accession": "0001564590-20-016803",
+    "published": "2020-04-15T06:58:56",
+    "results": false
+  },
+  {
+    "accession": "0001564590-20-016960",
+    "published": "2020-04-16T07:22:43",
+    "results": true,
+    "title": "TSMC Reports First Quarter EPS of NT$4.51",
+    "url": "https://www.sec.gov/Archives/edgar/data/1046179/000156459020016960/tsm-6k_20200416.htm",
+    "file": "2020-04-16_tsm-6k_20200416.htm"
+  },
+  {
+    "accession": "0001564590-20-018323",
+    "published": "2020-04-24T06:03:48",
+    "results": false
+  },
+  {
+    "accession": "0001564590-20-023197",
+    "published": "2020-05-08T06:04:08",
+    "results": false
+  },
+  {
+    "accession": "0001564590-20-024689",
+    "published": "2020-05-12T16:30:33",
+    "results": false
+  },
+  {
+    "accession": "0001564590-20-025247",
+    "published": "2020-05-14T06:59:23",
+    "results": false
+  },
+  {
+    "accession": "0001564590-20-025607",
+    "published": "2020-05-14T21:32:58",
+    "results": false
+  },
+  {
+    "accession": "0001564590-20-026646",
+    "published": "2020-05-22T06:02:06",
+    "results": false
+  },
+  {
+    "accession": "0001564590-20-028674",
+    "published": "2020-06-09T06:04:15",
+    "results": false
+  },
+  {
+    "accession": "0001564590-20-028818",
+    "published": "2020-06-10T06:04:12",
+    "results": false
+  },
+  {
+    "accession": "0001564590-20-030340",
+    "published": "2020-06-24T06:02:19",
+    "results": false
+  },
+  {
+    "accession": "0001564590-20-031984",
+    "published": "2020-07-08T06:02:54",
+    "results": false
+  },
+  {
+    "accession": "0001564590-20-032150",
+    "published": "2020-07-10T06:02:31",
+    "results": false
+  },
+  {
+    "accession": "0001564590-20-032443",
+    "published": "2020-07-16T06:39:29",
+    "results": true,
+    "title": "TSMC Reports Second Quarter EPS of NT$4.66",
+    "url": "https://www.sec.gov/Archives/edgar/data/1046179/000156459020032443/tsm-ex991_64.htm",
+    "file": "2020-07-16_tsm-ex991_64.htm"
+  },
+  {
+    "accession": "0001564590-20-033310",
+    "published": "2020-07-24T06:03:14",
+    "results": false
+  },
+  {
+    "accession": "0001564590-20-033315",
+    "published": "2020-07-24T06:18:44",
+    "results": false
+  },
+  {
+    "accession": "0001564590-20-038543",
+    "published": "2020-08-10T06:02:09",
+    "results": false
+  },
+  {
+    "accession": "0001564590-20-039111",
+    "published": "2020-08-11T06:51:53",
+    "results": false
+  },
+  {
+    "accession": "0001564590-20-040158",
+    "published": "2020-08-14T06:05:05",
+    "results": false
+  },
+  {
+    "accession": "0001564590-20-041088",
+    "published": "2020-08-25T06:01:28",
+    "results": false
+  },
+  {
+    "accession": "0001564590-20-043040",
+    "published": "2020-09-10T07:06:36",
+    "results": false
+  },
+  {
+    "accession": "0001564590-20-044420",
+    "published": "2020-09-23T20:10:01",
+    "results": false
+  },
+  {
+    "accession": "0001564590-20-044564",
+    "published": "2020-09-25T06:02:02",
+    "results": false
+  },
+  {
+    "accession": "0001564590-20-046046",
+    "published": "2020-10-08T06:02:42",
+    "results": false
+  },
+  {
+    "accession": "0001564590-20-046453",
+    "published": "2020-10-15T06:42:33",
+    "results": true,
+    "title": "TSMC Reports Third Quarter EPS of NT$5.30",
+    "url": "https://www.sec.gov/Archives/edgar/data/1046179/000156459020046453/tsm-ex991_7.htm",
+    "file": "2020-10-15_tsm-ex991_7.htm"
+  },
+  {
+    "accession": "0001564590-20-047339",
+    "published": "2020-10-23T06:01:58",
+    "results": false
+  },
+  {
+    "accession": "0001564590-20-052694",
+    "published": "2020-11-10T06:02:48",
+    "results": false
+  },
+  {
+    "accession": "0001564590-20-052746",
+    "published": "2020-11-10T07:57:41",
+    "results": false
+  },
+  {
+    "accession": "0001564590-20-053724",
+    "published": "2020-11-13T07:10:27",
+    "results": false
+  },
+  {
+    "accession": "0001564590-20-055127",
+    "published": "2020-11-25T06:01:51",
+    "results": false
+  },
+  {
+    "accession": "0001564590-20-056626",
+    "published": "2020-12-10T06:02:27",
+    "results": false
+  },
+  {
+    "accession": "0001564590-20-058086",
+    "published": "2020-12-23T06:26:48",
+    "results": false
+  },
+  {
+    "accession": "0001564590-21-000622",
+    "published": "2021-01-08T08:54:53",
+    "results": false
+  },
+  {
+    "accession": "0001564590-21-001132",
+    "published": "2021-01-14T07:00:42",
+    "results": true,
+    "title": "TSMC Reports Fourth Quarter EPS of NT$5.51",
+    "url": "https://www.sec.gov/Archives/edgar/data/1046179/000156459021001132/tsm-ex991_6.htm",
+    "file": "2021-01-14_tsm-ex991_6.htm"
+  },
+  {
+    "accession": "0001564590-21-001982",
+    "published": "2021-01-25T06:02:10",
+    "results": false
+  },
+  {
+    "accession": "0001564590-21-004774",
+    "published": "2021-02-09T06:03:18",
+    "results": false
+  },
+  {
+    "accession": "0001564590-21-004779",
+    "published": "2021-02-09T06:40:10",
+    "results": false
+  },
+  {
+    "accession": "0001564590-21-008379",
+    "published": "2021-02-25T06:02:00",
+    "results": false
+  },
+  {
+    "accession": "0001564590-21-009168",
+    "published": "2021-02-26T06:03:06",
+    "results": false
+  },
+  {
+    "accession": "0001564590-21-011879",
+    "published": "2021-03-10T06:02:25",
+    "results": false
+  },
+  {
+    "accession": "0001564590-21-014465",
+    "published": "2021-03-22T06:09:56",
+    "results": false
+  },
+  {
+    "accession": "0001564590-21-015236",
+    "published": "2021-03-25T06:01:17",
+    "results": false
+  },
+  {
+    "accession": "0001564590-21-017172",
+    "published": "2021-04-01T06:03:09",
+    "results": false
+  },
+  {
+    "accession": "0001564590-21-018240",
+    "published": "2021-04-09T06:01:53",
+    "results": false
+  },
+  {
+    "accession": "0001564590-21-018896",
+    "published": "2021-04-15T06:44:04",
+    "results": true,
+    "title": "TSMC Reports First Quarter EPS of NT$5.39",
+    "url": "https://www.sec.gov/Archives/edgar/data/1046179/000156459021018896/tsm-ex991_6.htm",
+    "file": "2021-04-15_tsm-ex991_6.htm"
+  },
+  {
+    "accession": "0001564590-21-019085",
+    "published": "2021-04-16T06:45:11",
+    "results": false
+  },
+  {
+    "accession": "0001564590-21-019088",
+    "published": "2021-04-16T08:11:45",
+    "results": false
+  },
+  {
+    "accession": "0001564590-21-019693",
+    "published": "2021-04-21T06:02:43",
+    "results": false
+  },
+  {
+    "accession": "0001564590-21-019939",
+    "published": "2021-04-22T07:10:13",
+    "results": false
+  },
+  {
+    "accession": "0001564590-21-020185",
+    "published": "2021-04-23T06:00:21",
+    "results": false
+  },
+  {
+    "accession": "0001564590-21-025717",
+    "published": "2021-05-10T06:02:04",
+    "results": false
+  },
+  {
+    "accession": "0001564590-21-027791",
+    "published": "2021-05-14T06:27:40",
+    "results": false
+  },
+  {
+    "accession": "0001564590-21-029173",
+    "published": "2021-05-21T06:16:14",
+    "results": false
+  },
+  {
+    "accession": "0001564590-21-029598",
+    "published": "2021-05-25T06:00:48",
+    "results": false
+  },
+  {
+    "accession": "0001564590-21-032179",
+    "published": "2021-06-09T07:59:41",
+    "results": false
+  },
+  {
+    "accession": "0001564590-21-032334",
+    "published": "2021-06-10T06:09:34",
+    "results": false
+  },
+  {
+    "accession": "0001564590-21-033442",
+    "published": "2021-06-21T06:06:25",
+    "results": false
+  },
+  {
+    "accession": "0001564590-21-034393",
+    "published": "2021-06-25T06:00:23",
+    "results": false
+  },
+  {
+    "accession": "0001564590-21-036094",
+    "published": "2021-07-09T06:02:50",
+    "results": false
+  },
+  {
+    "accession": "0001564590-21-036216",
+    "published": "2021-07-12T06:28:45",
+    "results": false
+  },
+  {
+    "accession": "0001564590-21-036225",
+    "published": "2021-07-12T08:30:40",
+    "results": false
+  },
+  {
+    "accession": "0001564590-21-036625",
+    "published": "2021-07-15T06:02:54",
+    "results": true,
+    "title": "TSMC Reports Second Quarter EPS of NT$5.18",
+    "url": "https://www.sec.gov/Archives/edgar/data/1046179/000156459021036625/tsm-ex991_6.htm",
+    "file": "2021-07-15_tsm-ex991_6.htm"
+  },
+  {
+    "accession": "0001564590-21-037677",
+    "published": "2021-07-23T06:00:28",
+    "results": false
+  },
+  {
+    "accession": "0001564590-21-037790",
+    "published": "2021-07-26T06:02:56",
+    "results": false
+  },
+  {
+    "accession": "0001564590-21-042846",
+    "published": "2021-08-10T06:02:30",
+    "results": false
+  },
+  {
+    "accession": "0001564590-21-042889",
+    "published": "2021-08-10T07:45:22",
+    "results": false
+  },
+  {
+    "accession": "0001564590-21-044132",
+    "published": "2021-08-13T06:06:10",
+    "results": false
+  },
+  {
+    "accession": "0001564590-21-045604",
+    "published": "2021-08-25T06:00:33",
+    "results": false
+  },
+  {
+    "accession": "0001564590-21-047528",
+    "published": "2021-09-10T06:02:39",
+    "results": false
+  },
+  {
+    "accession": "0001564590-21-048761",
+    "published": "2021-09-24T06:00:20",
+    "results": false
+  },
+  {
+    "accession": "0001564590-21-050466",
+    "published": "2021-10-08T06:10:23",
+    "results": false
+  },
+  {
+    "accession": "0001564590-21-050767",
+    "published": "2021-10-14T06:26:39",
+    "results": true,
+    "title": "TSMC Reports Third Quarter EPS of NT$6.03",
+    "url": "https://www.sec.gov/Archives/edgar/data/1046179/000156459021050767/tsm-ex991_29.htm",
+    "file": "2021-10-14_tsm-ex991_29.htm"
+  },
+  {
+    "accession": "0001193125-21-301021",
+    "published": "2021-10-18T16:04:04",
+    "results": false
+  },
+  {
+    "accession": "0001193125-21-301181",
+    "published": "2021-10-18T17:18:03",
+    "results": false
+  },
+  {
+    "accession": "0001564590-21-051075",
+    "published": "2021-10-19T06:03:19",
+    "results": false
+  },
+  {
+    "accession": "0001193125-21-303164",
+    "published": "2021-10-20T17:16:11",
+    "results": false
+  },
+  {
+    "accession": "0001564590-21-051613",
+    "published": "2021-10-25T06:00:30",
+    "results": false
+  },
+  {
+    "accession": "0001193125-21-305980",
+    "published": "2021-10-25T06:58:56",
+    "results": false
+  },
+  {
+    "accession": "0001193125-21-306139",
+    "published": "2021-10-25T09:09:38",
+    "results": false
+  },
+  {
+    "accession": "0001564590-21-055416",
+    "published": "2021-11-09T06:03:06",
+    "results": false
+  },
+  {
+    "accession": "0001564590-21-055424",
+    "published": "2021-11-09T06:24:23",
+    "results": false
+  },
+  {
+    "accession": "0001564590-21-055890",
+    "published": "2021-11-10T06:01:56",
+    "results": false
+  },
+  {
+    "accession": "0001564590-21-056389",
+    "published": "2021-11-12T06:10:17",
+    "results": false
+  },
+  {
+    "accession": "0001564590-21-058152",
+    "published": "2021-11-24T06:00:19",
+    "results": false
+  },
+  {
+    "accession": "0001564590-21-059942",
+    "published": "2021-12-10T06:02:41",
+    "results": false
+  },
+  {
+    "accession": "0001564590-21-060907",
+    "published": "2021-12-22T06:02:46",
+    "results": false
+  },
+  {
+    "accession": "0001564590-22-000736",
+    "published": "2022-01-10T06:01:49",
+    "results": false
+  },
+  {
+    "accession": "0001564590-22-001132",
+    "published": "2022-01-13T06:02:31",
+    "results": true,
+    "title": "TSMC Reports Fourth Quarter EPS of NT$6.41",
+    "url": "https://www.sec.gov/Archives/edgar/data/1046179/000156459022001132/tsm-ex991_6.htm",
+    "file": "2022-01-13_tsm-ex991_6.htm"
+  },
+  {
+    "accession": "0001564590-22-002158",
+    "published": "2022-01-25T06:03:29",
+    "results": false
+  },
+  {
+    "accession": "0001564590-22-004502",
+    "published": "2022-02-10T06:03:22",
+    "results": false
+  },
+  {
+    "accession": "0001564590-22-005076",
+    "published": "2022-02-15T06:18:24",
+    "results": false
+  },
+  {
+    "accession": "0001564590-22-005084",
+    "published": "2022-02-15T07:15:43",
+    "results": false
+  },
+  {
+    "accession": "0001564590-22-006898",
+    "published": "2022-02-25T06:12:18",
+    "results": false
+  },
+  {
+    "accession": "0001564590-22-006887",
+    "published": "2022-02-25T06:15:40",
+    "results": false
+  },
+  {
+    "accession": "0001564590-22-009446",
+    "published": "2022-03-10T06:03:03",
+    "results": false
+  },
+  {
+    "accession": "0001564590-22-010954",
+    "published": "2022-03-18T06:02:38",
+    "results": false
+  },
+  {
+    "accession": "0001564590-22-011722",
+    "published": "2022-03-25T06:00:20",
+    "results": false
+  },
+  {
+    "accession": "0001564590-22-013903",
+    "published": "2022-04-08T06:02:15",
+    "results": false
+  },
+  {
+    "accession": "0001564590-22-014381",
+    "published": "2022-04-14T06:02:33",
+    "results": true,
+    "title": "TSMC Reports First Quarter EPS of NT$7.82",
+    "url": "https://www.sec.gov/Archives/edgar/data/1046179/000156459022014381/tsm-ex991_6.htm",
+    "file": "2022-04-14_tsm-ex991_6.htm"
+  },
+  {
+    "accession": "0001564590-22-014392",
+    "published": "2022-04-14T07:12:09",
+    "results": false
+  },
+  {
+    "accession": "0001193125-22-108102",
+    "published": "2022-04-18T16:55:08",
+    "results": false
+  },
+  {
+    "accession": "0001193125-22-109600",
+    "published": "2022-04-19T17:23:59",
+    "results": false
+  },
+  {
+    "accession": "0001193125-22-114121",
+    "published": "2022-04-22T07:24:07",
+    "results": false
+  },
+  {
+    "accession": "0001193125-22-114126",
+    "published": "2022-04-22T07:27:08",
+    "results": false
+  },
+  {
+    "accession": "0001564590-22-015327",
+    "published": "2022-04-25T06:01:37",
+    "results": false
+  },
+  {
+    "accession": "0001564590-22-019047",
+    "published": "2022-05-10T06:01:41",
+    "results": false
+  },
+  {
+    "accession": "0001564590-22-019076",
+    "published": "2022-05-10T07:31:01",
+    "results": false
+  },
+  {
+    "accession": "0001564590-22-019989",
+    "published": "2022-05-13T06:18:22",
+    "results": false
+  },
+  {
+    "accession": "0001564590-22-021205",
+    "published": "2022-05-25T06:00:23",
+    "results": false
+  },
+  {
+    "accession": "0001564590-22-022717",
+    "published": "2022-06-08T06:04:50",
+    "results": false
+  },
+  {
+    "accession": "0001564590-22-022912",
+    "published": "2022-06-10T06:06:58",
+    "results": false
+  },
+  {
+    "accession": "0001564590-22-024119",
+    "published": "2022-06-24T06:00:20",
+    "results": false
+  },
+  {
+    "accession": "0001564590-22-025478",
+    "published": "2022-07-08T06:02:01",
+    "results": false
+  },
+  {
+    "accession": "0001564590-22-025726",
+    "published": "2022-07-14T06:01:55",
+    "results": true,
+    "title": "TSMC Reports Second Quarter EPS of NT$9.14",
+    "url": "https://www.sec.gov/Archives/edgar/data/1046179/000156459022025726/tsm-ex991_6.htm",
+    "file": "2022-07-14_tsm-ex991_6.htm"
+  },
+  {
+    "accession": "0001564590-22-026001",
+    "published": "2022-07-20T06:02:24",
+    "results": false
+  },
+  {
+    "accession": "0001564590-22-026280",
+    "published": "2022-07-25T06:00:25",
+    "results": false
+  },
+  {
+    "accession": "0001564590-22-028585",
+    "published": "2022-08-09T07:09:17",
+    "results": false
+  },
+  {
+    "accession": "0001564590-22-028847",
+    "published": "2022-08-10T06:01:31",
+    "results": false
+  },
+  {
+    "accession": "0001564590-22-029014",
+    "published": "2022-08-11T06:03:05",
+    "results": false
+  },
+  {
+    "accession": "0001564590-22-029201",
+    "published": "2022-08-12T06:04:07",
+    "results": false
+  },
+  {
+    "accession": "0001564590-22-030076",
+    "published": "2022-08-25T06:00:23",
+    "results": false
+  },
+  {
+    "accession": "0001564590-22-031240",
+    "published": "2022-09-08T06:02:55",
+    "results": false
+  },
+  {
+    "accession": "0001564590-22-032163",
+    "published": "2022-09-23T06:00:21",
+    "results": false
+  },
+  {
+    "accession": "0001564590-22-033741",
+    "published": "2022-10-07T06:01:16",
+    "results": false
+  },
+  {
+    "accession": "0001564590-22-034145",
+    "published": "2022-10-13T07:25:25",
+    "results": true,
+    "title": "TSMC Reports Third Quarter EPS of NT$10.83",
+    "url": "https://www.sec.gov/Archives/edgar/data/1046179/000156459022034145/tsm-ex991_104.htm",
+    "file": "2022-10-13_tsm-ex991_104.htm"
+  },
+  {
+    "accession": "0001564590-22-034989",
+    "published": "2022-10-25T06:00:32",
+    "results": false
+  },
+  {
+    "accession": "0001564590-22-035784",
+    "published": "2022-10-31T06:02:38",
+    "results": false
+  },
+  {
+    "accession": "0001564590-22-036926",
+    "published": "2022-11-08T06:17:27",
+    "results": false
+  },
+  {
+    "accession": "0001564590-22-037273",
+    "published": "2022-11-10T06:04:50",
+    "results": false
+  },
+  {
+    "accession": "0001564590-22-037471",
+    "published": "2022-11-14T06:05:47",
+    "results": false
+  },
+  {
+    "accession": "0001564590-22-038265",
+    "published": "2022-11-25T06:02:17",
+    "results": false
+  },
+  {
+    "accession": "0001564590-22-039051",
+    "published": "2022-12-06T10:43:00",
+    "results": false
+  },
+  {
+    "accession": "0001564590-22-039159",
+    "published": "2022-12-09T06:02:18",
+    "results": false
+  },
+  {
+    "accession": "0001564590-22-039567",
+    "published": "2022-12-22T06:00:20",
+    "results": false
+  },
+  {
+    "accession": "0001564590-22-039693",
+    "published": "2022-12-27T06:02:42",
+    "results": false
+  },
+  {
+    "accession": "0001564590-22-039856",
+    "published": "2022-12-29T06:02:32",
+    "results": false
+  },
+  {
+    "accession": "0001564590-23-000305",
+    "published": "2023-01-10T06:01:57",
+    "results": false
+  },
+  {
+    "accession": "0001564590-23-000363",
+    "published": "2023-01-12T06:37:24",
+    "results": true,
+    "title": "TSMC Reports Fourth Quarter EPS of NT$11.41",
+    "url": "https://www.sec.gov/Archives/edgar/data/1046179/000156459023000363/tsm-ex991_38.htm",
+    "file": "2023-01-12_tsm-ex991_38.htm"
+  },
+  {
+    "accession": "0001564590-23-000489",
+    "published": "2023-01-18T06:02:44",
+    "results": false
+  },
+  {
+    "accession": "0001564590-23-001698",
+    "published": "2023-02-10T06:01:40",
+    "results": false
+  },
+  {
+    "accession": "0001564590-23-001822",
+    "published": "2023-02-14T07:07:30",
+    "results": false
+  },
+  {
+    "accession": "0001564590-23-002144",
+    "published": "2023-02-22T06:01:55",
+    "results": false
+  },
+  {
+    "accession": "0001564590-23-002381",
+    "published": "2023-02-24T07:06:08",
+    "results": false
+  },
+  {
+    "accession": "0001564590-23-002825",
+    "published": "2023-03-01T06:41:47",
+    "results": false
+  },
+  {
+    "accession": "0001564590-23-003384",
+    "published": "2023-03-10T06:02:22",
+    "results": false
+  },
+  {
+    "accession": "0001564590-23-003858",
+    "published": "2023-03-17T06:02:08",
+    "results": false
+  },
+  {
+    "accession": "0001628280-23-009091",
+    "published": "2023-03-24T06:03:36",
+    "results": false
+  },
+  {
+    "accession": "0001628280-23-011133",
+    "published": "2023-04-10T06:09:34",
+    "results": false
+  },
+  {
+    "accession": "0001628280-23-012121",
+    "published": "2023-04-20T06:11:05",
+    "results": true,
+    "title": "TSMC Reports First Quarter EPS of NT$7.98",
+    "url": "https://www.sec.gov/Archives/edgar/data/1046179/000162828023012121/a1q23e_withguidancexfinal.htm",
+    "file": "2023-04-20_a1q23e_withguidancexfinal.htm",
+    "slides_title": "2023 First Quarter Earnings Conference",
+    "slides_url": "https://www.sec.gov/Archives/edgar/data/1046179/000162828023012121/a1q23presentatione.htm",
+    "slides_file": "2023-04-20_a1q23presentatione.htm"
+  },
+  {
+    "accession": "0001628280-23-012133",
+    "published": "2023-04-20T07:08:28",
+    "results": false
+  },
+  {
+    "accession": "0001628280-23-012636",
+    "published": "2023-04-25T06:04:08",
+    "results": false
+  },
+  {
+    "accession": "0001628280-23-016618",
+    "published": "2023-05-09T07:06:48",
+    "results": false
+  },
+  {
+    "accession": "0001628280-23-017015",
+    "published": "2023-05-10T06:18:02",
+    "results": false
+  },
+  {
+    "accession": "0001628280-23-017752",
+    "published": "2023-05-12T07:31:40",
+    "results": false
+  },
+  {
+    "accession": "0001628280-23-019648",
+    "published": "2023-05-25T06:08:46",
+    "results": false
+  },
+  {
+    "accession": "0001628280-23-020208",
+    "published": "2023-05-31T06:09:47",
+    "results": false
+  },
+  {
+    "accession": "0001628280-23-020992",
+    "published": "2023-06-06T06:17:01",
+    "results": false
+  },
+  {
+    "accession": "0001628280-23-021631",
+    "published": "2023-06-09T06:38:03",
+    "results": false
+  },
+  {
+    "accession": "0001628280-23-022819",
+    "published": "2023-06-21T06:10:03",
+    "results": false
+  },
+  {
+    "accession": "0001628280-23-024605",
+    "published": "2023-07-10T06:14:02",
+    "results": false
+  },
+  {
+    "accession": "0001628280-23-025146",
+    "published": "2023-07-20T06:06:25",
+    "results": true,
+    "title": "TSMC Reports Second Quarter EPS of NT$7.01",
+    "url": "https://www.sec.gov/Archives/edgar/data/1046179/000162828023025146/a2q23e_withguidancexfinalx.htm",
+    "file": "2023-07-20_a2q23e_withguidancexfinalx.htm",
+    "slides_title": "2023 Second Quarter Earnings Conference",
+    "slides_url": "https://www.sec.gov/Archives/edgar/data/1046179/000162828023025146/a2q23presentatione.htm",
+    "slides_file": "2023-07-20_a2q23presentatione.htm"
+  },
+  {
+    "accession": "0001628280-23-025517",
+    "published": "2023-07-25T06:13:42",
+    "results": false
+  },
+  {
+    "accession": "0001628280-23-027944",
+    "published": "2023-08-08T07:27:31",
+    "results": false
+  },
+  {
+    "accession": "0001628280-23-027976",
+    "published": "2023-08-08T08:32:10",
+    "results": false
+  },
+  {
+    "accession": "0001628280-23-028724",
+    "published": "2023-08-10T06:02:28",
+    "results": false
+  },
+  {
+    "accession": "0001628280-23-029161",
+    "published": "2023-08-14T06:06:50",
+    "results": false
+  },
+  {
+    "accession": "0001628280-23-030043",
+    "published": "2023-08-21T06:47:50",
+    "results": false
+  },
+  {
+    "accession": "0001628280-23-030593",
+    "published": "2023-08-25T06:03:37",
+    "results": false
+  },
+  {
+    "accession": "0001046179-23-000006",
+    "published": "2023-09-08T06:15:27",
+    "results": false
+  },
+  {
+    "accession": "0001046179-23-000008",
+    "published": "2023-09-12T08:17:09",
+    "results": false
+  },
+  {
+    "accession": "0001046179-23-000010",
+    "published": "2023-09-25T06:10:37",
+    "results": false
+  },
+  {
+    "accession": "0001046179-23-000012",
+    "published": "2023-10-06T06:15:19",
+    "results": false
+  },
+  {
+    "accession": "0001046179-23-000014",
+    "published": "2023-10-19T06:22:41",
+    "results": true,
+    "title": "TSMC Reports Third Quarter EPS of NT$8.14",
+    "url": "https://www.sec.gov/Archives/edgar/data/1046179/000104617923000014/a3q23e_withguidancexfinal.htm",
+    "file": "2023-10-19_a3q23e_withguidancexfinal.htm",
+    "slides_title": "2023 Third Quarter Earnings Conference",
+    "slides_url": "https://www.sec.gov/Archives/edgar/data/1046179/000104617923000014/a3q23presentatione.htm",
+    "slides_file": "2023-10-19_a3q23presentatione.htm"
+  },
+  {
+    "accession": "0001046179-23-000016",
+    "published": "2023-10-26T06:04:03",
+    "results": false
+  },
+  {
+    "accession": "0001046179-23-000019",
+    "published": "2023-11-13T06:04:51",
+    "results": false
+  },
+  {
+    "accession": "0001046179-23-000021",
+    "published": "2023-11-14T06:05:54",
+    "results": false
+  },
+  {
+    "accession": "0001046179-23-000023",
+    "published": "2023-11-14T06:15:28",
+    "results": false
+  },
+  {
+    "accession": "0001046179-23-000025",
+    "published": "2023-11-24T06:01:44",
+    "results": false
+  },
+  {
+    "accession": "0001046179-23-000027",
+    "published": "2023-12-06T06:05:58",
+    "results": false
+  },
+  {
+    "accession": "0001046179-23-000029",
+    "published": "2023-12-08T06:04:43",
+    "results": false
+  },
+  {
+    "accession": "0001046179-23-000031",
+    "published": "2023-12-15T06:08:54",
+    "results": false
+  },
+  {
+    "accession": "0001046179-23-000033",
+    "published": "2023-12-19T06:04:39",
+    "results": false
+  },
+  {
+    "accession": "0001046179-23-000035",
+    "published": "2023-12-22T06:03:06",
+    "results": false
+  },
+  {
+    "accession": "0001046179-24-000002",
+    "published": "2024-01-10T06:03:11",
+    "results": false
+  },
+  {
+    "accession": "0001046179-24-000005",
+    "published": "2024-01-18T06:21:57",
+    "results": true,
+    "slides_title": "2023 Fourth Quarter Earnings Conference",
+    "slides_url": "https://www.sec.gov/Archives/edgar/data/1046179/000104617924000005/a4q23presentatione.htm",
+    "slides_file": "2024-01-18_a4q23presentatione.htm",
+    "title": "TSMC Reports Fourth Quarter EPS of NT$9.21",
+    "url": "https://www.sec.gov/Archives/edgar/data/1046179/000104617924000005/a4q24e_withguidancexfinal.htm",
+    "file": "2024-01-18_a4q24e_withguidancexfinal.htm"
+  },
+  {
+    "accession": "0001046179-24-000008",
+    "published": "2024-01-25T06:04:06",
+    "results": false
+  },
+  {
+    "accession": "0001046179-24-000010",
+    "published": "2024-02-06T07:53:53",
+    "results": false
+  },
+  {
+    "accession": "0001046179-24-000012",
+    "published": "2024-02-06T07:55:14",
+    "results": false
+  },
+  {
+    "accession": "0001046179-24-000014",
+    "published": "2024-02-07T06:01:57",
+    "results": false
+  },
+  {
+    "accession": "0001046179-24-000016",
+    "published": "2024-02-23T06:04:54",
+    "results": false
+  },
+  {
+    "accession": "0001046179-24-000018",
+    "published": "2024-02-29T06:10:39",
+    "results": false
+  },
+  {
+    "accession": "0001046179-24-000020",
+    "published": "2024-02-29T06:13:29",
+    "results": false
+  },
+  {
+    "accession": "0001046179-24-000022",
+    "published": "2024-03-01T06:03:48",
+    "results": false
+  },
+  {
+    "accession": "0001046179-24-000026",
+    "published": "2024-03-08T06:05:24",
+    "results": false
+  },
+  {
+    "accession": "0001046179-24-000028",
+    "published": "2024-03-18T06:09:25",
+    "results": false
+  },
+  {
+    "accession": "0001046179-24-000030",
+    "published": "2024-03-22T06:05:45",
+    "results": false
+  },
+  {
+    "accession": "0001046179-24-000032",
+    "published": "2024-03-25T06:16:52",
+    "results": false
+  },
+  {
+    "accession": "0001046179-24-000034",
+    "published": "2024-04-03T11:13:36",
+    "results": false
+  },
+  {
+    "accession": "0001046179-24-000036",
+    "published": "2024-04-04T09:20:12",
+    "results": false
+  },
+  {
+    "accession": "0001046179-24-000038",
+    "published": "2024-04-05T09:09:11",
+    "results": false
+  },
+  {
+    "accession": "0001046179-24-000040",
+    "published": "2024-04-08T06:36:29",
+    "results": false
+  },
+  {
+    "accession": "0001046179-24-000042",
+    "published": "2024-04-10T06:04:06",
+    "results": false
+  },
+  {
+    "accession": "0001046179-24-000044",
+    "published": "2024-04-12T06:04:58",
+    "results": false
+  },
+  {
+    "accession": "0001046179-24-000046",
+    "published": "2024-04-18T06:05:21",
+    "results": true,
+    "title": "TSMC Reports First Quarter EPS of NT$8.70",
+    "url": "https://www.sec.gov/Archives/edgar/data/1046179/000104617924000046/a1q24e_withguidancexfinal.htm",
+    "file": "2024-04-18_a1q24e_withguidancexfinal.htm",
+    "slides_title": "2024 First Quarter Earnings Conference",
+    "slides_url": "https://www.sec.gov/Archives/edgar/data/1046179/000104617924000046/a1q24presentatione_x.htm",
+    "slides_file": "2024-04-18_a1q24presentatione_x.htm"
+  },
+  {
+    "accession": "0001046179-24-000048",
+    "published": "2024-04-18T07:11:30",
+    "results": false
+  },
+  {
+    "accession": "0001046179-24-000050",
+    "published": "2024-04-18T07:26:54",
+    "results": false
+  },
+  {
+    "accession": "0001046179-24-000052",
+    "published": "2024-04-25T06:02:04",
+    "results": false
+  },
+  {
+    "accession": "0001046179-24-000054",
+    "published": "2024-05-02T06:02:45",
+    "results": false
+  },
+  {
+    "accession": "0001046179-24-000056",
+    "published": "2024-05-10T06:04:00",
+    "results": false
+  },
+  {
+    "accession": "0001046179-24-000058",
+    "published": "2024-05-10T06:05:04",
+    "results": false
+  },
+  {
+    "accession": "0001046179-24-000061",
+    "published": "2024-05-15T06:09:21",
+    "results": false
+  },
+  {
+    "accession": "0001046179-24-000064",
+    "published": "2024-05-24T06:01:51",
+    "results": false
+  },
+  {
+    "accession": "0001046179-24-000066",
+    "published": "2024-05-28T06:47:03",
+    "results": false
+  },
+  {
+    "accession": "0001046179-24-000068",
+    "published": "2024-05-29T06:02:27",
+    "results": false
+  },
+  {
+    "accession": "0001046179-24-000070",
+    "published": "2024-06-04T06:09:14",
+    "results": false
+  },
+  {
+    "accession": "0001046179-24-000072",
+    "published": "2024-06-05T06:56:01",
+    "results": false
+  },
+  {
+    "accession": "0001046179-24-000074",
+    "published": "2024-06-06T07:02:32",
+    "results": false
+  },
+  {
+    "accession": "0001046179-24-000076",
+    "published": "2024-06-07T06:03:04",
+    "results": false
+  },
+  {
+    "accession": "0001046179-24-000078",
+    "published": "2024-06-25T06:03:16",
+    "results": false
+  },
+  {
+    "accession": "0001046179-24-000081",
+    "published": "2024-07-10T06:09:18",
+    "results": false
+  },
+  {
+    "accession": "0001046179-24-000083",
+    "published": "2024-07-18T06:19:06",
+    "results": true,
+    "title": "TSMC Reports Second Quarter EPS of NT$9.56",
+    "url": "https://www.sec.gov/Archives/edgar/data/1046179/000104617924000083/a2q24e_withguidancexfinal.htm",
+    "file": "2024-07-18_a2q24e_withguidancexfinal.htm",
+    "slides_title": "2024 Second Quarter Earnings Conference",
+    "slides_url": "https://www.sec.gov/Archives/edgar/data/1046179/000104617924000083/a2q24presentatione.htm",
+    "slides_file": "2024-07-18_a2q24presentatione.htm"
+  },
+  {
+    "accession": "0001046179-24-000085",
+    "published": "2024-07-23T07:32:11",
+    "results": false
+  },
+  {
+    "accession": "0001046179-24-000087",
+    "published": "2024-07-29T06:51:00",
+    "results": false
+  },
+  {
+    "accession": "0001046179-24-000090",
+    "published": "2024-08-09T06:04:26",
+    "results": false
+  },
+  {
+    "accession": "0001046179-24-000092",
+    "published": "2024-08-13T08:29:33",
+    "results": false
+  },
+  {
+    "accession": "0001046179-24-000094",
+    "published": "2024-08-14T06:08:18",
+    "results": false
+  },
+  {
+    "accession": "0001046179-24-000097",
+    "published": "2024-08-20T09:18:59",
+    "results": false
+  },
+  {
+    "accession": "0001046179-24-000100",
+    "published": "2024-08-23T06:03:22",
+    "results": false
+  },
+  {
+    "accession": "0001046179-24-000102",
+    "published": "2024-08-28T06:11:09",
+    "results": false
+  },
+  {
+    "accession": "0001046179-24-000104",
+    "published": "2024-09-06T06:03:44",
+    "results": false
+  },
+  {
+    "accession": "0001046179-24-000106",
+    "published": "2024-09-10T06:20:24",
+    "results": false
+  },
+  {
+    "accession": "0001046179-24-000108",
+    "published": "2024-09-25T06:12:35",
+    "results": false
+  },
+  {
+    "accession": "0001046179-24-000110",
+    "published": "2024-09-27T06:01:19",
+    "results": false
+  },
+  {
+    "accession": "0001046179-24-000112",
+    "published": "2024-10-03T17:19:35",
+    "results": false
+  },
+  {
+    "accession": "0001046179-24-000114",
+    "published": "2024-10-09T06:15:02",
+    "results": false
+  },
+  {
+    "accession": "0001046179-24-000116",
+    "published": "2024-10-17T06:13:36",
+    "results": true,
+    "title": "TSMC Reports Third Quarter EPS of NT$12.54",
+    "url": "https://www.sec.gov/Archives/edgar/data/1046179/000104617924000116/a3q24e_withguidancexfinal.htm",
+    "file": "2024-10-17_a3q24e_withguidancexfinal.htm",
+    "slides_title": "2024 Third Quarter Earnings Conference",
+    "slides_url": "https://www.sec.gov/Archives/edgar/data/1046179/000104617924000116/a3q24presentatione.htm",
+    "slides_file": "2024-10-17_a3q24presentatione.htm"
+  },
+  {
+    "accession": "0001046179-24-000118",
+    "published": "2024-10-25T06:08:45",
+    "results": false
+  },
+  {
+    "accession": "0001046179-24-000120",
+    "published": "2024-10-28T06:57:48",
+    "results": false
+  },
+  {
+    "accession": "0001046179-24-000122",
+    "published": "2024-11-08T06:08:20",
+    "results": false
+  },
+  {
+    "accession": "0001046179-24-000124",
+    "published": "2024-11-12T06:57:22",
+    "results": false
+  },
+  {
+    "accession": "0001046179-24-000126",
+    "published": "2024-11-14T06:02:52",
+    "results": false
+  },
+  {
+    "accession": "0001046179-24-000128",
+    "published": "2024-11-25T06:03:13",
+    "results": false
+  },
+  {
+    "accession": "0001046179-24-000130",
+    "published": "2024-11-27T07:03:20",
+    "results": false
+  },
+  {
+    "accession": "0001046179-24-000132",
+    "published": "2024-12-10T06:06:35",
+    "results": false
+  },
+  {
+    "accession": "0001046179-24-000135",
+    "published": "2024-12-19T06:07:34",
+    "results": false
+  },
+  {
+    "accession": "0001046179-24-000137",
+    "published": "2024-12-23T06:01:44",
+    "results": false
+  },
+  {
+    "accession": "0001046179-25-000002",
+    "published": "2025-01-10T06:01:48",
+    "results": false
+  },
+  {
+    "accession": "0001046179-25-000004",
+    "published": "2025-01-16T06:13:35",
+    "results": true,
+    "title": "TSMC Reports Fourth Quarter EPS of NT$14.45",
+    "url": "https://www.sec.gov/Archives/edgar/data/1046179/000104617925000004/a4q24e_withguidancexfinal.htm",
+    "file": "2025-01-16_a4q24e_withguidancexfinal.htm",
+    "slides_title": "2024 Fourth Quarter Earnings Conference",
+    "slides_url": "https://www.sec.gov/Archives/edgar/data/1046179/000104617925000004/a4q24presentatione.htm",
+    "slides_file": "2025-01-16_a4q24presentatione.htm"
+  },
+  {
+    "accession": "0001046179-25-000006",
+    "published": "2025-01-21T06:05:30",
+    "results": false
+  },
+  {
+    "accession": "0001046179-25-000008",
+    "published": "2025-01-23T06:02:31",
+    "results": false
+  },
+  {
+    "accession": "0001046179-25-000010",
+    "published": "2025-01-24T06:04:55",
+    "results": false
+  },
+  {
+    "accession": "0001046179-25-000013",
+    "published": "2025-02-10T06:19:01",
+    "results": false
+  },
+  {
+    "accession": "0001046179-25-000015",
+    "published": "2025-02-12T06:01:31",
+    "results": false
+  },
+  {
+    "accession": "0001046179-25-000017",
+    "published": "2025-02-25T06:03:21",
+    "results": false
+  },
+  {
+    "accession": "0001046179-25-000019",
+    "published": "2025-02-27T06:02:03",
+    "results": false
+  },
+  {
+    "accession": "0001046179-25-000021",
+    "published": "2025-03-03T06:03:00",
+    "results": false
+  },
+  {
+    "accession": "0001046179-25-000024",
+    "published": "2025-03-03T16:44:32",
+    "results": false
+  },
+  {
+    "accession": "0001046179-25-000026",
+    "published": "2025-03-10T07:39:23",
+    "results": false
+  },
+  {
+    "accession": "0001046179-25-000028",
+    "published": "2025-03-17T06:05:16",
+    "results": false
+  },
+  {
+    "accession": "0001046179-25-000031",
+    "published": "2025-03-25T06:18:30",
+    "results": false
+  },
+  {
+    "accession": "0001046179-25-000033",
+    "published": "2025-04-10T06:44:58",
+    "results": false
+  },
+  {
+    "accession": "0001046179-25-000035",
+    "published": "2025-04-17T07:00:49",
+    "results": true,
+    "title": "TSMC Reports First Quarter EPS of NT$13.94",
+    "url": "https://www.sec.gov/Archives/edgar/data/1046179/000104617925000035/a1q25e_withguidancexfinal.htm",
+    "file": "2025-04-17_a1q25e_withguidancexfinal.htm",
+    "slides_title": "2025 First Quarter Earnings Conference",
+    "slides_url": "https://www.sec.gov/Archives/edgar/data/1046179/000104617925000035/a1q25presentatione_for6k.htm",
+    "slides_file": "2025-04-17_a1q25presentatione_for6k.htm"
+  },
+  {
+    "accession": "0001046179-25-000037",
+    "published": "2025-04-17T07:20:39",
+    "results": false
+  },
+  {
+    "accession": "0001046179-25-000039",
+    "published": "2025-04-18T06:34:46",
+    "results": false
+  },
+  {
+    "accession": "0001046179-25-000050",
+    "published": "2025-04-25T06:34:31",
+    "results": false
+  },
+  {
+    "accession": "0001046179-25-000052",
+    "published": "2025-05-09T06:15:56",
+    "results": false
+  },
+  {
+    "accession": "0001046179-25-000054",
+    "published": "2025-05-13T06:06:38",
+    "results": false
+  },
+  {
+    "accession": "0001046179-25-000057",
+    "published": "2025-05-14T06:19:25",
+    "results": false
+  },
+  {
+    "accession": "0001046179-25-000059",
+    "published": "2025-05-15T06:09:20",
+    "results": false
+  },
+  {
+    "accession": "0001046179-25-000060",
+    "published": "2025-05-15T06:19:28",
+    "results": false
+  },
+  {
+    "accession": "0001046179-25-000062",
+    "published": "2025-05-23T06:04:07",
+    "results": false
+  },
+  {
+    "accession": "0001046179-25-000065",
+    "published": "2025-05-28T07:23:13",
+    "results": false
+  },
+  {
+    "accession": "0001046179-25-000067",
+    "published": "2025-06-03T06:11:49",
+    "results": false
+  },
+  {
+    "accession": "0001046179-25-000070",
+    "published": "2025-06-10T06:17:55",
+    "results": false
+  },
+  {
+    "accession": "0001046179-25-000072",
+    "published": "2025-06-25T06:24:27",
+    "results": false
+  },
+  {
+    "accession": "0001046179-25-000074",
+    "published": "2025-06-25T07:01:43",
+    "results": false
+  },
+  {
+    "accession": "0001046179-25-000078",
+    "published": "2025-07-01T08:12:17",
+    "results": false
+  },
+  {
+    "accession": "0001046179-25-000080",
+    "published": "2025-07-10T06:04:59",
+    "results": false
+  },
+  {
+    "accession": "0001046179-25-000082",
+    "published": "2025-07-17T07:45:12",
+    "results": true,
+    "title": "TSMC Reports Second Quarter EPS of NT$15.36",
+    "url": "https://www.sec.gov/Archives/edgar/data/1046179/000104617925000082/a2q25e_withguidancexfinal.htm",
+    "file": "2025-07-17_a2q25e_withguidancexfinal.htm"
+  },
+  {
+    "accession": "0001046179-25-000086",
+    "published": "2025-07-25T06:21:33",
+    "results": false
+  },
+  {
+    "accession": "0001046179-25-000089",
+    "published": "2025-08-01T06:55:30",
+    "results": false
+  },
+  {
+    "accession": "0001046179-25-000091",
+    "published": "2025-08-08T06:10:15",
+    "results": false
+  },
+  {
+    "accession": "0001046179-25-000093",
+    "published": "2025-08-12T07:25:29",
+    "results": false
+  },
+  {
+    "accession": "0001046179-25-000095",
+    "published": "2025-08-12T08:15:23",
+    "results": false
+  },
+  {
+    "accession": "0001046179-25-000097",
+    "published": "2025-08-14T06:12:55",
+    "results": false
+  },
+  {
+    "accession": "0001046179-25-000099",
+    "published": "2025-08-25T06:45:47",
+    "results": false
+  },
+  {
+    "accession": "0001046179-25-000101",
+    "published": "2025-09-02T06:03:51",
+    "results": false
+  },
+  {
+    "accession": "0001046179-25-000103",
+    "published": "2025-09-02T06:11:23",
+    "results": false
+  },
+  {
+    "accession": "0001046179-25-000105",
+    "published": "2025-09-10T06:17:13",
+    "results": false
+  },
+  {
+    "accession": "0001046179-25-000107",
+    "published": "2025-09-24T17:16:33",
+    "results": false
+  },
+  {
+    "accession": "0001046179-25-000110",
+    "published": "2025-09-25T06:02:45",
+    "results": false
+  },
+  {
+    "accession": "0001046179-25-000113",
+    "published": "2025-10-09T06:08:39",
+    "results": false
+  },
+  {
+    "accession": "0001046179-25-000116",
+    "published": "2025-10-16T06:39:55",
+    "results": true,
+    "title": "TSMC Reports Third Quarter EPS of NT$17.44",
+    "url": "https://www.sec.gov/Archives/edgar/data/1046179/000104617925000116/a3q25e_withguidancexfinal.htm",
+    "file": "2025-10-16_a3q25e_withguidancexfinal.htm",
+    "slides_title": "2025 Third Quarter Earnings Conference",
+    "slides_url": "https://www.sec.gov/Archives/edgar/data/1046179/000104617925000116/a3q25presentatione.htm",
+    "slides_file": "2025-10-16_a3q25presentatione.htm"
+  },
+  {
+    "accession": "0001046179-25-000118",
+    "published": "2025-10-23T06:10:32",
+    "results": false
+  },
+  {
+    "accession": "0001046179-25-000121",
+    "published": "2025-11-05T08:12:19",
+    "results": false
+  },
+  {
+    "accession": "0001046179-25-000124",
+    "published": "2025-11-10T06:05:54",
+    "results": false
+  },
+  {
+    "accession": "0001046179-25-000126",
+    "published": "2025-11-12T06:14:15",
+    "results": false
+  },
+  {
+    "accession": "0001046179-25-000128",
+    "published": "2025-11-14T06:05:01",
+    "results": false
+  },
+  {
+    "accession": "0001046179-25-000130",
+    "published": "2025-11-25T06:24:33",
+    "results": false
+  },
+  {
+    "accession": "0001046179-25-000133",
+    "published": "2025-11-25T06:26:57",
+    "results": false
+  },
+  {
+    "accession": "0001046179-25-000135",
+    "published": "2025-11-26T06:06:45",
+    "results": false
+  },
+  {
+    "accession": "0001046179-25-000137",
+    "published": "2025-12-10T06:03:40",
+    "results": false
+  },
+  {
+    "accession": "0001046179-25-000140",
+    "published": "2025-12-19T06:31:22",
+    "results": false
+  },
+  {
+    "accession": "0001046179-25-000142",
+    "published": "2025-12-23T06:13:52",
+    "results": false
+  },
+  {
+    "accession": "0001046179-26-000002",
+    "published": "2026-01-06T06:04:22",
+    "results": false
+  },
+  {
+    "accession": "0001046179-26-000005",
+    "published": "2026-01-09T06:02:53",
+    "results": false
+  },
+  {
+    "accession": "0001046179-26-000008",
+    "published": "2026-01-15T06:58:24",
+    "results": true,
+    "title": "TSMC Reports Fourth Quarter EPS of NT$19.50",
+    "url": "https://www.sec.gov/Archives/edgar/data/1046179/000104617926000008/a4q25e_withguidancexfinal.htm",
+    "file": "2026-01-15_a4q25e_withguidancexfinal.htm",
+    "slides_title": "2025 Fourth Quarter Earnings Conference",
+    "slides_url": "https://www.sec.gov/Archives/edgar/data/1046179/000104617926000008/a4q25presentatione.htm",
+    "slides_file": "2026-01-15_a4q25presentatione.htm"
+  },
+  {
+    "accession": "0001046179-26-000010",
+    "published": "2026-01-23T06:24:08",
+    "results": false
+  },
+  {
+    "accession": "0001046179-26-000012",
+    "published": "2026-01-23T06:27:17",
+    "results": false
+  },
+  {
+    "accession": "0001046179-26-000015",
+    "published": "2026-02-10T07:00:18",
+    "results": false
+  },
+  {
+    "accession": "0001046179-26-000017",
+    "published": "2026-02-10T07:09:45",
+    "results": false
+  },
+  {
+    "accession": "0001046179-26-000019",
+    "published": "2026-02-10T07:34:25",
+    "results": false
+  },
+  {
+    "accession": "0001046179-26-000021",
+    "published": "2026-02-25T06:07:15",
+    "results": false
+  },
+  {
+    "accession": "0001046179-26-000024",
+    "published": "2026-02-26T06:02:01",
+    "results": false
+  },
+  {
+    "accession": "0001046179-26-000027",
+    "published": "2026-03-02T06:06:02",
+    "results": false
+  },
+  {
+    "accession": "0001046179-26-000031",
+    "published": "2026-03-10T06:19:33",
+    "results": false
+  },
+  {
+    "accession": "0001046179-26-000076",
+    "published": "2026-03-17T06:34:26",
+    "results": false
+  },
+  {
+    "accession": "0001046179-26-000126",
+    "published": "2026-03-25T06:14:02",
+    "results": false
+  },
+  {
+    "accession": "0001046179-26-000136",
+    "published": "2026-04-10T06:14:43",
+    "results": false
+  },
+  {
+    "accession": "0001046179-26-000199",
+    "published": "2026-04-16T08:00:18",
+    "results": true,
+    "title": "TSMC Reports First Quarter EPS of NT$22.08",
+    "url": "https://www.sec.gov/Archives/edgar/data/1046179/000104617926000199/a1q26e_withguidancexfinal.htm",
+    "file": "2026-04-16_a1q26e_withguidancexfinal.htm",
+    "slides_title": "2026 First Quarter Earnings Conference",
+    "slides_url": "https://www.sec.gov/Archives/edgar/data/1046179/000104617926000199/a1q26presentatione.htm",
+    "slides_file": "2026-04-16_a1q26presentatione.htm"
+  },
+  {
+    "accession": "0001046179-26-000201",
+    "published": "2026-04-16T08:08:20",
+    "results": false
+  },
+  {
+    "accession": "0001046179-26-000203",
+    "published": "2026-04-17T06:28:37",
+    "results": false
+  },
+  {
+    "accession": "0001046179-26-000205",
+    "published": "2026-04-24T06:27:21",
+    "results": false
+  },
+  {
+    "accession": "0001046179-26-000213",
+    "published": "2026-05-08T06:07:47",
+    "results": false
+  },
+  {
+    "accession": "0001046179-26-000215",
+    "published": "2026-05-08T06:41:49",
+    "results": false
+  },
+  {
+    "accession": "0001046179-26-000274",
+    "published": "2026-05-12T08:08:45",
+    "results": false
+  },
+  {
+    "accession": "0001046179-26-000275",
+    "published": "2026-05-12T08:27:20",
+    "results": false
+  },
+  {
+    "accession": "0001046179-26-000278",
+    "published": "2026-05-15T07:54:38",
+    "results": false
+  },
+  {
+    "accession": "0001046179-26-000280",
+    "published": "2026-05-15T08:10:50",
+    "results": false
+  },
+  {
+    "accession": "0001046179-26-000292",
+    "published": "2026-05-26T06:48:17",
+    "results": false
+  },
+  {
+    "accession": "0001046179-26-000294",
+    "published": "2026-05-27T06:51:42",
+    "results": false
+  },
+  {
+    "accession": "0001046179-26-000302",
+    "published": "2026-06-04T07:45:21",
+    "results": false
+  },
+  {
+    "accession": "0001046179-26-000367",
+    "published": "2026-06-10T06:18:57",
+    "results": false
+  },
+  {
+    "accession": "0001046179-26-000377",
+    "published": "2026-06-25T06:52:39",
+    "results": false
+  },
+  {
+    "accession": "0001046179-26-000381",
+    "published": "2026-07-02T07:10:57",
+    "results": false
+  },
+  {
+    "accession": "0001046179-26-000447",
+    "published": "2026-07-13T07:01:35",
+    "results": false
+  },
+  {
+    "accession": "0001046179-26-000451",
+    "published": "2026-07-16T07:45:43",
+    "results": true,
+    "title": "TSMC Reports Second Quarter EPS of NT$27.25",
+    "url": "https://www.sec.gov/Archives/edgar/data/1046179/000104617926000451/a2q26e_withguidancexfinal.htm",
+    "file": "2026-07-16_a2q26e_withguidancexfinal.htm",
+    "slides_title": "2026 Second Quarter Earnings Conference",
+    "slides_url": "https://www.sec.gov/Archives/edgar/data/1046179/000104617926000451/a2q26presentatione.htm",
+    "slides_file": "2026-07-16_a2q26presentatione.htm"
+  },
+  {
+    "accession": "0001046179-26-000459",
+    "published": "2026-07-24T06:33:23",
+    "results": false
+  },
+  {
+    "accession": "0001046179-26-000471",
+    "published": "2026-08-10T06:28:44",
+    "results": false
+  },
+  {
+    "accession": "0001046179-26-000536",
+    "published": "2026-08-11T07:45:48",
+    "results": false
+  },
+  {
+    "accession": "0001046179-26-000539",
+    "published": "2026-08-11T08:25:45",
+    "results": false
+  },
+  {
+    "accession": "0001046179-26-000541",
+    "published": "2026-08-14T06:02:33",
+    "results": false
+  },
+  {
+    "accession": "0001046179-26-000545",
+    "published": "2026-08-25T06:17:27",
+    "results": false
+  },
+  {
+    "accession": "0001046179-26-000552",
+    "published": "2026-09-01T06:07:38",
+    "results": false
+  },
+  {
+    "accession": "0001046179-26-000658",
+    "published": "2026-09-10T06:15:36",
+    "results": false
+  },
+  {
+    "accession": "0001046179-26-000660",
+    "published": "2026-09-24T06:02:44",
+    "results": false
+  },
+  {
+    "accession": "0001046179-26-000680",
+    "published": "2026-10-08T06:12:39",
+    "results": false
+  },
+  {
+    "accession": "0001046179-26-000726",
+    "published": "2026-10-15T06:40:56",
+    "results": true,
+    "title": "TSMC Reports Third Quarter EPS of NT$29.43",
+    "url": "https://www.sec.gov/Archives/edgar/data/1046179/000104617926000726/a3q26e_withguidancexfinal.htm",
+    "file": "2026-10-15_a3q26e_withguidancexfinal.htm",
+    "slides_title": "2026 Third Quarter Earnings Conference",
+    "slides_url": "https://www.sec.gov/Archives/edgar/data/1046179/000104617926000726/a3q26presentatione.htm",
+    "slides_file": "2026-10-15_a3q26presentatione.htm"
+  },
+  {
+    "accession": "0001046179-26-000728",
+    "published": "2026-10-22T06:02:14",
+    "results": false
+  },
+  {
+    "accession": "0001046179-26-000796",
+    "published": "2026-11-10T07:01:33",
+    "results": false
+  },
+  {
+    "accession": "0001046179-26-000797",
+    "published": "2026-11-10T08:41:38",
+    "results": false
+  },
+  {
+    "accession": "0001046179-26-000800",
+    "published": "2026-11-12T08:03:05",
+    "results": false
+  },
+  {
+    "accession": "0001046179-26-000801",
+    "published": "2026-11-13T06:02:30",
+    "results": false
+  },
+  {
+    "accession": "0001046179-26-000805",
+    "published": "2026-11-25T06:02:34",
+    "results": false
+  },
+  {
+    "accession": "0001046179-26-000807",
+    "published": "2026-11-25T06:11:07",
+    "results": false
+  }
+]

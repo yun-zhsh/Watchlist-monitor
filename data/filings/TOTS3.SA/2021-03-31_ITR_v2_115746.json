@@ -1,0 +1,200 @@
+{
+ "source": "CVM, quarterly financial statements (ITR): account codes and values of the consolidated statements (an extract, not the original document)",
+ "kind": "ITR",
+ "company_code": "019992",
+ "reference_date": "2021-03-31",
+ "version": 2,
+ "document_id": 115746,
+ "received_date": "2022-05-25",
+ "delivered": "2022-05-25T19:17:35",
+ "values_from": "CVM open data",
+ "link": "https://www.rad.cvm.gov.br/ENETCONSULTA/frmDownloadDocumento.aspx?CodigoInstituicao=1&NumeroSequencialDocumento=115746",
+ "currency": "BRL",
+ "scale": 1000,
+ "income_statement": [
+  {
+   "code": "3.01",
+   "start": "2020-01-01",
+   "end": "2020-03-31",
+   "value": 601418.0
+  },
+  {
+   "code": "3.01",
+   "start": "2021-01-01",
+   "end": "2021-03-31",
+   "value": 720256.0
+  },
+  {
+   "code": "3.09",
+   "start": "2020-01-01",
+   "end": "2020-03-31",
+   "value": 62607.0
+  },
+  {
+   "code": "3.09",
+   "start": "2021-01-01",
+   "end": "2021-03-31",
+   "value": 80645.0
+  },
+  {
+   "code": "3.10",
+   "start": "2020-01-01",
+   "end": "2020-03-31",
+   "value": -1099.0
+  },
+  {
+   "code": "3.10",
+   "start": "2021-01-01",
+   "end": "2021-03-31",
+   "value": 0.0
+  },
+  {
+   "code": "3.10.01",
+   "start": "2020-01-01",
+   "end": "2020-03-31",
+   "value": -1099.0
+  },
+  {
+   "code": "3.10.01",
+   "start": "2021-01-01",
+   "end": "2021-03-31",
+   "value": 0.0
+  },
+  {
+   "code": "3.10.02",
+   "start": "2020-01-01",
+   "end": "2020-03-31",
+   "value": 0.0
+  },
+  {
+   "code": "3.10.02",
+   "start": "2021-01-01",
+   "end": "2021-03-31",
+   "value": 0.0
+  },
+  {
+   "code": "3.11",
+   "start": "2020-01-01",
+   "end": "2020-03-31",
+   "value": 61508.0
+  },
+  {
+   "code": "3.11",
+   "start": "2021-01-01",
+   "end": "2021-03-31",
+   "value": 80645.0
+  },
+  {
+   "code": "3.11.01",
+   "start": "2020-01-01",
+   "end": "2020-03-31",
+   "value": 61508.0
+  },
+  {
+   "code": "3.11.01",
+   "start": "2021-01-01",
+   "end": "2021-03-31",
+   "value": 80645.0
+  },
+  {
+   "code": "3.11.02",
+   "start": "2020-01-01",
+   "end": "2020-03-31",
+   "value": 0.0
+  },
+  {
+   "code": "3.11.02",
+   "start": "2021-01-01",
+   "end": "2021-03-31",
+   "value": 0.0
+  },
+  {
+   "code": "3.99",
+   "start": "2020-01-01",
+   "end": "2020-03-31",
+   "value": 0.0
+  },
+  {
+   "code": "3.99",
+   "start": "2021-01-01",
+   "end": "2021-03-31",
+   "value": 0.0
+  },
+  {
+   "code": "3.99.01",
+   "start": "2020-01-01",
+   "end": "2020-03-31",
+   "value": 0.0
+  },
+  {
+   "code": "3.99.01",
+   "start": "2021-01-01",
+   "end": "2021-03-31",
+   "value": 0.0
+  },
+  {
+   "code": "3.99.01.01",
+   "start": "2020-01-01",
+   "end": "2020-03-31",
+   "value": 0.10752
+  },
+  {
+   "code": "3.99.01.01",
+   "start": "2021-01-01",
+   "end": "2021-03-31",
+   "value": 0.14204
+  },
+  {
+   "code": "3.99.02",
+   "start": "2020-01-01",
+   "end": "2020-03-31",
+   "value": 0.0
+  },
+  {
+   "code": "3.99.02",
+   "start": "2021-01-01",
+   "end": "2021-03-31",
+   "value": 0.0
+  },
+  {
+   "code": "3.99.02.01",
+   "start": "2020-01-01",
+   "end": "2020-03-31",
+   "value": 0.10672
+  },
+  {
+   "code": "3.99.02.01",
+   "start": "2021-01-01",
+   "end": "2021-03-31",
+   "value": 0.14035
+  }
+ ],
+ "balance_sheet": [
+  {
+   "code": "2.03",
+   "end": "2020-12-31",
+   "value": 2604166.0
+  },
+  {
+   "code": "2.03",
+   "end": "2021-03-31",
+   "value": 2702688.0
+  },
+  {
+   "code": "2.03.09",
+   "end": "2020-12-31",
+   "value": 0.0
+  },
+  {
+   "code": "2.03.09",
+   "end": "2021-03-31",
+   "value": 0.0
+  }
+ ],
+ "shares": {
+  "ordinary": 577913181,
+  "preferred": 0,
+  "ordinary_treasury": 10149529,
+  "preferred_treasury": 0
+ }
+}

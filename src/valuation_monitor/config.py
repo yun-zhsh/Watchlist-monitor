@@ -143,7 +143,7 @@ def parse_config(raw: dict) -> Config:
         filing_format = str(s.get("filing_format", default_format))
         if filing_format not in FILING_FORMATS:
             raise ValueError(f"{symbol}: unknown filing format {filing_format}; available formats: {sorted(FILING_FORMATS)}")
-        foreign_formats = {"press_release": "US", "us_press_release": "US", "us_gaap_statements": "US", "ifrs_statements": "US", "sap_ifrs": "US", "kifrs_statements": "KR", "cn_report": "CN", "tesla_update": "US", "jp_tanshin": "JP", "tifrs_statements": "TW", "cvm_statements": "BR", "tsmc_release": "US"}  # non-HK formats only apply to their own market
+        foreign_formats = {"press_release": "US", "us_press_release": "US", "us_gaap_statements": "US", "ifrs_statements": "US", "sap_ifrs": "US", "kifrs_statements": "KR", "cn_report": "CN", "tesla_update": "US", "jp_tanshin": "JP", "tifrs_statements": "TW", "cvm_statements": "BR", "tsmc_release": "US", "baidu_release": "US"}  # non-HK formats only apply to their own market
         if foreign_formats.get(filing_format, "HK" if market == "HK" else None) != market:
             raise ValueError(f"{symbol}: filing format {filing_format} does not match market {market}")
         cik = int(s["cik"]) if s.get("cik") is not None else None

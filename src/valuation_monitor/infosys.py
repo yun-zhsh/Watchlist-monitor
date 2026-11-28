@@ -29,6 +29,9 @@ from valuation_monitor.parsed import Parsed
 
 CURRENCY = "USD"
 STATEMENTS_NOTE = "IFRS statements"  # Filing.note of the statements: what their figures come from (see build_history)
+IMPLIED_SHARES_NOTE = (
+    "shares implied from net profit / basic EPS (two decimals) until the IFRS statements are published (the press release has no share count)"
+)
 MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
 DATE = r"(?P<month>" + "|".join(MONTHS) + r") (?P<day>\d{1,2}), (?P<year>\d{4})"
 EXHIBIT_LABEL_RE = re.compile(r"^.*?\bExhibit 99\.\d+\s+", re.I)

@@ -19,6 +19,7 @@ import pandas as pd
 from valuation_monitor.db import FINAL_COLUMNS, Database, stored_text
 from valuation_monitor.filings import (
     PARSER_VERSIONS,
+    PROVISIONAL_FORMAT_NOTES,
     SUPPLEMENT_PARSER_VERSION,
     SUPPLEMENT_TABLE,
     Announcement,
@@ -238,6 +239,9 @@ def as_saved(announcement: Announcement, parser_version: int, market: Market) ->
     return stored
 
 
+REPARSE_WHEN_TIME_CHANGES = {"skhynix_statements"}  # layouts whose saved parse results are redone when the provider gives a filing another publication time, status or note (SK Hynix: call times listed later)
+
+
 class EarningsStore:
     def __init__(self, root: str | Path = "data", db: Database | None = None):
         self.db = db or Database(Path(root) / "valuation.db")
@@ -281,12 +285,16 @@ class EarningsStore:
         parsed = []
         for f in filings:
             try:
-                parsed.append(saved.get(f.url) or as_saved(parse_announcement(f, fmt, market, non_gaap), version, market))
+                kept = saved.get(f.url)
+                if fmt in REPARSE_WHEN_TIME_CHANGES and kept is not None and (kept.published, kept.provisional, kept.note) != (pd.Timestamp(f.published).floor("min"), f.provisional, f.note):
+                    kept = None  # the same document with another publication time (saved to the minute) or status, e.g. a call time learnt later: parsed again
+                parsed.append(kept or as_saved(parse_announcement(f, fmt, market, non_gaap), version, market))
             except Exception as e:
                 if not f.provisional:
                     raise
                 print(f"{symbol}: cannot parse the provisional data {f.url} ({e}); waiting for the official report", file=sys.stderr)
         history = build_history(adjust_for_splits(parsed, splits), splits, non_gaap_changes, fiscal_year_end)
+        history.provisional_note = PROVISIONAL_FORMAT_NOTES.get(fmt, "")
 
         if not self.db.readonly:  # the saved frames are a cache of what was just computed; a read-only database (the MCP server) keeps its copy as it is
             self.db.write_frame("announcements", symbol, announcements_to_frame(parsed, version), text=True)

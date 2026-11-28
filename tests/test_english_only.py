@@ -4,7 +4,8 @@ see English only in code comments, docstrings, tests and documentation.
 The only places allowed to contain Chinese or Japanese are string literals that *read* the original filings: those of
 A-share companies in src/valuation_monitor/cn_patterns.py and the fixtures in tests/test_cn.py, those of Japanese companies
 (Kessan Tanshin) in src/valuation_monitor/jp_patterns.py and the fixtures in tests/test_jp.py. Their comments and
-docstrings must still be English.
+docstrings must still be English. The saved original PDFs (data/filings/*/*.pdf) are not checked: those of the A-share companies are Chinese,
+those of SHIFT Japanese, and those of SK Hynix (data/filings/000660.KS) may contain Korean footnotes; the index files and the database are checked.
 """
 
 import ast

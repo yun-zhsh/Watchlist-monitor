@@ -1,0 +1,490 @@
+[
+  {
+    "year": 2014,
+    "quarter": 4,
+    "published": "2015-01-28T15:30:00",
+    "time_note": "the time of the earnings conference call from a FactSet event calendar supplied by the maintainer (the IR website gives only its date; the results release may come slightly earlier the same day)",
+    "presentation": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/4679244520841752.pdf",
+    "kind": "report",
+    "url": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/4657066259797784.pdf",
+    "file": "2014Q4_report.pdf"
+  },
+  {
+    "year": 2015,
+    "quarter": 1,
+    "published": "2015-04-23T09:00:00",
+    "time_note": "the time of the earnings conference call from a FactSet event calendar supplied by the maintainer (the IR website gives only its date; the results release may come slightly earlier the same day)",
+    "presentation": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/4679363977413106.pdf",
+    "kind": "presentation",
+    "url": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/4679363977413106.pdf",
+    "file": "2015Q1_presentation.pdf",
+    "provisional": false
+  },
+  {
+    "year": 2015,
+    "quarter": 2,
+    "published": "2015-07-23T09:00:00",
+    "time_note": "the time of the earnings conference call from a FactSet event calendar supplied by the maintainer (the IR website gives only its date; the results release may come slightly earlier the same day)",
+    "presentation": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/4679457014933035.pdf",
+    "kind": "report",
+    "url": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/4656990489190497.pdf",
+    "file": "2015Q2_report.pdf"
+  },
+  {
+    "year": 2015,
+    "quarter": 3,
+    "published": "2015-10-22T09:00:00",
+    "time_note": "the time of the earnings conference call from a FactSet event calendar supplied by the maintainer (the IR website gives only its date; the results release may come slightly earlier the same day)",
+    "presentation": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/1963127302079705.pdf",
+    "kind": "report",
+    "url": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/2651373698475118.pdf",
+    "file": "2015Q3_report.pdf"
+  },
+  {
+    "year": 2015,
+    "quarter": 4,
+    "published": "2016-01-26T09:00:00",
+    "time_note": "the time of the earnings conference call from a FactSet event calendar supplied by the maintainer (the IR website gives only its date; the results release may come slightly earlier the same day)",
+    "presentation": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/6703026104415372.pdf",
+    "kind": "report",
+    "url": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/165355467150546.pdf",
+    "file": "2015Q4_report.pdf"
+  },
+  {
+    "year": 2016,
+    "quarter": 1,
+    "published": "2016-04-26T09:00:00",
+    "time_note": "the time of the earnings conference call from a FactSet event calendar supplied by the maintainer (the IR website gives only its date; the results release may come slightly earlier the same day)",
+    "presentation": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/4130667051041126.pdf",
+    "kind": "report",
+    "url": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/5887975820478886.pdf",
+    "file": "2016Q1_report.pdf"
+  },
+  {
+    "year": 2016,
+    "quarter": 2,
+    "published": "2016-07-26T09:00:00",
+    "time_note": "the time of the earnings conference call from a FactSet event calendar supplied by the maintainer (the IR website gives only its date; the results release may come slightly earlier the same day)",
+    "presentation": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/11993982920956834.pdf",
+    "kind": "report",
+    "url": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/4822995237124424.pdf",
+    "file": "2016Q2_report.pdf"
+  },
+  {
+    "year": 2016,
+    "quarter": 3,
+    "published": "2016-10-25T09:00:00",
+    "time_note": "the time of the earnings conference call from a FactSet event calendar supplied by the maintainer (the IR website gives only its date; the results release may come slightly earlier the same day)",
+    "presentation": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/4824994351515485.pdf",
+    "kind": "presentation",
+    "url": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/4824994351515485.pdf",
+    "file": "2016Q3_presentation.pdf",
+    "provisional": false
+  },
+  {
+    "year": 2016,
+    "quarter": 4,
+    "published": "2017-01-26T09:00:00",
+    "time_note": "the time of the earnings conference call from a FactSet event calendar supplied by the maintainer (the IR website gives only its date; the results release may come slightly earlier the same day)",
+    "presentation": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/13837366719520532.pdf",
+    "kind": "presentation",
+    "url": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/13837366719520532.pdf",
+    "file": "2016Q4_presentation.pdf",
+    "provisional": false
+  },
+  {
+    "year": 2017,
+    "quarter": 1,
+    "published": "2017-04-25T09:00:00",
+    "time_note": "the time of the earnings conference call from a FactSet event calendar supplied by the maintainer (the IR website gives only its date; the results release may come slightly earlier the same day)",
+    "presentation": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/3612965138885248.pdf",
+    "kind": "presentation",
+    "url": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/3612965138885248.pdf",
+    "file": "2017Q1_presentation.pdf",
+    "provisional": false
+  },
+  {
+    "year": 2017,
+    "quarter": 2,
+    "published": "2017-07-25T09:00:00",
+    "time_note": "the time of the earnings conference call from a FactSet event calendar supplied by the maintainer (the IR website gives only its date; the results release may come slightly earlier the same day)",
+    "presentation": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/595060024676387.pdf",
+    "kind": "presentation",
+    "url": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/595060024676387.pdf",
+    "file": "2017Q2_presentation.pdf",
+    "provisional": false
+  },
+  {
+    "year": 2017,
+    "quarter": 3,
+    "published": "2017-10-26T13:00:00",
+    "time_note": "the time of the earnings conference call from a FactSet event calendar supplied by the maintainer (the IR website gives only its date; the results release may come slightly earlier the same day)",
+    "presentation": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/3619599386183211.pdf",
+    "kind": "report",
+    "url": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/6058336522348997.pdf",
+    "file": "2017Q3_report.pdf"
+  },
+  {
+    "year": 2017,
+    "quarter": 4,
+    "published": "2018-01-25T09:00:00",
+    "time_note": "the time of the earnings conference call from a FactSet event calendar supplied by the maintainer (the IR website gives only its date; the results release may come slightly earlier the same day)",
+    "presentation": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/4383603618992379.pdf",
+    "kind": "report",
+    "url": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/7355432810516067.pdf",
+    "file": "2017Q4_report.pdf"
+  },
+  {
+    "year": 2018,
+    "quarter": 1,
+    "published": "2018-04-24T09:00:00",
+    "time_note": "the time of the earnings conference call from a FactSet event calendar supplied by the maintainer (the IR website gives only its date; the results release may come slightly earlier the same day)",
+    "presentation": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/3442825892207149.pdf",
+    "kind": "presentation",
+    "url": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/3442825892207149.pdf",
+    "file": "2018Q1_presentation.pdf",
+    "provisional": false
+  },
+  {
+    "year": 2018,
+    "quarter": 2,
+    "published": "2018-07-26T09:00:00",
+    "time_note": "the time of the earnings conference call from a FactSet event calendar supplied by the maintainer (the IR website gives only its date; the results release may come slightly earlier the same day)",
+    "presentation": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/4220230707889475.pdf",
+    "kind": "report",
+    "url": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/7017550593138050.pdf",
+    "file": "2018Q2_report.pdf"
+  },
+  {
+    "year": 2018,
+    "quarter": 3,
+    "published": "2018-10-25T09:00:00",
+    "time_note": "the time of the earnings conference call from a FactSet event calendar supplied by the maintainer (the IR website gives only its date; the results release may come slightly earlier the same day)",
+    "presentation": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/3096783810190286.pdf",
+    "kind": "report",
+    "url": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/6149642375740113.pdf",
+    "file": "2018Q3_report.pdf"
+  },
+  {
+    "year": 2018,
+    "quarter": 4,
+    "published": "2019-01-24T09:00:00",
+    "time_note": "the time of the earnings conference call from a FactSet event calendar supplied by the maintainer (the IR website gives only its date; the results release may come slightly earlier the same day)",
+    "presentation": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/10958663385996626.pdf",
+    "kind": "report",
+    "url": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/2348971185660279.pdf",
+    "file": "2018Q4_report.pdf"
+  },
+  {
+    "year": 2019,
+    "quarter": 1,
+    "published": "2019-04-25T09:00:00",
+    "time_note": "the time of the earnings conference call from a FactSet event calendar supplied by the maintainer (the IR website gives only its date; the results release may come slightly earlier the same day)",
+    "presentation": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/4664405615596862.pdf",
+    "kind": "presentation",
+    "url": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/4664405615596862.pdf",
+    "file": "2019Q1_presentation.pdf",
+    "provisional": false
+  },
+  {
+    "year": 2019,
+    "quarter": 2,
+    "published": "2019-07-25T09:00:00",
+    "time_note": "the time of the earnings conference call from a FactSet event calendar supplied by the maintainer (the IR website gives only its date; the results release may come slightly earlier the same day)",
+    "presentation": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/11133204797233657.pdf",
+    "kind": "report",
+    "url": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/13207735833832349.PDF",
+    "file": "2019Q2_report.pdf"
+  },
+  {
+    "year": 2019,
+    "quarter": 3,
+    "published": "2019-10-24T09:00:00",
+    "time_note": "the time of the earnings conference call from a FactSet event calendar supplied by the maintainer (the IR website gives only its date; the results release may come slightly earlier the same day)",
+    "presentation": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/11133541650387289.pdf",
+    "kind": "report",
+    "url": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/5371397938576906.PDF",
+    "file": "2019Q3_report.pdf"
+  },
+  {
+    "year": 2019,
+    "quarter": 4,
+    "published": "2020-01-31T09:00:00",
+    "time_note": "the time of the earnings conference call from a FactSet event calendar supplied by the maintainer (the IR website gives only its date; the results release may come slightly earlier the same day)",
+    "presentation": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/11133586214958018.pdf",
+    "kind": "report",
+    "url": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/13472117393102619.pdf",
+    "file": "2019Q4_report.pdf"
+  },
+  {
+    "year": 2020,
+    "quarter": 1,
+    "published": "2020-04-23T09:00:00",
+    "time_note": "the time of the earnings conference call from a FactSet event calendar supplied by the maintainer (the IR website gives only its date; the results release may come slightly earlier the same day)",
+    "presentation": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/9519079513568522.pdf",
+    "kind": "report",
+    "url": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/5981812952633986.pdf",
+    "file": "2020Q1_report.pdf"
+  },
+  {
+    "year": 2020,
+    "quarter": 2,
+    "published": "2020-07-23T09:00:00",
+    "time_note": "the time of the earnings conference call from a FactSet event calendar supplied by the maintainer (the IR website gives only its date; the results release may come slightly earlier the same day)",
+    "presentation": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/10873716960439820.pdf",
+    "kind": "report",
+    "url": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/14329733919422675.pdf",
+    "file": "2020Q2_report.pdf"
+  },
+  {
+    "year": 2020,
+    "quarter": 3,
+    "published": "2020-11-04T09:00:00",
+    "time_note": "the time of the earnings conference call from a FactSet event calendar supplied by the maintainer (the IR website gives only its date; the results release may come slightly earlier the same day)",
+    "presentation": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/19891220327578851.pdf",
+    "kind": "report",
+    "url": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/23074080458691094.pdf",
+    "file": "2020Q3_report.pdf"
+  },
+  {
+    "year": 2020,
+    "quarter": 4,
+    "published": "2021-01-29T09:00:00",
+    "time_note": "the time of the earnings conference call from a FactSet event calendar supplied by the maintainer (the IR website gives only its date; the results release may come slightly earlier the same day)",
+    "presentation": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/4322951995425300.pdf",
+    "kind": "report",
+    "url": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/7949093312743000.pdf",
+    "file": "2020Q4_report.pdf"
+  },
+  {
+    "year": 2021,
+    "quarter": 1,
+    "published": "2021-04-28T09:00:00",
+    "time_note": "the time of the earnings conference call from a FactSet event calendar supplied by the maintainer (the IR website gives only its date; the results release may come slightly earlier the same day)",
+    "presentation": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/7585763256709093.pdf",
+    "kind": "report",
+    "url": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/2936986735935700.pdf",
+    "file": "2021Q1_report.pdf"
+  },
+  {
+    "year": 2021,
+    "quarter": 2,
+    "published": "2021-07-27T09:00:00",
+    "time_note": "the time of the earnings conference call from a FactSet event calendar supplied by the maintainer (the IR website gives only its date; the results release may come slightly earlier the same day)",
+    "presentation": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/7585812176834789.pdf",
+    "kind": "report",
+    "url": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/10882467626267500.pdf",
+    "file": "2021Q2_report.pdf"
+  },
+  {
+    "year": 2021,
+    "quarter": 3,
+    "published": "2021-10-26T09:00:00",
+    "time_note": "the time of the earnings conference call from a FactSet event calendar supplied by the maintainer (the IR website gives only its date; the results release may come slightly earlier the same day)",
+    "presentation": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/7585901605977905.pdf",
+    "kind": "report",
+    "url": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/18738868208526300.pdf",
+    "file": "2021Q3_report.pdf"
+  },
+  {
+    "year": 2021,
+    "quarter": 4,
+    "published": "2022-01-28T09:00:00",
+    "time_note": "the time of the earnings conference call from a FactSet event calendar supplied by the maintainer (the IR website gives only its date; the results release may come slightly earlier the same day)",
+    "presentation": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/7604341504857107.pdf",
+    "kind": "report",
+    "url": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/4922420618844748.pdf",
+    "file": "2021Q4_report.pdf"
+  },
+  {
+    "year": 2022,
+    "quarter": 1,
+    "published": "2022-04-27T09:00:00",
+    "time_note": "the time of the earnings conference call from a FactSet event calendar supplied by the maintainer (the IR website gives only its date; the results release may come slightly earlier the same day)",
+    "presentation": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/1231150849532441.pdf",
+    "kind": "report",
+    "url": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/1452526434823117.pdf",
+    "file": "2022Q1_report.pdf"
+  },
+  {
+    "year": 2022,
+    "quarter": 2,
+    "published": "2022-07-27T09:00:00",
+    "time_note": "the time of the earnings conference call from a FactSet event calendar supplied by the maintainer (the IR website gives only its date; the results release may come slightly earlier the same day)",
+    "presentation": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/3019171149111090.pdf",
+    "kind": "report",
+    "url": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/6476879684819482.pdf",
+    "file": "2022Q2_report.pdf"
+  },
+  {
+    "year": 2022,
+    "quarter": 3,
+    "published": "2022-10-26T09:00:00",
+    "time_note": "the time of the earnings conference call from a FactSet event calendar supplied by the maintainer (the IR website gives only its date; the results release may come slightly earlier the same day)",
+    "presentation": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/766106284610273.pdf",
+    "kind": "report",
+    "url": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/3809650724341909.pdf",
+    "file": "2022Q3_report.pdf"
+  },
+  {
+    "year": 2022,
+    "quarter": 4,
+    "published": "2023-02-01T09:00:00",
+    "time_note": "the time of the earnings conference call from a FactSet event calendar supplied by the maintainer (the IR website gives only its date; the results release may come slightly earlier the same day)",
+    "presentation": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/24434428074035670.pdf",
+    "kind": "report",
+    "url": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/26023344963520479.pdf",
+    "file": "2022Q4_report.pdf"
+  },
+  {
+    "year": 2023,
+    "quarter": 1,
+    "published": "2023-04-26T09:00:00",
+    "time_note": "the time of the earnings call on the SK Hynix IR website (the results are published shortly before it, before the market opens)",
+    "presentation": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/29911794722201356.pdf",
+    "kind": "report",
+    "url": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/19458935511258796.pdf",
+    "file": "2023Q1_report.pdf"
+  },
+  {
+    "year": 2023,
+    "quarter": 2,
+    "published": "2023-07-26T09:00:00",
+    "time_note": "the time of the earnings call on the SK Hynix IR website (the results are published shortly before it, before the market opens)",
+    "presentation": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/34468093604369739.pdf",
+    "kind": "report",
+    "url": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/27474315075804210.pdf",
+    "file": "2023Q2_report.pdf"
+  },
+  {
+    "year": 2023,
+    "quarter": 3,
+    "published": "2023-10-26T09:00:00",
+    "time_note": "the time of the earnings call on the SK Hynix IR website (the results are published shortly before it, before the market opens)",
+    "presentation": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/32304484452409020.pdf",
+    "kind": "report",
+    "url": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/35264645125745991.pdf",
+    "file": "2023Q3_report.pdf"
+  },
+  {
+    "year": 2023,
+    "quarter": 4,
+    "published": "2024-01-25T09:00:00",
+    "time_note": "the time of the earnings call on the SK Hynix IR website (the results are published shortly before it, before the market opens)",
+    "presentation": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/53459886915120783.pdf",
+    "kind": "report",
+    "url": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/57467790007756546.PDF",
+    "file": "2023Q4_report.pdf"
+  },
+  {
+    "year": 2024,
+    "quarter": 1,
+    "published": "2024-04-25T09:00:00",
+    "time_note": "the time of the earnings call on the SK Hynix IR website (the results are published shortly before it, before the market opens)",
+    "presentation": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/61321621157035970.pdf",
+    "kind": "report",
+    "url": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/70420188208212106.PDF",
+    "file": "2024Q1_report.pdf"
+  },
+  {
+    "year": 2024,
+    "quarter": 2,
+    "published": "2024-07-25T09:00:00",
+    "time_note": "the time of the earnings call on the SK Hynix IR website (the results are published shortly before it, before the market opens)",
+    "presentation": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/66003067237742062.pdf",
+    "kind": "report",
+    "url": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/69132246086058666.PDF",
+    "file": "2024Q2_report.pdf"
+  },
+  {
+    "year": 2024,
+    "quarter": 3,
+    "published": "2024-10-24T09:00:00",
+    "time_note": "the time of the earnings call on the SK Hynix IR website (the results are published shortly before it, before the market opens)",
+    "presentation": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/77045741902433810.pdf",
+    "kind": "report",
+    "url": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/80095245433228493.PDF",
+    "file": "2024Q3_report.pdf"
+  },
+  {
+    "year": 2024,
+    "quarter": 4,
+    "published": "2025-01-23T09:00:00",
+    "time_note": "the time of the earnings call on the SK Hynix IR website (the results are published shortly before it, before the market opens)",
+    "presentation": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/81727201766385339.pdf",
+    "kind": "report",
+    "url": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/717263541446789.PDF",
+    "file": "2024Q4_report.pdf"
+  },
+  {
+    "year": 2025,
+    "quarter": 1,
+    "published": "2025-04-24T09:00:00",
+    "time_note": "the time of the earnings call on the SK Hynix IR website (the results are published shortly before it, before the market opens)",
+    "presentation": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/5001632852769028.pdf",
+    "kind": "report",
+    "url": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/7974702728726733.pdf",
+    "file": "2025Q1_report.pdf"
+  },
+  {
+    "year": 2025,
+    "quarter": 2,
+    "published": "2025-07-24T09:00:00",
+    "time_note": "the time of the earnings call on the SK Hynix IR website (the results are published shortly before it, before the market opens)",
+    "presentation": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/40103454849895488.pdf",
+    "kind": "report",
+    "url": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/43066904007297727.pdf",
+    "file": "2025Q2_report.pdf"
+  },
+  {
+    "year": 2025,
+    "quarter": 3,
+    "published": "2025-10-29T09:00:00",
+    "time_note": "the time of the earnings call on the SK Hynix IR website (the results are published shortly before it, before the market opens)",
+    "presentation": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/3127648149034921.pdf",
+    "kind": "report",
+    "url": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/5756422134859350.pdf",
+    "file": "2025Q3_report.pdf"
+  },
+  {
+    "year": 2025,
+    "quarter": 4,
+    "published": "2026-01-29T09:00:00",
+    "time_note": "the time of the earnings call on the SK Hynix IR website (the results are published shortly before it, before the market opens)",
+    "presentation": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/116964051831620258.pdf",
+    "kind": "report",
+    "url": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/121822586381465204.pdf",
+    "file": "2025Q4_report.pdf"
+  },
+  {
+    "year": 2026,
+    "quarter": 1,
+    "published": "2026-04-23T09:00:00",
+    "time_note": "the time of the earnings call on the SK Hynix IR website (the results are published shortly before it, before the market opens)",
+    "presentation": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/18333727317328069.pdf",
+    "kind": "report",
+    "url": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/21471389770071386.pdf",
+    "file": "2026Q1_report.pdf"
+  },
+  {
+    "year": 2026,
+    "quarter": 2,
+    "published": "2026-07-29T09:00:00",
+    "time_note": "the time of the earnings call on the SK Hynix IR website (the results are published shortly before it, before the market opens)",
+    "presentation": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/21385145622881753.pdf",
+    "kind": "report",
+    "url": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/136258966284328189.pdf",
+    "file": "2026Q2_report.pdf"
+  },
+  {
+    "year": 2026,
+    "quarter": 3,
+    "published": "2026-10-28T09:00:00",
+    "time_note": "the time of the earnings call on the SK Hynix IR website (the results are published shortly before it, before the market opens)",
+    "presentation": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/21453379321009165.pdf",
+    "kind": "presentation",
+    "url": "https://mis-prod-koce-homepage-cdn-01-blob-ep.azureedge.net/web/attach/21453379321009165.pdf",
+    "file": "2026Q3_presentation.pdf",
+    "provisional": true
+  }
+]

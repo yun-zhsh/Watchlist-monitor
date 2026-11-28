@@ -65,7 +65,16 @@ def test_the_deployment_fails_when_a_stock_cannot_be_loaded():
 
 def test_the_adobe_cid_tables_ship_with_the_package_and_their_license():
     pyproject = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
-    assert '"valuation_monitor" = ["cmaps/*"]' in pyproject  # package data: installed by `pip install .` in the image too
+    assert '"valuation_monitor" = ["cmaps/*", "supplied/*/*"]' in pyproject  # package data: installed by `pip install .` in the image too
     folder = ROOT / "src" / "valuation_monitor" / "cmaps"
     assert {p.name for p in folder.iterdir()} == {"Adobe-GB1-UCS2", "Adobe-CNS1-UCS2", "NOTICE"}
     assert "Redistribution and use in source and binary forms" in (folder / "NOTICE").read_text(encoding="utf-8")
+
+
+def test_the_supplied_originals_ship_with_the_package():
+    """Baidu's fourth-quarter 2020 statements supplied by the maintainer (see baidu_release.SUPPLIED_STATEMENTS) are package data, so the
+    image, the scheduled workflow and the MCP server read them without fetching anything."""
+    from valuation_monitor.baidu_release import SUPPLIED_DIR, SUPPLIED_STATEMENTS
+
+    folder = ROOT / "src" / "valuation_monitor" / SUPPLIED_DIR
+    assert {p.relative_to(folder).as_posix() for p in folder.rglob("*") if p.is_file()} == set(SUPPLIED_STATEMENTS.values())

@@ -14,10 +14,13 @@ equity attributable to owners (millions), shares disclosed in the filing (millio
       this period to date, same period last year to date; amounts are in thousands and converted to millions when read.
     - Balance sheet: same as above. EPS note: weighted average shares.
   travelsky_statements (TravelSky, PDF; IFRS until the 2020 interim results, CASBE from the 2020 annual results) is in travelsky.py.
-  press_release (JD, Alibaba; HTML) is in press_release.py; us_press_release and us_gaap_statements (Meta, Cognizant, Dynatrace, Sea, ASML) in us_release.py;
+  press_release (JD, Alibaba, PDD; HTML) is in press_release.py; us_press_release and us_gaap_statements (Meta, Cognizant, Dynatrace, Sea, ASML) in us_release.py;
   ifrs_statements (XP, HTML) in ifrs.py; sap_ifrs (SAP, HTML) in sap_ifrs.py; kifrs_statements (Samsung, PDF) in kifrs.py;
   cn_report (Hikvision, Glodon, PDF) in cn_report.py; tifrs_statements (Advantech, PDF) in tifrs.py; tesla_update (Tesla's Update decks, and the Form 10-Q or 10-K of a quarter whose deck has
-  its statements as page images only) in tesla_update.py; jp_tanshin (SHIFT's Japanese Kessan Tanshin, PDF) in jp_tanshin.py. These parse
+  its statements as page images only) in tesla_update.py; jp_tanshin (SHIFT's Japanese Kessan Tanshin, PDF) in jp_tanshin.py; cvm_statements (TOTVS, extracts of the statements delivered to
+  Brazil's CVM, JSON) in cvm_statements.py;
+  baidu_release (Baidu's 6-K press releases, HTML) in baidu_release.py;
+  skhynix_statements (SK Hynix's English statements and earnings presentations, PDF) in skhynix.py. These parse
   functions return the common Parsed (see parsed.py).
 
 A company may publish results every quarter (4 periods a year) or only interim and annual (2 periods a year; the second half is obtained as full year minus first half).
@@ -41,15 +44,23 @@ from pypdf import PdfReader
 
 from valuation_monitor.market_calendar import HK, Market, effective_trading_day, get_market
 from valuation_monitor.cn_report import parse_cn_express, parse_cn_report
-from valuation_monitor.audit import Component, num, shares_formula, split_notes, sum_formula
+from valuation_monitor.cvm_statements import parse_cvm_statements
+from valuation_monitor.audit import DILUTED_SHARES_LABEL, Component, num, shares_formula, split_notes, sum_formula
+from valuation_monitor.baidu_release import parse_baidu_filing
 from valuation_monitor.ifrs import parse_ifrs_statements
 from valuation_monitor.jp_tanshin import parse_jp_tanshin
 from valuation_monitor.kifrs import parse_kifrs, parse_kifrs_deck
 from valuation_monitor.press_release import parse_press_release
 from valuation_monitor.release_eps import parse_adjusted_eps_release
 from valuation_monitor.sap_ifrs import parse_sap_statement
+from valuation_monitor.skhynix import parse_deck as parse_skhynix_deck, parse_report as parse_skhynix_report
 from valuation_monitor.tesla_update import parse_tesla_filing
 from valuation_monitor.tifrs import parse_tifrs
+from valuation_monitor.tsmc_release import CURRENCY as TSMC_CURRENCY, EQUITY_NOTE as TSMC_EQUITY_NOTE, STATEMENTS_EQUITY_NOTE as TSMC_STATEMENTS_EQUITY_NOTE
+from valuation_monitor.tsmc_release import STATEMENTS_NOTE as TSMC_STATEMENTS_NOTE, parse_release as parse_tsmc_release, parse_slides as parse_tsmc_slides
+from valuation_monitor.tsmc_release import parse_statements as parse_tsmc_statements
+from valuation_monitor.infosys import IMPLIED_SHARES_NOTE as INFOSYS_IMPLIED_SHARES_NOTE, STATEMENTS_NOTE as INFOSYS_STATEMENTS_NOTE
+from valuation_monitor.infosys import parse_release as parse_infosys_release, parse_statements as parse_infosys_statements
 from valuation_monitor.travelsky import parse_travelsky_statements
 from valuation_monitor.us_release import parse_us_release
 from valuation_monitor.providers.base import Filing
@@ -109,9 +120,14 @@ SERIES_LABELS = {
     "equity": "Equity attributable to owners",
     "wa_shares": "Weighted average shares",
 }
-PARSER_VERSIONS = {"highlights": 5, "statements": 3, "press_release": 4, "us_press_release": 9, "us_gaap_statements": 5, "ifrs_statements": 1, "sap_ifrs": 2, "kifrs_statements": 4, "cn_report": 8, "tesla_update": 1, "jp_tanshin": 1, "travelsky_statements": 1, "tifrs_statements": 1}  # add 1 when the parsing rules change; saved parse results are then re-parsed automatically
+PARSER_VERSIONS = {"highlights": 5, "statements": 3, "press_release": 5, "us_press_release": 9, "us_gaap_statements": 5, "ifrs_statements": 1, "sap_ifrs": 2, "kifrs_statements": 4, "cn_report": 8, "tesla_update": 1, "jp_tanshin": 1, "travelsky_statements": 1, "tifrs_statements": 1, "cvm_statements": 1, "tsmc_release": 1, "baidu_release": 1, "skhynix_statements": 1, "infosys_ifrs": 1}  # add 1 when the parsing rules change; saved parse results are then re-parsed automatically
 SUPPLEMENT_FORMAT = "adjusted_eps_release"  # the layout of a supplementary document (XP's press release, see release_eps.py); its parse results carry their own version
-SUPPLEMENT_PARSER_VERSION = 1  # add 1 when the rules of release_eps.py change
+SUPPLEMENT_PARSER_VERSION = 1  # add 1 when the rules of release_eps.py change (or those of tsmc_release.parse_slides, which reads TSMC's supplementary slides); and of infosys.parse_statements (Infosys's IFRS statements)
+SUPPLEMENT_SERIES = ("non_ifrs_eps", "equity")  # what a supplementary document may add: XP's press release its Non-GAAP EPS, TSMC's slides (until 2019) the equity
+# A supplementary document that repeats the figures of its quarter (Infosys's IFRS statements, 4-7 days after its press release): it adds what the
+# filing lacks (the weighted average shares) and replaces a figure that differs, both from its own publication time (see build_history)
+SUPPLEMENT_RESTATED_SERIES = ("revenue", "profit", "eps")  # the series that mark such a supplement; its equity and shares are then treated alike
+SHARES_IMPLIED_NOTES: tuple[str, ...] = (INFOSYS_IMPLIED_SHARES_NOTE,)  # filing notes that say the shares are implied until a supplement brings them
 SUPPLEMENT_TABLE = "supplement"  # the "table" of a supplementary document's parse result in the stored announcements
 CORRECTION_TABLE_SUFFIX = " correction"  # the "table" of a correction's parse result: "cumulative correction" or "quarterly correction"
 PER_SHARE_TOLERANCE = 0.005  # allowed difference of the same value between filings: per-share data (rounding, subtraction of cumulative figures)
@@ -142,6 +158,9 @@ PROVISIONAL_NOTES = {
     "CN": "comes from the express report (not audited by the accounting firm, so it may differ slightly from the final annual report numbers); it is replaced automatically when the annual report is out",
     "*": "is preliminary and is replaced automatically when the official report is out",
 }
+PROVISIONAL_FORMAT_NOTES = {  # a layout whose preliminary data differs from that of the other stocks of its market; used instead of PROVISIONAL_NOTES
+    "skhynix_statements": "comes from the earnings presentation (before the auditors' review; revenue, net profit and equity in KRW billions, net profit and equity including non-controlling interests); it is replaced automatically when the English report is on the IR website",
+}
 
 
 def tolerance(series: str, value: float) -> float:
@@ -165,7 +184,7 @@ class Announcement:
     note: str = ""  # explanation of the publication time etc.
     series_notes: dict[str, str] = field(default_factory=dict)  # series -> note on its figures in this filing (Parsed.notes), carried to each period value
     per_share_factors: tuple[float, float] = (1.0, 1.0)  # set by adjust_for_splits: what per-share figures were divided by (this and the previous period; prior year)
-    supplement: bool = False  # a supplementary document of the results (XP's press release): it only adds its Non-GAAP EPS for its own quarter, see build_history
+    supplement: bool = False  # a supplementary document of the results (XP's press release; TSMC's slides): it only adds its Non-GAAP EPS (the equity) for its own quarter, see build_history
     correction: bool = False  # a corrected reissue of an earlier filing of the same period: its figures replace the original's from its own publication on, see build_history
 
     @property
@@ -366,13 +385,29 @@ def parse_statements(pages: Pages) -> tuple[str, dict[str, list[float]]]:
 
 
 FORMATS = {"highlights": parse_highlights, "statements": parse_statements, "travelsky_statements": parse_travelsky_statements}  # HKEX PDF announcements; travelsky_statements also returns series notes
-FILING_FORMATS = {*FORMATS, "press_release", "us_press_release", "us_gaap_statements", "ifrs_statements", "sap_ifrs", "kifrs_statements", "cn_report", "tesla_update", "jp_tanshin", "tifrs_statements"}  # plus US HTML press releases (6-K of JD; 8-K of US companies), IFRS statements (6-K of XP and SAP), Samsung English financial statements, A-share reports and Tesla's Update decks; Advantech's Taiwan-IFRS statements
+FILING_FORMATS = {*FORMATS, "press_release", "us_press_release", "us_gaap_statements", "ifrs_statements", "sap_ifrs", "kifrs_statements", "cn_report", "tesla_update", "jp_tanshin", "tifrs_statements", "cvm_statements", "tsmc_release", "baidu_release", "skhynix_statements", "infosys_ifrs"}  # plus US HTML press releases (6-K of JD; 8-K of US companies), IFRS statements (6-K of XP and SAP), Samsung English financial statements, A-share reports and Tesla's Update decks; Advantech's Taiwan-IFRS statements; the statements Brazilian companies deliver to CVM (TOTVS); TSMC's earnings releases and slides; Infosys's IFRS USD press releases and statements
 
 
 def parse_announcement(filing: Filing, fmt: str = "highlights", market: Market = HK, non_gaap: str | None = None) -> Announcement:
     """Parse one earnings filing; values stay as in the filing (amounts converted to millions, EPS to yuan; not adjusted for splits).
 
     non_gaap is the EPS basis of the stock's Non-GAAP PE, None without one; only the us_press_release and tesla_update layouts use it (see parse_us_release, parse_tesla_update)."""
+    if filing.supplement and fmt == "tsmc_release":  # TSMC's slides in a 6-K of their own (until 2019) or its consolidated statements: only the equity is read
+        statements = filing.note == TSMC_STATEMENTS_NOTE
+        balance = parse_tsmc_statements(filing.content) if statements else parse_tsmc_slides(filing.content)
+        if balance is None:
+            raise ValueError(f"{filing.url}: the slides have no text balance sheet")
+        return Announcement(
+            balance[0], filing.published, filing.url, TSMC_CURRENCY, True, {"equity": [balance[1]]}, market.key, note=filing.note, supplement=True,
+            series_notes={"equity": TSMC_STATEMENTS_EQUITY_NOTE if statements else TSMC_EQUITY_NOTE},
+        )
+    if filing.supplement and fmt == "infosys_ifrs":  # Infosys's IFRS statements: its quarter's figures again, with the weighted average shares
+        parsed = parse_infosys_statements(filing.content)
+        values = {k: v[:1] for k, v in parsed.values.items()}  # its own quarter only
+        return Announcement(
+            parsed.period, filing.published, filing.url, parsed.currency, True, values, market.key, note=filing.note or INFOSYS_STATEMENTS_NOTE,
+            supplement=True, series_notes=dict(parsed.notes or {}),
+        )
     if filing.supplement:  # a supplementary document whatever the layout of the main filings: only its Non-GAAP EPS is read
         parsed = parse_adjusted_eps_release(filing.content)
         return Announcement(parsed.period, filing.published, filing.url, parsed.currency, True, parsed.values, market.key, note=filing.note, supplement=True)
@@ -388,11 +423,24 @@ def parse_announcement(filing: Filing, fmt: str = "highlights", market: Market =
             parsed.period, filing.published, filing.url, parsed.currency, parsed.quarterly, parsed.values, market.key,
             filing.provisional, "", PERIOD_END_SHARES, filing.note, correction=filing.correction,
         )
-    if fmt in ("press_release", "us_press_release", "us_gaap_statements", "ifrs_statements", "sap_ifrs", "kifrs_statements", "tesla_update", "tifrs_statements"):  # the parse result carries its own reporting period and whether it is a single quarter
+    if fmt == "skhynix_statements":  # SK Hynix: review or audit report, or earnings presentation; keeps the explanation of the publication time
+        parsed = parse_skhynix_deck(filing.title, filing.content) if "presentation" in filing.title else parse_skhynix_report(filing.title, filing.content)
+        return Announcement(
+            parsed.period, filing.published, filing.url, parsed.currency, parsed.quarterly, parsed.values, market.key,
+            filing.provisional, "" if parsed.quarterly else "full year", note=filing.note, series_notes=dict(parsed.notes or {}),
+        )
+    if fmt == "cvm_statements":  # Brazil: ITR (single quarters) and DFP (the year) delivered to CVM, or a later version of one
+        parsed = parse_cvm_statements(filing.content)
+        return Announcement(
+            parsed.period, filing.published, filing.url, parsed.currency, parsed.quarterly, parsed.values, market.key,
+            filing.provisional, "", PERIOD_END_SHARES, filing.note, series_notes=dict(parsed.notes or {}),
+            correction=filing.correction,
+        )
+    if fmt in ("press_release", "us_press_release", "us_gaap_statements", "ifrs_statements", "sap_ifrs", "kifrs_statements", "tesla_update", "tifrs_statements", "tsmc_release", "baidu_release", "infosys_ifrs"):  # the parse result carries its own reporting period and whether it is a single quarter
         if fmt == "tesla_update":
             parsed = parse_tesla_filing(filing, non_gaap)
         elif fmt == "press_release":
-            parsed = parse_press_release(filing.content)
+            parsed = parse_press_release(filing.content, non_gaap)
         elif fmt == "us_press_release":
             parsed = parse_us_release(filing.content, non_gaap)
         elif fmt == "us_gaap_statements":
@@ -403,15 +451,26 @@ def parse_announcement(filing: Filing, fmt: str = "highlights", market: Market =
             parsed = parse_sap_statement(filing.content)
         elif fmt == "tifrs_statements":
             parsed = parse_tifrs(filing.title, filing.content)
+        elif fmt == "tsmc_release":
+            parsed = parse_tsmc_release(filing.content, filing.attachments.get("slides"))
+        elif fmt == "baidu_release":
+            parsed = parse_baidu_filing(filing.url, filing.content)
+        elif fmt == "infosys_ifrs":
+            parsed = parse_infosys_release(filing.content)
         elif filing.provisional:
             parsed = parse_kifrs_deck(filing.title, filing.content, filing.attachments["previous_bs"])
         else:
             parsed = parse_kifrs(filing.title, filing.content, filing.attachments["bs"], filing.attachments.get("note"))
         basis = "" if parsed.quarterly else "full year" if parsed.period.quarter == 4 else YEAR_TO_DATE  # Sea's second- and third-quarter releases: six and nine months
-        return Announcement(
+        announcement = Announcement(
             parsed.period, filing.published, filing.url, parsed.currency, parsed.quarterly, parsed.values, market.key,
             filing.provisional, basis, series_notes=dict(parsed.notes or {}),
         )
+        if fmt == "tsmc_release":  # TSMC discloses diluted EPS only, with the diluted weighted average shares
+            announcement.shares_label = DILUTED_SHARES_LABEL
+        if fmt == "infosys_ifrs" and "wa_shares" not in parsed.values:  # the press release has no share count (since July 2020, and three before)
+            announcement.note = INFOSYS_IMPLIED_SHARES_NOTE
+        return announcement
     period = parse_period(filing.title)
     currency, values, *notes = FORMATS[fmt](Pages(filing.content))  # (currency, values) or, for travelsky_statements, (currency, values, series notes)
     shares = values.pop("wa_shares", None)
@@ -650,6 +709,7 @@ class EarningsHistory:
     shares_basis: dict[pd.Period, str] = field(default_factory=dict)  # period the disclosed weighted average shares of each period refer to (empty = this period, "full year", "year to date")
     non_gaap_changes: tuple[pd.Timestamp, ...] = ()  # when the company changed the definition of its Non-GAAP EPS (see build_history)
     fiscal_year_end: int = 12  # the month the company's fiscal year ends: the labels shown (period_label) and where year-to-date figures start (fiscal_quarter)
+    provisional_note: str = ""  # what the preliminary data of this layout is, when it differs from the market's PROVISIONAL_NOTES (see PROVISIONAL_FORMAT_NOTES)
 
     def label(self, p: pd.Period) -> str:
         """The name a period is shown with (see period_label)."""
@@ -673,7 +733,7 @@ class EarningsHistory:
                     )
         for a in self.announcements:
             if a.provisional:
-                out.append(f"The {self.label(a.period)} data {PROVISIONAL_NOTES.get(a.market, PROVISIONAL_NOTES['*'])}")
+                out.append(f"The {self.label(a.period)} data {self.provisional_note or PROVISIONAL_NOTES.get(a.market, PROVISIONAL_NOTES['*'])}")
         for change in self.non_gaap_changes:
             after = self.ttm[pd.to_datetime(self.ttm["published"]) >= change]
             empty = after["non_ifrs_eps_ttm"].isna()
@@ -783,9 +843,14 @@ def build_history(
     quarters, the Non-GAAP EPS TTM is empty. The per-period values (quarters) keep the first published figure of each quarter, whatever its definition.
 
     Supplementary documents (XP's press release next to its IFRS statements) only add their Non-GAAP EPS, for their own quarter and with their own
-    publication time. One published on the day its quarter's TTM row becomes available (before or after the statements) completes that row; one that
+    publication time; TSMC's earnings conference slides in a 6-K of their own (until 2019) likewise add the equity at the end of their quarter. One published on the day its quarter's TTM row becomes available (before or after the statements) completes that row; one that
     becomes available later adds a row of its own, a copy of the latest row with the Non-GAAP EPS TTM brought up to date. A supplement without a
     value, or for a quarter that has no filing, changes nothing. Without supplements the result is exactly what it was before they existed.
+
+    A supplementary document that repeats its quarter's figures (Infosys's IFRS statements: revenue, net profit, EPS, equity and the weighted
+    average shares, 4-7 days after the press release, which has no share count) adds a figure the filing lacked and replaces one that differs,
+    noting "first published as X", both from its own publication time: a row of its own repeats the latest row with them (when they are part of
+    it). One that changes nothing adds nothing.
 
     Corrections (a Japanese company's corrected Kessan Tanshin) reissue an earlier filing of the same period with corrected figures. The original's
     figures are used until the correction is available; from then on its figures replace them (a year-to-date figure: the single period derived
@@ -842,22 +907,65 @@ def build_history(
             s = pending.pop(0)
             if s.currency not in currencies:
                 raise ValueError(f"{s.url}: the supplementary document is in {s.currency}, the filings in {currencies}")
+            if any(k in s.values for k in SUPPLEMENT_RESTATED_SERIES):
+                add_restating_supplement(s)
+                continue
             for series, vals in s.values.items():
-                if series != "non_ifrs_eps":
-                    raise ValueError(f"{s.url}: a supplementary document only adds the Non-GAAP EPS, got {series}")
+                if series not in SUPPLEMENT_SERIES:
+                    raise ValueError(f"{s.url}: a supplementary document only adds the Non-GAAP EPS or the equity, got {series}")
                 record(series, s.period, vals[0], s, derived=False)
             if not s.values or not rows_of or not 0 <= (rows_of[-1].period - s.period).n < 4:
                 continue  # nothing to add, or not part of the latest TTM: its own quarter's row will use it
+            if "equity" in s.values and rows_of[-1].period != s.period:
+                continue  # the equity of an earlier quarter is not part of the latest row
             latest = rows_of[-1]
             row, detail = row_of(latest)
             if s.available == ttm_rows[-1]["available_date"]:  # available on the same day as the latest row: that row is completed
                 ttm_rows[-1], details[-1] = row, detail
             else:  # available later: a row of its own, from the day the press release can be used
                 row = {**row, "published": f"{s.published:%Y-%m-%d %H:%M}", "available_date": s.available}
-                detail = {**detail, "published": row["published"], "note": "; ".join(x for x in (detail["note"], f"Non-GAAP EPS from the press release published {row['published']}") if x)}
+                source = f"Non-GAAP EPS from the press release published {row['published']}" if "equity" not in s.values else f"equity from the {s.note or 'supplementary document'} published {row['published']}"
+                detail = {**detail, "published": row["published"], "note": "; ".join(x for x in (detail["note"], source) if x)}
                 ttm_rows.append(row)
                 details.append(detail)
                 rows_of.append(latest)
+
+    def add_restating_supplement(s: Announcement) -> None:
+        """A supplement that repeats its quarter's figures (SUPPLEMENT_RESTATED_SERIES): add what is missing, replace what differs."""
+        if s.period not in announcements:
+            return  # a quarter without a filing: changes nothing
+        changed: list[str] = []
+        for series, vals in s.values.items():
+            if series not in (*SUPPLEMENT_RESTATED_SERIES, *BALANCES, *SHARE_COUNTS):
+                raise ValueError(f"{s.url}: a supplementary document that repeats its quarter's figures cannot add {series}")
+            old = quarters[series].get(s.period)
+            if old is None:
+                record(series, s.period, vals[0], s, derived=False)
+            elif abs(old.value - vals[0]) <= 1e-9 * max(1.0, abs(vals[0])):
+                continue
+            else:
+                factor = s.per_share_factors[0] if series in PER_SHARE else 1.0
+                q = QuarterValue(vals[0], s.available, s.published, factor=factor, note=f"from the {s.note or 'supplementary document'} published {s.published:%Y-%m-%d %H:%M}; first published as {num(old.value)}")
+                q.observations.append(Observation(vals[0], s.url, False))
+                quarters[series][s.period] = q
+            changed.append(series)
+        if not changed or not rows_of:
+            return
+        n = (rows_of[-1].period - s.period).n
+        if not any((series in FLOWS and 0 <= n < 4) or (series not in FLOWS and n == 0) for series in changed):
+            return  # not part of the latest row: the rows of later quarters use it
+        latest = rows_of[-1]
+        row, detail = row_of(latest)
+        row = {**row, "published": f"{s.published:%Y-%m-%d %H:%M}", "available_date": s.available}
+        labels = ", ".join(SERIES_LABELS[x].lower() for x in changed)
+        notes = [x for x in detail["note"].split("; ") if x and not (x in SHARES_IMPLIED_NOTES and "wa_shares" in changed)]
+        detail = {**detail, "published": row["published"], "note": "; ".join([*notes, f"{labels} from the {s.note or 'supplementary document'} published {row['published']}"])}
+        if s.available == ttm_rows[-1]["available_date"]:  # available on the same day as the latest row: that row is completed
+            ttm_rows[-1], details[-1] = row, detail
+        else:
+            ttm_rows.append(row)
+            details.append(detail)
+            rows_of.append(latest)
 
     pending_corrections = list(corrections)
     processed: list[pd.Period] = []  # the periods of the filings recorded so far
@@ -870,8 +978,7 @@ def build_history(
             if original is None or original.published >= c.published:
                 raise ValueError(f"{c.url}: a correction of the {c.period} filing, which was not published before it")
             later = {c.period + k for k in range(1, 4 - fiscal_quarter(c.period, fiscal_year_end) + 1)}
-            if later & set(processed):
-                raise ValueError(f"{c.url}: a correction published after a later quarter of the same fiscal year is not supported")
+            late = bool(later & set(processed))  # published after a later quarter of the same fiscal year: only supported when it changes no figure
             changed = False
             for series, vals in c.values.items():
                 value, derived = vals[0], False
@@ -887,6 +994,8 @@ def build_history(
                 old = quarters[series].get(c.period)
                 if old is not None and abs(old.value - value) <= 1e-9 * max(1.0, abs(value)):
                     continue
+                if late:  # a restated filing (TOTVS's 2020 and 2021 ITRs, delivered again in 2022 with the same figures) that repeats every figure adds nothing
+                    raise ValueError(f"{c.url}: a correction published after a later quarter of the same fiscal year is not supported")
                 factor = c.per_share_factors[0] if series in PER_SHARE else 1.0
                 note = f"corrected by the filing published {c.published:%Y-%m-%d %H:%M}" + (f"; first published as {num(old.value)}" if old else "")
                 q = QuarterValue(value, c.available, c.published, factor=factor, note=note)

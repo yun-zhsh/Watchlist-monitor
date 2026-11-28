@@ -1,5 +1,6 @@
 """Extract earnings data from the earnings press releases (HTML) of US-listed companies (verified on all JD press releases from August 2014 on
-and all Alibaba Group releases from January 2015 on).
+all Alibaba Group releases from January 2015 on and all PDD Holdings releases since its 2018 IPO; the rules for PDD are appended
+after the others and tried only where those find nothing, see PDD_GROUP_RE).
 
 The tables in the press release are laid out as "header + data rows":
   the first header row describes each group (For the three months ended / six months ended / year ended),
@@ -46,6 +47,31 @@ YEAR_CELL_RE = re.compile(r"^\d{4}$")
 LABEL_DAY_RE = re.compile(r"\b([A-Z][a-z]+) ?(\d{1,2}),?$")  # the month and day at the end of a group description, e.g. "Three months ended June 30,"
 SPACED_NUMBER_RE = re.compile(r"^\(? ?-?\d[\d, ]*(?:\.[\d ]+)?\)?$")  # a number broken by stray spaces (Alibaba 2015-2016: "2,86 9", "(6, 133", "( 2")
 ADS_RATIO_TOLERANCE = 0.05  # allowed relative distance of (EPS per ADS / EPS per share) from a whole number
+# Rules appended for PDD Holdings (Pinduoduo until 2023), each tried only where the rules above find nothing (see parse_header,
+# parse_flow_rows and parse_balance_table): its group descriptions say "For the years ended December 31," (plural); its currency cells
+# carry the audit note ("RMB (Unaudited)", "US$ (Unaudited)"; the September quarter 2025 release)
+PDD_GROUP_RE = re.compile(rf"{GROUP_RE.pattern}|years ended", re.I)
+PDD_DATE_COMMA_RE = re.compile(r"^([A-Z][a-z]+ \d{1,2}) ?, ?(\d{4})$")  # "December 31 , 2021" (the September quarter 2022 release), "December 31,2017"
+PDD_CURRENCY_NOTE_RE = re.compile(r"^(RMB|US\$) \((?:Unaudited|Audited)\)$")
+PDD_REVENUE_RE = re.compile(r"^total revenues$", re.I)  # 2018-2020: "Total Revenues" under a heading "Revenues"
+PDD_BASIC_RE = re.compile(r"^[-–—] ?basic$", re.I)  # "-Basic", "- Basic" under a per-share, per-ADS or share-count heading
+# per-share and per-ADS headings with the loss and profit words joined by a slash: "(Loss)/ earnings per ADS (4 ordinary shares equals 1 ADS):",
+# "Earnings/(deficits) per share for Class A and Class B ordinary shares:", "Deficits per ADS (...)", "Earnings/ (loss) per ADS (...)"
+PDD_EPS_SECTION_RE = re.compile(r"^(?:\(?(?:loss|earnings|deficits?)\)?(?: ?/ ?)?)+ per (?P<unit>ads|share|ordinary share)\b", re.I)
+# "Weighted average number of outstanding ordinary shares (in thousands):", "Weighted average number of Class A and Class B ordinary shares
+# outstanding:", "Weighted-average number of ordinary shares outstanding (in millions):" (headings without figures; the rows below are "-Basic")
+# The share counts are in the unit of their label ("(in thousands)", "(in millions)"); without one, single shares when the unit note of the
+# table excepts them ("(Amounts in thousands of RMB and US$, except for number of shares and per share data)", 2018), else the table's unit
+PDD_SHARES_SECTION_RE = re.compile(r"^weighted[- ]average number of (?:outstanding )?(?:class a and class b )?ordinary shares\b", re.I)
+PDD_SHARES_UNIT_RE = re.compile(r"\(in (thousands|millions)\)", re.I)
+PDD_RAW_SHARES_RE = re.compile(r"except (?:for )?number of shares", re.I)
+# the diluted Non-GAAP EPS with the loss and profit words of PDD's releases: "Non-GAAP diluted (loss)/gain per ADS", "Non-GAAP basic and diluted
+# loss per ADS", "Non-GAAP diluted deficits per ADS", "Non-GAAP diluted earnings/(deficits) per ADS", "Non-GAAP diluted (loss)/ earnings per ADS"
+PDD_NON_GAAP_DILUTED_RE = re.compile(
+    r"^non-?gaap (?:basic and )?diluted (?:\(?(?:loss|earnings|deficits?|gain)\)?(?: ?/ ?)?)+ per (?P<unit>ads|share)$", re.I)
+# "Total shareholders' deficits" (the June and September quarter 2018 releases, the June 2018 balance before the IPO),
+# "Total shareholders' (deficits)/equity" (the next two, comparing with December 31, 2017)
+PDD_EQUITY_LABEL_RE = re.compile(r"^total shareholders?'?s? (?:\(deficits?\) ?/ ?equity|deficits?)$", re.I)
 MONTHS = {m: i for i, m in enumerate(
     ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"], 1)}
 AMOUNT_KEYS = ("revenue", "profit", "wa_shares")  # amount rows, converted to millions by the unit of the table
@@ -136,6 +162,36 @@ def dates_from_years(years: list[int], currencies: list[str], labels: list[str])
 
 
 def parse_header(rows: list[list[str]]) -> Header | None:
+    """The header of a table (None without one); the rules appended for PDD are tried only when the rules for JD and Alibaba find none."""
+    return _parse_header(rows) or _parse_header(rows, pdd=True)
+
+
+def dates_per_rmb_column(dates: list[pd.Timestamp], currencies: list[str]) -> list[pd.Timestamp] | None:
+    """PDD's balance sheet: one date per RMB column ("December 31, 2018" "June 30, 2019" over "RMB RMB US$"); a US dollar column (the
+    convenience translation) takes the date of the RMB column before it."""
+    if sum(ccy == "RMB" for ccy in currencies) != len(dates) or currencies[0] != "RMB":
+        return None
+    out, remaining = [], iter(dates)
+    for ccy in currencies:
+        out.append(next(remaining) if ccy == "RMB" else out[-1])
+    return out
+
+
+def join_split_month(rows: list[list[str]]) -> list[list[str]]:
+    """PDD's March quarter 2020 balance sheet breaks its first date over two rows: "December" over "31, 2019" "March 31, 2020"."""
+    out: list[list[str]] = []
+    for row in rows:
+        if out and len(out[-1]) == 1 and out[-1][0] in MONTHS and row and re.match(r"^\d{1,2}, \d{4}$", row[0]):
+            out[-1] = [f"{out[-1][0]} {row[0]}", *row[1:]]
+        else:
+            out.append(row)
+    return out
+
+
+def _parse_header(rows: list[list[str]], pdd: bool = False) -> Header | None:
+    if pdd:
+        rows = [[m.group(1) if (m := PDD_CURRENCY_NOTE_RE.match(c)) else PDD_DATE_COMMA_RE.sub(r"\1, \2", c) for c in r] for r in rows]
+        rows = join_split_month(rows)
     years: list[int] | None = None
     for i, row in enumerate(rows[:8]):
         dates = [parse_date(c) for c in row]
@@ -150,14 +206,21 @@ def parse_header(rows: list[list[str]]) -> Header | None:
         return None
     currencies = rows[i + 1]
     groups = currency_groups(currencies)
-    labels = [c for r in rows[:i] for c in r if GROUP_RE.search(c)]
+    labels = [c for r in rows[:i] for c in r if (PDD_GROUP_RE if pdd else GROUP_RE).search(c)]
     if years is not None:
         dates = dates_from_years(years, currencies, labels)
         if dates is None:
             return None
     elif len(currencies) != len(dates):
-        return None
+        if not pdd or (dates := dates_per_rmb_column(dates, currencies)) is None:
+            return None
     return Header(dates, currencies, groups, labels if len(labels) == len(groups) else [""] * len(groups), i + 2)
+
+
+def raw_share_counts(table) -> bool:
+    """Appended for PDD: whether the nearest unit note before the table excepts the number of shares (they are then single shares)."""
+    note = next((t for s in table.find_all_previous(string=True, limit=40) if UNIT_RE.search(t := clean(s))), "")
+    return bool(PDD_RAW_SHARES_RE.search(note))
 
 
 def unit_scale(table, rows: list[list[str]]) -> float:
@@ -167,6 +230,11 @@ def unit_scale(table, rows: list[list[str]]) -> float:
             return 0.001 if m.group(1).lower() == "thousands" else 1.0
     for s in table.find_all_previous(string=True, limit=40):
         if m := UNIT_RE.search(clean(s)):
+            return 0.001 if m.group(1).lower() == "thousands" else 1.0
+    # appended for PDD: a note broken over two strings, "(Amounts in" and "millions of Renminbi ..." (2026 balance sheets)
+    previous = [clean(s) for s in table.find_all_previous(string=True, limit=40)]
+    for later, earlier in zip(previous, previous[1:]):
+        if m := UNIT_RE.search(f"{earlier} {later}"):
             return 0.001 if m.group(1).lower() == "thousands" else 1.0
     raise ValueError("Cannot find the unit of the amounts")
 
@@ -207,15 +275,19 @@ def quarter_offsets(by_date: dict[pd.Timestamp, float]) -> tuple[pd.Period, list
     return current, out[:2] if out[2] is None else out
 
 
-def parse_flow_rows(rows, header: Header, scale: float | None) -> dict[str, tuple[pd.Period, list[float]]]:
+def parse_flow_rows(rows, header: Header, scale: float | None, raw_shares: bool = False) -> dict[str, tuple[pd.Period, list[float]]]:
     """Revenue, net profit, basic EPS per ADS and basic Non-GAAP EPS in the "three months" group.
 
     The consolidated income statement may be split by page breaks into several tables, so each table only takes the rows it has, and the caller merges them and cross-checks.
+    raw_shares: the unit note of the table excepts the number of shares (used only by the rules appended for PDD, see PDD_SHARES_SECTION_RE).
     """
     group = next((g for g, label in enumerate(header.labels) if re.search("three months", label, re.I)), None)
     if group is None:
         return {}
     found: dict[str, dict[pd.Timestamp, float]] = {}
+    fallback: dict[str, dict[pd.Timestamp, float]] = {}  # what the rules appended for PDD find; used only for keys the rules above leave empty
+    fallback_scale: float | None = None  # the unit of the share counts in fallback
+    shares_scale: float | None = None  # factor to millions of the share counts under PDD's heading (PDD_SHARES_UNIT_RE)
     section = None  # which "per ADS" (or "per share") section we are in: eps, non_ifrs_eps or eps_share
     basic = False  # whether we are under the "Basic" part of the section (in years with discontinued operations, Basic is further split into continuing, discontinued and total)
     ordinary_profit = False  # whether the profit row found is the one attributable to ordinary shareholders
@@ -229,6 +301,8 @@ def parse_flow_rows(rows, header: Header, scale: float | None) -> dict[str, tupl
                 continue
             if "per ads" in low:
                 section = "non_ifrs_eps" if re.search("non-gaap|adjusted", low) else "eps" if EPS_SECTION_RE.match(low) else None
+                if section is None and PDD_EPS_SECTION_RE.match(label):
+                    section = "eps"
                 basic = False
             elif "per share" in low and EPS_SECTION_RE.match(low) and not re.search("non-gaap|adjusted", low):
                 section = "eps_share"  # used for the shares per ADS, and as the EPS when there are no per-ADS figures
@@ -236,6 +310,13 @@ def parse_flow_rows(rows, header: Header, scale: float | None) -> dict[str, tupl
             elif low == "basic":
                 basic = True
             elif low == "diluted":
+                basic = False
+            elif PDD_SHARES_SECTION_RE.match(label):
+                section = "wa_shares"
+                unit = PDD_SHARES_UNIT_RE.search(label)
+                shares_scale = (1e-6 if raw_shares else scale) if unit is None else 0.001 if unit.group(1).lower() == "thousands" else 1.0
+            elif m := PDD_EPS_SECTION_RE.match(label):
+                section = "eps" if m.group("unit").lower() == "ads" else "eps_share"
                 basic = False
             else:
                 section = None
@@ -251,15 +332,32 @@ def parse_flow_rows(rows, header: Header, scale: float | None) -> dict[str, tupl
         elif PROFIT_LABEL_RE.match(label) and ("profit" not in found or (ORDINARY_PROFIT_RE.search(label) and not ordinary_profit)):
             found["profit"] = columns_by_date(header, group, nums)
             ordinary_profit = bool(ORDINARY_PROFIT_RE.search(label))
+        elif section and PDD_BASIC_RE.match(label) and section not in fallback:
+            if section == "wa_shares":
+                fallback[section] = leading_columns(header, group, nums)
+                fallback_scale = shares_scale
+            else:
+                fallback[section] = columns_by_date(header, group, nums)
+        elif (m := PDD_NON_GAAP_DILUTED_RE.match(label)) and (key := "non_gaap_diluted_ads" if m.group("unit").lower() == "ads" else "non_gaap_diluted_share") not in fallback:
+            fallback[key] = columns_by_date(header, group, nums)
+        elif PDD_REVENUE_RE.match(label) and "revenue" not in fallback:
+            fallback["revenue"] = columns_by_date(header, group, nums)
+    scales = {}  # the unit of a key that is not the table's
+    for key, by_date in fallback.items():
+        if not found.get(key):
+            found[key] = by_date
+            if key == "wa_shares" and fallback_scale is not None:
+                scales[key] = fallback_scale
     out = {}
     for key, by_date in found.items():
         if not by_date:
             continue
         period, vals = quarter_offsets(by_date)
         if key in AMOUNT_KEYS:
-            if scale is None:
+            factor = scales.get(key, scale)
+            if factor is None:
                 continue  # tables with an unknown unit are not used; the same numbers are in other tables
-            vals = [v * scale for v in vals]  # shares stay in millions of ordinary shares here; parse_press_release divides by the shares per ADS
+            vals = [v * factor for v in vals]  # shares stay in millions of ordinary shares here; parse_press_release divides by the shares per ADS
         out[key] = (period, vals)
     return out
 
@@ -290,18 +388,20 @@ def parse_balance_table(rows, header: Header, scale: float | None) -> tuple[pd.P
     # follows (Alibaba: "Noncontrolling interests" between the two), it is the equity attributable to the company
     has_nci = any(re.match(r"non-?controlling interests?$", label, re.I) for label in labels) and not any(re.match(r"total equity$", label, re.I) for label in labels)
     pattern = EQUITY_LABEL_RE if has_nci else re.compile(f"{EQUITY_LABEL_RE.pattern}|{TOTAL_EQUITY_LABEL_RE.pattern}", re.I)
-    for row in rows[header.first_data_row :]:
-        if pattern.match(row[0]):
-            by_date = columns_by_date(header, 0, numbers(row))
-            if len(by_date) < 2:
-                return None
-            current = max(by_date)
-            earlier = max(d for d in by_date if d != current)
-            if earlier != pd.Timestamp(year=current.year - 1, month=12, day=31):
-                # the comparison column is the end of a fiscal year that is not the calendar year (Alibaba: March 31), while the history files the second
-                # balance under the previous December quarter; only this period's balance is kept (the earlier one is in that period's own release)
-                return pd.Period(current, freq="Q"), [by_date[current] * scale]
-            return pd.Period(current, freq="Q"), [by_date[current] * scale, by_date[earlier] * scale]
+    row = next((r for r in rows[header.first_data_row :] if pattern.match(r[0])), None)
+    if row is None and not has_nci:  # appended for PDD: "Total shareholders' (deficits)/equity"
+        row = next((r for r in rows[header.first_data_row :] if PDD_EQUITY_LABEL_RE.match(r[0])), None)
+    if row is not None:
+        by_date = columns_by_date(header, 0, numbers(row))
+        if len(by_date) < 2:
+            return None
+        current = max(by_date)
+        earlier = max(d for d in by_date if d != current)
+        if earlier != pd.Timestamp(year=current.year - 1, month=12, day=31):
+            # the comparison column is the end of a fiscal year that is not the calendar year (Alibaba: March 31), while the history files the second
+            # balance under the previous December quarter; only this period's balance is kept (the earlier one is in that period's own release)
+            return pd.Period(current, freq="Q"), [by_date[current] * scale]
+        return pd.Period(current, freq="Q"), [by_date[current] * scale, by_date[earlier] * scale]
     return None
 
 
@@ -309,7 +409,10 @@ def close(a: float, b: float, key: str) -> bool:
     return abs(a - b) <= (0.005 if key in PER_SHARE_KEYS else max(1.0, abs(a) * TOLERANCE))
 
 
-def parse_press_release(html: bytes) -> Parsed:
+def parse_press_release(html: bytes, non_gaap: str | None = None) -> Parsed:
+    """non_gaap is the EPS basis of the stock's Non-GAAP PE (config eps_basis): "diluted" always takes the diluted Non-GAAP EPS, never a basic one
+    (PDD published a basic one until its March quarter 2021 release and only the diluted one since); otherwise the basic one is taken and the
+    diluted one only when a release has no basic one (Alibaba)."""
     from bs4 import BeautifulSoup
 
     soup = BeautifulSoup(html, "lxml")
@@ -326,7 +429,7 @@ def parse_press_release(html: bytes) -> Parsed:
             scale = unit_scale(table, rows)
         except ValueError:
             scale = None
-        for key, found in parse_flow_rows(rows, header, scale).items():
+        for key, found in parse_flow_rows(rows, header, scale, raw_share_counts(table)).items():
             if header.inherited and key not in ("eps", "non_ifrs_eps", "eps_share"):
                 continue  # when the income statement is split across pages, the second half (per-share data) has no header and reuses the previous one; amounts only count in tables with their own header
             candidates.setdefault(key, []).append(found)
@@ -351,6 +454,8 @@ def parse_press_release(html: bytes) -> Parsed:
         raise ValueError(f"The rows disagree on the reporting period: {periods}")
     ratio = shares_per_ads(values.get("eps"), values.pop("eps_share", None))
     diluted_ads, diluted_share = values.pop("non_gaap_diluted_ads", None), values.pop("non_gaap_diluted_share", None)
+    if non_gaap == "diluted":
+        values.pop("non_ifrs_eps", None)  # the stock's Non-GAAP PE is on diluted EPS: a basic figure is never taken
     if "non_ifrs_eps" not in values:  # no basic Non-GAAP EPS: the diluted one as stated (per ADS; per share only when one ADS is one share)
         if diluted_ads is not None:
             values["non_ifrs_eps"] = diluted_ads

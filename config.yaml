@@ -53,14 +53,20 @@ freshness:
 #                     statements; every quarter has a three-months income statement; needs a cik and sec_exhibit: sap_ifrs (SAP)
 #   tesla_update      Tesla's quarterly Update deck (exhibit 99.1 of its 8-K), its statements read from the text of the deck; a quarter whose deck
 #                     has its statements as page images only is read from its Form 10-Q or 10-K; needs a cik and sec_exhibit: tesla_update (Tesla)
+#   tsmc_release      TSMC's earnings release and earnings conference slides furnished on Form 6-K (diluted EPS only; equity from the slides,
+#                     or for a quarter whose slides have no text balance sheet from its consolidated financial statements 6-K); needs a cik and
+#                     sec_exhibit: tsmc_release (TSMC)
 # sec_release_non_gaap: true also reads the earnings press release next to the IFRS statements, for its "Adjusted Basic EPS" (pe_non_gaap; XP)
 #   kifrs_statements  English consolidated financial statements (K-IFRS) on the Samsung Electronics IR website, every quarter; market KR
 #   cn_report         periodic reports (Q1, half-year, Q3, annual) and annual express reports of A-share companies on CNINFO (Chinese originals); market CN
 #   jp_tanshin        Kessan Tanshin (summaries of consolidated results, Japanese GAAP; Japanese originals) and their corrections, from the
 #                     company's IR library on Xj-Storage, every quarter (year to date after the first quarter); market JP
+#   cvm_statements    the ITR (quarterly) and DFP (annual) statements Brazilian companies deliver to CVM, read by CVM's account codes from
+#                     its open data, with each version's delivery time from the delivered document (a later version restates an earlier
+#                     one from its own delivery time); saved as extracts of codes and values; market BR
 # market: HK (HKEXnews; default for symbols ending in .HK), US (SEC EDGAR), KR (the IR website of a Korean company; default for
 # symbols ending in .KS), CN (A-shares, CNINFO; default for symbols ending in .SZ or .SS) or JP (Tokyo Stock Exchange, the company's IR
-# library on Xj-Storage; default for symbols ending in .T).
+# library on Xj-Storage; default for symbols ending in .T) or BR (B3, Sao Paulo; CVM; default for symbols ending in .SA).
 # Accessing EDGAR requires identifying yourself: before running, set the environment variable
 # SEC_USER_AGENT="valuation-monitor your-email" (see the README).
 # The order below is the order of the stocks on the home page and in the reports. hidden: true leaves a stock off the home page
@@ -246,3 +252,43 @@ stocks:
     market: CN   # Shanghai; Chinese periodic reports and express reports on CNINFO. A commercial bank
     filing_format: cn_report   # RMB; revenue is the operating income (net interest income included); PB uses the equity of the ordinary shareholders (without preference shares and perpetual bonds)
     metrics: [pe, ps, pb]
+  - symbol: TSM
+    name: Taiwan Semiconductor Manufacturing (ADR)
+    market: US
+    cik: 1046179   # Taiwan Semiconductor Manufacturing Co Ltd; reports under Taiwan-IFRS in NT$, every calendar quarter
+    filing_format: tsmc_release   # the 6-K earnings release (revenue, net income, EPS) and conference slides (equity); the price is USD per ADR (5 common shares), EPS is NT$ per ADR
+    sec_exhibit: tsmc_release   # for the quarters whose slides have no text balance sheet, the equity comes from the consolidated financial statements 6-K (statements.json)
+    metrics: [pe, ps, pb]   # TSMC has never published a Non-GAAP EPS; PB on total equity including non-controlling interests (the slides give no other)
+    eps_basis: { pe: diluted }   # the release gives diluted EPS only: "Diluted PE (TTM)"
+  - symbol: INFY
+    name: Infosys (ADR)
+    market: US   # NYSE; one ADS = one equity share, so price and EPS need no ADS ratio; a foreign private issuer filing 20-F and 6-K
+    cik: 1067491   # Infosys Limited; fiscal year ends March 31, results every calendar quarter
+    sec_exhibit: infosys_ifrs   # the IFRS USD press release on the results day; the IFRS statements in USD 4-7 days later add the weighted average shares
+    filing_format: infosys_ifrs   # USD, IFRS, basic EPS (two decimals); 1:1 bonus issues in December 2014, June 2015 and September 2018
+    metrics: [pe, ps, pb]   # no pe_non_gaap: the only adjusted EPS was a one-off, for the quarter to December 2025 (Labour Codes provision; see the README)
+    fiscal_year_end: 3   # the fiscal year ends on March 31: the quarter to September 2026 is shown as FY2027Q2
+  - symbol: BIDU
+    name: Baidu (ADR)
+    market: US
+    cik: 1329099   # Baidu, Inc.; results every calendar quarter on 6-K
+    filing_format: baidu_release   # the price is in USD per ADS (8 Class A ordinary shares since the 2021 subdivision; 1/10 share before); EPS is in RMB per ADS
+    metrics: [pe, pe_non_gaap, ps, pb]   # PE on basic EPS per ADS; Baidu discloses no basic Non-GAAP EPS, so its PE Non-GAAP uses the disclosed diluted one
+    eps_basis: { pe_non_gaap: diluted }   # no non_gaap_changes: one series across the definition changes of 2018 and 2019, the older figures carry a note
+  - symbol: PDD
+    name: PDD Holdings (ADR)
+    market: US
+    cik: 1737806   # PDD Holdings Inc. (Pinduoduo Inc. until February 2023); results every calendar quarter since its July 2018 IPO
+    filing_format: press_release   # the price is in USD per ADS (4 Class A ordinary shares); EPS is in RMB per ADS
+    metrics: [pe, pe_non_gaap, ps, pb]
+    eps_basis: { pe_non_gaap: diluted }   # a basic Non-GAAP EPS only until the March quarter 2021 release, a diluted one in every release
+  - symbol: 000660.KS
+    name: SK Hynix
+    market: KR   # KOSPI; English consolidated financial statements and earnings presentations on the SK Hynix IR website, every quarter
+    filing_format: skhynix_statements   # KRW, K-IFRS; basic EPS of ordinary shares (no preferred shares), no non-GAAP EPS
+    metrics: [pe, ps, pb]
+  - symbol: TOTS3.SA
+    name: TOTVS
+    market: BR   # B3 (Novo Mercado); the statements delivered to CVM (ITR every quarter, DFP for the year), CVM company code 019992
+    filing_format: cvm_statements   # price and financials both in BRL (IFRS); ordinary shares only
+    metrics: [pe, ps, pb]   # no pe_non_gaap: the only adjusted per-share figure, "EPS (LTM)" (since 1Q25), is a trailing-twelve-months figure on period-end shares
